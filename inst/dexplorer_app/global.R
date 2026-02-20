@@ -1,8 +1,8 @@
 # Load python environment
 library(reticulate)
-use_virtualenv("r-reticulate", required = TRUE)
+use_virtualenv("r-reticulate-dexplorer", required = TRUE)
 # This ensures that the python is used
-py_config()
+# py_config()
 
 # Data handling
 suppressPackageStartupMessages(library(dplyr))

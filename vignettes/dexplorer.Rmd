@@ -29,7 +29,7 @@ First, you need to install the latest version from [GitLab](https://gitlab.www.i
 #   build_vignettes = TRUE
 # )
 
-library(dexpreprocessr)
+library(dexplorer)
 
 # Load further required packages
 library(readxl)

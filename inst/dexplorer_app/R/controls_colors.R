@@ -238,6 +238,8 @@ create_heatmap_color_function <- function(selected_colors) {
 #   }
 # }
 
+# TODO: adjusted the name of the "App colors.png" manually to "App_colors.png"
+# TODO: this maintains portability and should be included here!
 # # Named list with 4 colors values per palette
 # palette_lookup <- setNames(
 #   lapply(color_choices_flat, colors_for_color_picker),

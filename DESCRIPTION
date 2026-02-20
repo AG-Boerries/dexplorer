@@ -1,6 +1,6 @@
-Package: dexpreprocessr
-Title: Data Preparation for DExploreR App
-Version: 0.5.9.0
+Package: dexplorer
+Title: Visualize and interactively explore bulk RNA-seq data
+Version: 0.6.0.0
 Authors@R: c(
     person(
         given = "Tobias",
@@ -13,7 +13,7 @@ Authors@R: c(
         role = c("cph", "fnd")
     )
         )
-Description: This package provides a set of functions to prepare data from bulk RNA-seq for visualization with the DExploreR app.
+Description: This package contains a shiny app for the visualization and interactive exploration of bulk RNA-seq data. Furthermore, it provides a set of functions to prepare RNA-seq data in a suitable foramt for DExploreR.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -39,6 +39,7 @@ Imports:
     purrr,
     readr,
     readxl,
+    reticulate,
     stats,
     stringr,
     tibble,
