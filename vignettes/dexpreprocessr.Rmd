@@ -1,0 +1,282 @@
+---
+title: "DEXpreprocessR: Preparing RNA-seq data for DExploreR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DEXpreprocessR: Preparing RNA-seq data for DExploreR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette shall demonstrate how to use the `dexpreprocessr` package to prepare RNA-seq data for analysis with DExploreR using the example of a bulk RNA-seq data set from [GSE273186](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE273186). The count tables from the STAR alignment are provided in the `extdata` directory of this package.
+
+## Installation
+
+<!-- TODO: This needs to be adjusted once the package is on Github -->
+
+First, you need to install the latest version from [GitLab](https://gitlab.www.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr).
+```{r load-packages, message=FALSE, warning=FALSE}
+# Install dexpreprocessr from GitLab
+# devtools::install_git(
+#   url = "https://gitlab.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr.git",
+#   git = "external",
+#   build_vignettes = TRUE
+# )
+
+library(dexpreprocessr)
+
+# Load further required packages
+library(readxl)
+library(readr)
+library(dplyr)
+library(tidyr)
+```
+
+## Load count data
+
+```{r load-counts}
+files_star_counts <- system.file("extdata", "GSE273186", package = "dexpreprocessr")
+list.files(files_star_counts)
+```
+
+The sample GSM8423684 has two count tables, which need to be summed up first, for instance, like this:
+
+```{r sum-counts, eval=FALSE}
+full_join(
+  read.delim(
+    "existing_scripts_files/GSE273186/GSM8423684_1.tab",
+    header = FALSE
+  ),
+  read.delim(
+    "existing_scripts_files/GSE273186/GSM8423684_2.tab",
+    header = FALSE
+  ),
+  by = "V1"
+) %>%
+  mutate(
+    V2 = V2.x + V2.y,
+    V3 = V3.x + V3.y,
+    V4 = V4.x + V4.y
+  ) %>%
+  select(V1, V2, V3, V4) %>%
+  write_tsv(
+    # The maintains the correct pattern for the file names, which is required for the loading function `createRawCountsWithStats()`
+    paste0(files_star_counts, "GSM8423684_combined_ReadsPerGene.out.tab"),
+    col_names = FALSE
+  )
+```
+
+Now, the count tables can be loaded using `createRawCountsWithStats()`. The library prep protocol for this data set is unstranded, so we choose `strandedness = "CountsUnstranded"`. Furthermore, we fix the run IDs using `fix_runid`, which are essentially the file names. We keep only the part before the first underscore, which is the sample name.
+
+```{r load-data}
+dfCounts <- createRawCountsWithStats(
+  path_to_STAR_directory = files_star_counts,
+  strandedness = "CountsUnstranded",
+  fix_runid = function(x) sub("_.*$", "", x)
+)
+```
+
+The output is a list with two data frames: `RawCounts` and `Stats`.
+
+In the next step, we translate the Ensembl IDs to gene symbols along with Entrez IDs, descriptions and aliases using [`AnnotationDbi::select()`](https://bioconductor.org/packages/release/bioc/manuals/AnnotationDbi/man/AnnotationDbi.pdf) and `org.Mm.eg.db` or `org.Hs.eg.db`, depending on the species provided:
+
+```{r dfCountsSymbols}
+dfCountsSymbols <- addGeneSymbols(
+  raw_counts = dfCounts$RawCounts,
+  species = "mouse"
+)
+```
+
+The output is a list with two data frames: `CountsSymbols` and `Symbols`, where the latter one is an inflated data frame with all gene symbols and aliases for the same Ensembl ID in a separate row. This enables gene symbol search for heatmaps across all aliases.
+
+## Load and prepare metadata
+
+Next, we need metadata to translate run IDs to sample names and assign them to experimental groups. When using data from GEO, the `GEOquery` package comes in very handy. Metadata for GSE273186 can thus be created like this: 
+
+```{r load-metadata, eval=FALSE}
+library(GEOquery)
+
+# Get the information from GEO
+gse <- getGEO(GEO = "GSE273186", GSEMatrix = FALSE)
+
+gsm_list <- GSMList(gse)
+
+# Create the meta data frame
+meta_data <- do.call(
+  rbind,
+  lapply(gsm_list, function(g) {
+    data.frame(
+      GSM = g@header$geo_accession,
+      Title = g@header$title,
+      Characteristics = paste(g@header$characteristics_ch1, collapse = "; ")
+    )
+  })
+) %>%
+  # Create columns for tissue, group, sample
+  separate(
+    Title,
+    into = c("Tissue", "Group", "Sample"),
+    sep = ", ",
+    fill = "right"
+  ) %>%
+  # Clean up the columns
+  mutate(
+    Group = sub(" (.*)$", "", Group),
+    Sex = sub(".*Sex: (.*)$", "\\1", Characteristics),
+    Genotype = sub(".*genotype: (.*);.*", "\\1", Characteristics),
+    Sample = paste0(Group, "_", sub(" ", "_", Sample))
+  ) %>%
+  select(-c(Characteristics))
+
+# Row names are not required because `GSM` column holds this information already
+rownames(meta_data) <- NULL
+```
+
+For convenience, the metadata file is also provided in the `extdata` directory of this package, so that you can directly load it like this:
+
+```{r }
+path_meta_data_lab <- system.file("extdata", "meta_data_GSE273186.csv", package = "dexpreprocessr")
+metaDataLab <- read.csv(path_meta_data_lab)
+
+metaDataLab
+```
+
+You may need to adjust your metadata file manually to make sure you can translate from run IDs to samples with group assignments. There is no standard way implemented in this package as the variety of metadata files is huge, and each lab will have their own structure. Once you figured out how to best format you metadata, there is no need to worry about this again.
+
+## Prepare the main data frames
+
+In `prepareDfs()`, the count table with the symbols (`dfCountsSymbols$CountsSymbols`) is combined with the metadata (`metaDataLab`) using a [`fuzzyjoin::fuzzy_left_join()`](https://www.rdocumentation.org/packages/fuzzyjoin/versions/0.1.6.1) by a define column pair (in this case `c("RunID" = "GSM")`), which gives you some flexibility. Furthermore, you need to define the column, which contains the sample names and the column(s) by which you want to group. These columns will receive generic names (`SampleNameUser` and `Group`). Finally, you can play around with the filtering parameters for minimal gene expression.
+
+```{r prepare-dfs}
+dfs <- prepareDfs(
+  raw_counts = dfCountsSymbols$CountsSymbols,
+  meta_data_lab = metaDataLab,
+  join_meta_data_lab = c("RunID" = "GSM"),
+  sample_name_column = "Sample",
+  group_column = "Group",
+  min_number_of_samples_per_group_with_gene_expressed = 2
+)
+```
+
+This function now performs several computations and returns a list of data frames:
+
+1. `RawCountsMeta`: Combined raw counts and metadata into a single data frame.
+2. `SamplesGroups`: A data frame with sample names, groups and run IDs.
+3. `CPMCounts`: A data frame containing CPMs calculated by [`edgeR::cpm()`](https://www.rdocumentation.org/packages/edgeR/versions/3.14.0/topics/cpm).
+4. `RawPCA`: An object of the class `prcomp` containing the results of the principal component analysis.
+5. `DfPCA`: A data frame with the x and y coordinates for the PCA. 
+6. `VarianceExplained`: A data frame with the explained variance per PC.
+
+## Differential gene expression analysis
+
+Prior to running the differential gene expression analysis, you need to define the contrasts, which are the comparisons between groups that you want to perform. The format for the contrasts is `"condition-control"`.
+
+```{r define-contrasts}
+unique(dfs$SamplesGroups$Group)
+
+# This example only has two groups ... 
+contrasts = c("Pkd1 vs Control" = "Pkd1-control")
+```
+
+Then, we can run differential gene expression analysis using `calculateDEG()`. This function is basically a wrapper for the [`limma-edgeR` workflow](https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/thursday/DE.html) or the [`DESeq2` workflow](https://www.bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html), depending on the `deg_tool` parameter and is meant to maintain the correct data formatting for DExploreR.
+
+```{r dgea-limma}
+DGEA <- calculateDEG(
+  raw_counts = dfs$RawCountsMeta,
+  # `de_fun` lets you chose the parameter for the design
+  # Designs with covariates or interaction are not yet implemented
+  # If you require this, you can run the workflow on your own and then just use the output data frame for the DEGs in the `dexDataSet` object
+  de_fun = "~ 0 + Group",
+  samples_groups = dfs$SamplesGroups,
+  contrasts = contrasts,
+  deg_tool = "limma"
+)
+```
+
+This returns a list with two data frames: 
+
+ 1. `DEGs`: A data frames with all differential expression results for all contrasts.
+ 2. `NormData`: A data frame with the normalized count data, required for gene set enrichment analysis, when using `gage::gage()`.
+
+## Gene set enrichment analysis
+
+Finally, we can run gene set enrichment analysis using `calculateGSEA()`, which is again a wrapper and maintains correct data formatting for the DExploreR app. You can either provide a data frame with normalized counts (like `DGEA$NormCounts`) to run [`gage::gage()`](https://bioconductor.org/packages/release/bioc/html/gage.html) or a data frame with differential expression results (like `DGEA$DEGs`) to run [`clusterProfiler::GSEA()`](https://rdrr.io/bioc/clusterProfiler/man/GSEA.html). `calculateGSEA()` uses [`msigdbr::msigdbr()`](https://igordot.github.io/msigdbr/) to retrieve gene sets from the [MSigDB database](https://www.gsea-msigdb.org/gsea/msigdb).
+
+```{r GSEA}
+GSEA <- calculateGSEA(
+  dge_table = DGEA$DEGs,
+  species = "mouse",
+  contrasts = contrasts,
+  samples_groups = dfs$SamplesGroups
+)
+```
+
+## Create the `dexDataSet` object
+
+That's almost it. Now we just need to combine the right data frames to the `dexDataSet` object. If you ran your own workflow, you can check the requirements for the `dexDataSet` by running: 
+
+```{r print-requirements}
+printDataSetReqs()
+```
+
+
+```{r create-dexdataset, eval=FALSE}
+createDataSet(
+  QualityControl = dfCounts$Stats,
+  RawCounts = dfCounts$RawCounts,
+  NormalizedCounts = dfs$CPMCounts,
+  VarianceExplained = dfs$VarianceExplained,
+  PCA = dfs$DfPCA,
+  SamplesGroups = dfs$SamplesGroups,
+  GeneInfoAliases = dfCountsSymbols$Symbols,
+  DGEAnalysis = DGEA$DEGs,
+  GeneSets = GSEA$Results,
+  GeneSetsGenes = GSEA$SignificantGeneSetsGenes,
+  pathRawCounts = files_star_counts,
+  pathMetaDataLab = path_meta_data_lab,
+  data_path = "/Users/tobiashundertmark/Documents/Programming/r-shiny-bulk-rna-seq/data/Replication_of_GSE273186",
+  Cell_line_or_tissue = "Mouse kidney",
+  Study_target = "Autosomal dominant polycystic kidney disease (ADPKD)",
+  Authors = "Wolfgang Kuehn",
+  Date = "2025",
+  Details = "Mouse kidney transcriptome from Pkd1 knock-out and wild-type ten week old male mice. This data is published as part of this study: Inhibition of the inflammasome ameliorates orthologous polycystic kidney disease (10.1073/pnas.2511204122).",
+  Sequencing_details = "Sequencer: Illumina HiSeq 2500, Sequencing mode: unstranded, Pipeline: FastQC (v0.11.8), cutadapt(v4.0), STAR (v2.6.1e) with '--quantMode GeneCounts'.",
+  DGEA_details = paste0(
+    "Preprocessing: DEXpreprocessR v",
+    packageVersion("dexpreprocessr"),
+    ", Differential expression analysis: edgeR v",
+    packageVersion("edgeR"),
+    " and limma v",
+    packageVersion("limma"),
+    "."
+  ),
+  GSEA_details = paste0(
+    "Preprocessing: DEXpreprocessR v",
+    packageVersion("dexpreprocessr"),
+    ", Gene set enrichment analysis ranked genes: GSEA v",
+    packageVersion("clusterProfiler"),
+    " from clusterProfiler and gene set annotation with msigdbr v",
+    packageVersion("msigdbr"),
+    ". Available gene sets: Hallmarks, Gene Ontology (GO) Biological Process, GO Cellular Component, GO Molecular Function."
+  )
+)
+```
+
+
+Once you data frames pass this function, you can be sure that they are compatible with DExploreR.
+
+
+
+`createDataSet()` also has a parameter called `RDSpath`. If provided, the function will directly save the created `dexDataSet` object as a `.rds` file to the specified path. Prior to saving or returning, the object is converted to a list. So that the data set can be used in all R environments even if `dexpreprocessr` is not installed.
+
+For `pathRawCounts`, `pathMetaDataLab` and `pathMetaDataSeq`, you should provide absolute paths. Consider usage of [`library(here)`](https://here.r-lib.org), for instance like:
+
+```{r here-usage}
+here::here(files_star_counts)
+```

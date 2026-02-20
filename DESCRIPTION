@@ -1,0 +1,50 @@
+Package: dexpreprocessr
+Title: Data Preparation for DExploreR App
+Version: 0.5.9.0
+Authors@R: c(
+    person(
+        given = "Tobias",
+        family = "Hundertmark",
+        email = "tobias.hundertmark@dkfz-heidelberg.de",
+        role = c("aut", "cre")
+    ),
+    person(
+        given = "IBSM - Institute of Medical Bioinformatics and Systems Medicine",
+        role = c("cph", "fnd")
+    )
+        )
+Description: This package provides a set of functions to prepare data from bulk RNA-seq for visualization with the DExploreR app.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: 
+    AnnotationDbi,
+    assertthat,
+    clusterProfiler,
+    DESeq2,
+    dplyr,
+    edgeR,
+    forcats,
+    fuzzyjoin,
+    gage,
+    here,
+    limma,
+    magrittr,
+    MASS,
+    methods,
+    msigdbr,
+    org.Hs.eg.db,
+    org.Mm.eg.db,
+    purrr,
+    readr,
+    readxl,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    utils
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

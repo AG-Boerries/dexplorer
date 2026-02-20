@@ -1,0 +1,7 @@
+"GSM","Tissue","Group","Sample","Sex","Genotype"
+"GSM8423684","whole kidney","control","control_sample_1","male","Pkd1flox/flox.Tet-O-Cre"
+"GSM8423685","whole kidney","control","control_sample_2","male","Pkd1flox/flox.Tet-O-Cre"
+"GSM8423686","whole kidney","control","control_sample_3","male","Pkd1flox/flox.Tet-O-Cre"
+"GSM8423687","whole kidney","Pkd1","Pkd1_sample_1","male","Pkd1flox/flox.Pax8rtTA.Tet-O-Cre"
+"GSM8423688","whole kidney","Pkd1","Pkd1_sample_2","male","Pkd1flox/flox.Pax8rtTA.Tet-O-Cre"
+"GSM8423689","whole kidney","Pkd1","Pkd1_sample_3","male","Pkd1flox/flox.Pax8rtTA.Tet-O-Cre"
