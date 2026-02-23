@@ -1,6 +1,6 @@
 # Load python environment
-library(reticulate)
-use_virtualenv("r-reticulate-dexplorer", required = TRUE)
+# library(reticulate)
+# use_virtualenv("r-reticulate-dexplorer", required = TRUE)
 # This ensures that the python is used
 # py_config()
 
@@ -63,3 +63,15 @@ theme_set(
 geom_point_quiet <- function(...) {
   suppressWarnings(ggplot2::geom_point(...))
 }
+
+
+# py_run_string("import plotly.io as pio pio.kaleido.scope.mathjax = None")
+# py_run_string(
+#   "
+# import plotly.io as pio
+# pio.defaults.mathjax = None
+# "
+# )
+
+k <- kaleido()
+k$scope$mathjax <- FALSE

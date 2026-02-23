@@ -1,54 +1,50 @@
 .onLoad <- function(libname, pkgname) {
   # Python setup is required for DExploreR
   # `plotly::save_image()` requires the kaleido python package to save plots in different formats
-  library(reticulate)
 
-  # Find path to python3 and use it, if it exists
-  python_path <- Sys.which("python3")
+  # Find path to python and use it, if it exists
+  python_path <- Sys.which("python3.12")
   if (python_path == "") {
-    stop(
-      "No python installation found, please install python to use DExploreR."
+    warning(
+      "Python 3.12 not found. This package was developed and tested with Python 3.12, so using another version may lead to unexpected behavior."
     )
+    python_path <- Sys.which("python3")
+    if (python_path == "") {
+      stop(
+        "No python installation found, please install python 3.12 to use DExploreR."
+      )
+    }
   }
   packageStartupMessage(
     "Using this python installation: ",
     python_path,
     " ...\n"
   )
-  use_python(python_path, required = TRUE)
 
-  # Install required python packages with defined versions in the `r-reticulate-dexplorer` virtual environment
-  suppressMessages(
-    py_install(
-      "plotly==6.5.2",
-      envname = "r-reticulate-dexplorer",
-      pip = TRUE,
-      pip_options = list("--quiet")
-    )
-  )
-  packageStartupMessage("... to install plotly v6.5.2\n")
+  # Create virtual python environment
+  env_path <- "~/.virtualenvs/r-reticulate-dexplorer"
+  # This will no recreate the environment if it already exists
+  virtualenv_create(env_path, python = python_path)
 
-  suppressMessages(
-    py_install(
-      "numpy==2.4.2",
-      envname = "r-reticulate-dexplorer",
-      pip = TRUE,
-      quite = TRUE,
-      pip_options = list("--quiet")
-    )
+  # Activate the virtual environment
+  use_virtualenv(
+    virtualenv = "r-reticulate-dexplorer",
+    required = TRUE
   )
-  packageStartupMessage("... to install numpy v2.4.2\n")
 
-  suppressMessages(
-    # kaleido 0.2.1 proved to work for this purpose
-    py_install(
-      "kaleido==0.2.1",
-      envname = "r-reticulate-dexplorer",
-      pip = TRUE,
-      pip_options = list("--quiet")
+  # Install required packages if missing
+  pkgs <- c("plotly==6.5.2", "numpy==2.4.2", "kaleido==0.2.1")
+  for (pkg in pkgs) {
+    suppressMessages(
+      py_install(
+        pkg,
+        envname = "r-reticulate-dexplorer",
+        pip = TRUE,
+        pip_options = list("--quiet")
+      )
     )
-  )
-  packageStartupMessage("... to install kaleido v0.2.1\n")
+    packageStartupMessage(paste0("... to install ", pkg, "\n"))
+  }
 
   packageStartupMessage(
     "\nPython environment setup complete!\n\n"

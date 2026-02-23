@@ -62,6 +62,7 @@
 #' @importFrom readxl read_xlsx
 #' @importFrom reticulate py_install
 #' @importFrom reticulate use_python
+#' @importFrom reticulate use_virtualenv
 #' @importFrom stats as.formula
 #' @importFrom stats mad
 #' @importFrom stats median

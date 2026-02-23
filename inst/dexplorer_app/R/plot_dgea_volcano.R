@@ -142,7 +142,7 @@ plot_dgea_volcano <- function(
         orientation = "h",
         y = 1.1,
         xanchor = "center",
-        xref = "container",
+        xref = "paper",
         x = 0.5
       )
     ) %>%
