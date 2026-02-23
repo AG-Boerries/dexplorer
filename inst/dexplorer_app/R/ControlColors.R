@@ -10,12 +10,12 @@ get_theme_colors <- function(color = NULL, n_values = NULL) {
 
   # Return all colors unnamed, when nothing specified
   if (is.null(color) && is.null(n_values)) {
-    return(unname(theme_colors))
+    return(base::unname(theme_colors))
   }
 
   if (!is.null(n_values)) {
     if (n_values <= 4) {
-      return(unname(theme_colors[1:n_values]))
+      return(base::unname(theme_colors[1:n_values]))
     } else {
       return(colorRampPalette(theme_colors)(n_values))
     }
@@ -24,7 +24,7 @@ get_theme_colors <- function(color = NULL, n_values = NULL) {
   # Return color by index
   if (is.numeric(color)) {
     if (all(color %in% 1:4)) {
-      return(unname(theme_colors[color]))
+      return(base::unname(theme_colors[color]))
     } else {
       stop("Numeric index must be between 1 and 4.")
     }
@@ -34,7 +34,7 @@ get_theme_colors <- function(color = NULL, n_values = NULL) {
   if (is.character(color)) {
     color <- tolower(color)
     if (all(color %in% names(theme_colors))) {
-      return(unname(theme_colors[color]))
+      return(base::unname(theme_colors[color]))
     } else {
       stop(
         "Color name must be one of: orange, blue, green, yellow (not cap-sensitive)."
@@ -59,7 +59,7 @@ color_choices <- list(
 )
 
 # Flatten color choices
-color_choices_flat <- unname(unlist(color_choices))
+color_choices_flat <- base::unname(unlist(color_choices))
 
 # Extract the color family of the selected palette
 # Although this information is contained in `color_choices`, the corresponding UI element returns an unnamed value
@@ -80,7 +80,7 @@ get_discrete_palette <- function(family, palette, n) {
   }
 
   if (family == "Viridis") {
-    return(viridis::viridis(n, option = palette))
+    return(viridis(n, option = palette))
   }
 
   if (family == "Wes Anderson") {
@@ -113,9 +113,9 @@ get_continuous_scale <- function(family, palette, aes) {
   } else if (family == "Viridis") {
     # Viridis has its own continuous scale functions
     if (aes == "fill") {
-      scale_fill_viridis_c(option = palette)
+      ggplot2::scale_fill_viridis_c(option = palette)
     } else {
-      scale_color_viridis_c(option = palette)
+      ggplot2::scale_color_viridis_c(option = palette)
     }
   } else if (family == "Wes Anderson") {
     scale_fun(palette = wes_palettes[[palette]])
@@ -188,9 +188,9 @@ add_selected_colors <- function(p, selected_palette, color_by = NULL) {
 
         p +
           if (row$aes == "fill") {
-            scale_fill_manual(values = cols)
+            ggplot2::scale_fill_manual(values = cols)
           } else {
-            scale_color_manual(values = cols)
+            ggplot2::scale_color_manual(values = cols)
           }
       }
     },
@@ -207,11 +207,11 @@ create_heatmap_color_function <- function(selected_colors) {
   if (ht_color_family == "App theme") {
     cols <- get_theme_colors(c(4, 3, 1))
   } else if (ht_color_family == "Viridis") {
-    cols <- viridis::viridis(3, option = selected_colors)
+    cols <- viridis(3, option = selected_colors)
   } else if (ht_color_family == "Wes Anderson") {
-    cols <- wesanderson::wes_palette(selected_colors, 3, type = "continuous")
+    cols <- wes_palette(selected_colors, 3, type = "continuous")
   } else if (ht_color_family == "RColorBrewer") {
-    cols <- RColorBrewer::brewer.pal(3, selected_colors)
+    cols <- brewer.pal(3, selected_colors)
   }
 
   colorRampPalette(cols)

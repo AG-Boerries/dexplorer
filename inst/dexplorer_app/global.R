@@ -21,10 +21,9 @@ suppressPackageStartupMessages(library(plotly))
 suppressPackageStartupMessages(library(circlize))
 suppressPackageStartupMessages(library(heatmaply))
 suppressPackageStartupMessages(library(scales))
-suppressPackageStartupMessages(library(viridis))
-library(wesanderson)
-library(RColorBrewer)
-
+# suppressPackageStartupMessages(library(viridis))
+# library(wesanderson)
+# library(RColorBrewer)
 
 # Shiny
 suppressPackageStartupMessages(library(shiny))
@@ -63,15 +62,3 @@ theme_set(
 geom_point_quiet <- function(...) {
   suppressWarnings(ggplot2::geom_point(...))
 }
-
-
-# py_run_string("import plotly.io as pio pio.kaleido.scope.mathjax = None")
-# py_run_string(
-#   "
-# import plotly.io as pio
-# pio.defaults.mathjax = None
-# "
-# )
-
-k <- kaleido()
-k$scope$mathjax <- FALSE
