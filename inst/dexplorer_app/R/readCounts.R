@@ -58,7 +58,7 @@ read_count_plot <- function(df) {
       x = "Sample name",
       fill = ""
     ) +
-    facet_wrap(Group, ncol = 1, scales = "free_y", space = "free_y")
+    facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")
 
   return(p)
 }

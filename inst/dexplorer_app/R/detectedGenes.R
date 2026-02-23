@@ -38,7 +38,7 @@ gene_count_plot <- function(df) {
       fill = ""
     ) +
     theme(legend.position = "none") +
-    facet_wrap(Group, ncol = 1, scales = "free_y", space = "free_y")
+    facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")
 
   return(p)
 }

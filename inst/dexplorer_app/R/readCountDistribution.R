@@ -41,7 +41,7 @@ read_count_distribution_plot <- function(df) {
       y = "Sample name"
     ) +
     theme(legend.position = "none") +
-    facet_wrap(Group, ncol = 1, scales = "free_y", space = "free_y")
+    facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")
 
   return(p)
 }
