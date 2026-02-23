@@ -13,7 +13,7 @@ heatmap_height <- function(
   dendro_type = NULL
 ) {
   # Set `dendro_height` to 0 if no sample dendrogram is requested
-  if (!grepl("Samples", dendro_type, fixed = TRUE)) {
+  if (!base::grepl("Samples", dendro_type, fixed = TRUE)) {
     dendro_height <- 0
   }
 

@@ -7,12 +7,12 @@ process_user_genes <- function(available_genes, user_genes) {
     col.names = "UserGenes"
   ) %>%
     # Avoid case-sensitive filtering
-    mutate(UserGenes = tolower(UserGenes)) %>%
+    mutate(UserGenes = base::tolower(UserGenes)) %>%
     as.data.frame()
 
   df_genes <- available_genes %>%
     # Avoid case-sensitive filtering
-    mutate(Alias = tolower(Alias)) %>%
+    mutate(Alias = base::tolower(Alias)) %>%
     # Check which of the user selected genes are present in the RNAseq data
     # To do so, compare user-defined gene names with all available aliases
     filter(Alias %in% user_genes$UserGenes) %>%
@@ -27,8 +27,8 @@ process_user_genes <- function(available_genes, user_genes) {
   genes_multiple <- df_genes %>%
     group_by(Alias) %>%
     filter(n() > 1) %>%
-    select(Alias, Symbol) %>%
-    rename("User's Gene" = "Alias", "Found symbol" = "Symbol")
+    dplyr::select(Alias, Symbol) %>%
+    dplyr::rename("User's Gene" = "Alias", "Found symbol" = "Symbol")
 
   return(
     list(

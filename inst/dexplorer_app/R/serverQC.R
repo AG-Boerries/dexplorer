@@ -273,7 +273,7 @@ tabContentServer <- function(
         for (i in seq_along(p$x$layout)) {
           if (str_detect(names(p$x$layout[i]), "yaxis")) {
             y <- names(p$x$layout[i])
-            p$x$layout[[y]]$domain <- unlist(df[df$yaxis == y, ]$domain)
+            p$x$layout[[y]]$domain <- base::unlist(df[df$yaxis == y, ]$domain)
           }
         }
 

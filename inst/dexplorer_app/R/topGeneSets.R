@@ -113,9 +113,9 @@ plot_gsea_top_gene_sets <- function(
       }
       # Remove the suffix added by `tidytext::reorder_within()`
       df$Pathway_base <- str_split_i(as.character(df$Pathway), "___", 1)
-      tooltip_contrast_mat <- mapply(
+      tooltip_contrast_mat <- base::mapply(
         function(yval, xval) {
-          match_idx <- which(
+          match_idx <- base::which(
             as.character(df$Direction) == as.character(tr$name) &
               as.character(df$Pathway_base) == as.character(yval)
           )

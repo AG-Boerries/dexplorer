@@ -37,7 +37,7 @@ format_for_top_dgea_genes <- function(
 
 plot_top_dgea_genes <- function(df, selected_palette, fc_or_pvalue) {
   # Display empty plot message, if the sample selection returns an empty dataframe
-  if (nrow(df) == 0) {
+  if (base::nrow(df) == 0) {
     return(empty_plot())
   }
 

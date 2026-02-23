@@ -34,15 +34,15 @@ format_for_gene_expression_heatmap <- function(
     # Remove unselected samples and non-numeric columns for z-scoring
     select(all_of(selected_samples)) %>%
     # Z-score cpm values for better depiction
-    t() %>%
+    base::t() %>%
     scale() %>%
-    t() %>%
+    base::t() %>%
     as.data.frame() %>%
     rownames_to_column(var = "Symbol") %>%
     # Re-add the further information, required for hover labels and comprehensive downloadable .csv
     left_join(
       df %>%
-        select(
+        dplyr::select(
           Symbol,
           GeneID,
           EntrezID,
@@ -104,7 +104,7 @@ gene_expression_heatmap <- function(
 
   # Create a data frame with sample and group information for hover labels
   col_info <- left_join(
-    data.frame(SampleNameUser = colnames(expression_mat)),
+    data.frame(SampleNameUser = base::colnames(expression_mat)),
     samples_groups,
     by = "SampleNameUser"
   )
@@ -113,11 +113,11 @@ gene_expression_heatmap <- function(
   hover_labels <- matrix(
     paste0(
       "<b><div style='font-size:16px;'>Sample: </b>",
-      colnames(expression_mat)[col(expression_mat)],
+      base::colnames(expression_mat)[col(expression_mat)],
       "<br><b>Group: </b>",
       col_info$Group[col(expression_mat)],
       "<br><b>Gene: </b>",
-      rownames(expression_mat)[row(expression_mat)],
+      base::rownames(expression_mat)[row(expression_mat)],
       "</div><hr><b>Z-score: </b>",
       sprintf('%.2f', expression_mat),
       "<br><br><b>Ensembl ID: </b>",
@@ -133,17 +133,17 @@ gene_expression_heatmap <- function(
       row_info$NCBIURL[row(expression_mat)],
       "' target='_blank'>NCBI</a>."
     ),
-    nrow = nrow(expression_mat),
-    ncol = ncol(expression_mat),
-    dimnames = dimnames(expression_mat)
+    nrow = base::nrow(expression_mat),
+    ncol = base::ncol(expression_mat),
+    dimnames = base::dimnames(expression_mat)
   )
 
   # Create a data frame with group labels for the columns
   group_labels <- samples_groups %>%
-    select(SampleNameUser, Group) %>%
+    dplyr::select(SampleNameUser, Group) %>%
     column_to_rownames(var = "SampleNameUser") %>%
     # Ensure the order of the samples matches the order in the heatmap
-    .[colnames(expression_mat), , drop = FALSE]
+    .[base::colnames(expression_mat), , drop = FALSE]
 
   # Build the heatmap
   p <- heatmaply(
@@ -176,7 +176,7 @@ gene_expression_heatmap <- function(
     Rowv = TRUE
   )
 
-  if (!grepl("Samples", dendrogram_type, fixed = TRUE)) {
+  if (!base::grepl("Samples", dendrogram_type, fixed = TRUE)) {
     # When there is no dendrogram for the columns, the axis indices are shifted
     # Domains need to be added differently
     p <- p %>%
@@ -248,10 +248,10 @@ gene_expression_heatmap <- function(
     )
 
   # Extract the index of the heatmap trace
-  main_heatmap_idx <- which(
+  main_heatmap_idx <- base::which(
     vapply(
       p$x$data,
-      function(tr) identical(tr$type, "heatmap") && nrow(tr$z) > 1,
+      function(tr) identical(tr$type, "heatmap") && base::nrow(tr$z) > 1,
       logical(1)
     )
   )
@@ -259,11 +259,14 @@ gene_expression_heatmap <- function(
   # Extract the sample order after clustering by `heatmaply()`
   if (length(main_heatmap_idx) > 0) {
     main_heatmap <- p$x$data[[main_heatmap_idx[1]]]
-    clustered_sample_order <- colnames(main_heatmap$z)
+    clustered_sample_order <- base::colnames(main_heatmap$z)
   }
 
   # Reorder the `samples_groups` data frame according to the clustered sample order
-  ord <- match(colnames(main_heatmap$z), samples_groups$SampleNameUser)
+  ord <- base::match(
+    base::colnames(main_heatmap$z),
+    samples_groups$SampleNameUser
+  )
   samples_groups_reordered <- samples_groups[ord, ]
 
   # Create the tooltips content for the group row

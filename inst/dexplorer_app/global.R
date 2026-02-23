@@ -5,46 +5,46 @@
 # py_config()
 
 # Data handling
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(purrr))
-library(reshape2)
-suppressPackageStartupMessages(library(tidyr))
-library(tibble)
-library(stringr)
-library(tidytext)
+# suppressPackageStartupMessages(library(dplyr))
+# suppressPackageStartupMessages(library(purrr))
+# library(reshape2)
+# suppressPackageStartupMessages(library(tidyr))
+# library(tibble)
+# library(stringr)
+# library(tidytext)
 
 # Plotting
-library(ggplot2)
-library(ggridges)
-library(ComplexUpset)
-suppressPackageStartupMessages(library(plotly))
-suppressPackageStartupMessages(library(circlize))
-suppressPackageStartupMessages(library(heatmaply))
-suppressPackageStartupMessages(library(scales))
+# library(ggplot2)
+# library(ggridges)
+# library(ComplexUpset)
+# suppressPackageStartupMessages(library(plotly))
+# suppressPackageStartupMessages(library(circlize))
+# suppressPackageStartupMessages(library(heatmaply))
+# suppressPackageStartupMessages(library(scales))
 # suppressPackageStartupMessages(library(viridis))
 # library(wesanderson)
 # library(RColorBrewer)
 
 # Shiny
-suppressPackageStartupMessages(library(shiny))
-suppressPackageStartupMessages(library(shinyjs))
-suppressPackageStartupMessages(library(shinycssloaders))
-suppressPackageStartupMessages(library(shinyWidgets))
-suppressPackageStartupMessages(library(bslib))
-suppressPackageStartupMessages(library(DT))
-library(waiter)
-library(htmlwidgets)
-library(htmltools)
+# suppressPackageStartupMessages(library(shiny))
+# suppressPackageStartupMessages(library(shinyjs))
+# suppressPackageStartupMessages(library(shinycssloaders))
+# suppressPackageStartupMessages(library(shinyWidgets))
+# suppressPackageStartupMessages(library(bslib))
+# suppressPackageStartupMessages(library(DT))
+# library(waiter)
+# library(htmlwidgets)
+# library(htmltools)
 
 # Code structure
-library(conflicted)
+# library(conflicted)
 
-# Resolve conflicts
-suppressMessages(conflict_prefer("dataTableOutput", "DT"))
-suppressMessages(conflict_prefer("renderTableOutput", "DT"))
-suppressMessages(conflict_prefer("layout", "plotly"))
-suppressMessages(conflict_prefer("filter", "dplyr"))
-suppressMessages(conflict_prefer("rename", "dplyr"))
+# # Resolve conflicts
+# suppressMessages(conflict_prefer("dataTableOutput", "DT"))
+# suppressMessages(conflict_prefer("renderTableOutput", "DT"))
+# suppressMessages(conflict_prefer("layout", "plotly"))
+# suppressMessages(conflict_prefer("filter", "dplyr"))
+# suppressMessages(conflict_prefer("rename", "dplyr"))
 
 # General ggplot settings
 theme_set(
