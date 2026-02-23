@@ -60,5 +60,5 @@ theme_set(
 # Suppress warnings from `geom_point()` because using the aestetic `text`,
 # which is required for the `ggplotly()` tooltip, is unknown to `geom_point()`
 geom_point_quiet <- function(...) {
-  suppressWarnings(ggplot2::geom_point(...))
+  suppressWarnings(geom_point(...))
 }

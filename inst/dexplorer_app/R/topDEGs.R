@@ -94,7 +94,7 @@ plot_top_dgea_genes <- function(df, selected_palette, fc_or_pvalue) {
     geom_bar(stat = "identity") +
     facet_wrap(~Contrast, ncol = 2, scales = "free_y") +
     labs(y = "Gene", x = x_col_lab, fill = fill_lab) +
-    scale_x_continuous(breaks = pretty_breaks(n = 4)) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 4)) +
     # This is needed in combination with `tidytext::reorder_within()`
     scale_y_reordered()
 

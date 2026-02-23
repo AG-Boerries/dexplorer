@@ -295,7 +295,7 @@ gene_expression_heatmap <- function(
     }
 
     if (identical(tr$type, "heatmap")) {
-      if (nrow(tr$z) == 1) {
+      if (base::nrow(tr$z) == 1) {
         # This is the custom tooltip for the group row, which is added by `heatmaply()` when using `ColSideColors`
         p$x$data[[i]]$text <- group_row_tooltips
         p$x$data[[i]]$name <- "group_row"
