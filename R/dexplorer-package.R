@@ -59,6 +59,7 @@
 #' @importFrom purrr pmap_dfr
 #' @importFrom purrr reduce
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom RColorBrewer brewer.pal.info
 #' @importFrom readr col_character
 #' @importFrom readr col_double
 #' @importFrom readr read_tsv
@@ -92,5 +93,6 @@
 #' @importFrom utils write.csv
 #' @importFrom viridis viridis
 #' @importFrom wesanderson wes_palette
+#' @importFrom wesanderson wes_palettes
 ## usethis namespace: end
 NULL
