@@ -54,7 +54,7 @@ color_choices <- list(
     "cividis",
     "turbo"
   ),
-  "Wes Anderson" = names(wes_palettes),
+  "Wes Anderson" = names(wesanderson::wes_palettes),
   "RColorBrewer" = rownames(brewer.pal.info)
 )
 
@@ -118,7 +118,7 @@ get_continuous_scale <- function(family, palette, aes) {
       ggplot2::scale_color_viridis_c(option = palette)
     }
   } else if (family == "Wes Anderson") {
-    scale_fun(palette = wes_palettes[[palette]])
+    scale_fun(palette = wesanderson::wes_palettes[[palette]])
   } else if (family == "RColorBrewer") {
     scale_fun(palette = palette)
   }
