@@ -55,7 +55,7 @@ color_choices <- list(
     "turbo"
   ),
   "Wes Anderson" = names(wesanderson::wes_palettes),
-  "RColorBrewer" = rownames(brewer.pal.info)
+  "RColorBrewer" = rownames(RColorBrewer::brewer.pal.info)
 )
 
 # Flatten color choices
@@ -93,7 +93,7 @@ get_discrete_palette <- function(family, palette, n) {
   if (family == "RColorBrewer") {
     # Check if the chosen plalette can offer enough colors
     # If not use `colorRampPalette()` to extend it
-    max_n <- brewer.pal.info[palette, "maxcolors"]
+    max_n <- RColorBrewer::brewer.pal.info[palette, "maxcolors"]
     base <- brewer.pal(min(n, max_n), palette)
     if (n > max_n) colorRampPalette(base)(n) else base
   }
