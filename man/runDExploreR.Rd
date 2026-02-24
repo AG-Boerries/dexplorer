@@ -4,7 +4,10 @@
 \alias{runDExploreR}
 \title{Run DExploreR Shiny App}
 \usage{
-runDExploreR()
+runDExploreR(
+  asset_dir = "/Users/tobiashundertmark/Downloads",
+  data_dir = "/Users/tobiashundertmark/Downloads/data"
+)
 }
 \description{
 ...
