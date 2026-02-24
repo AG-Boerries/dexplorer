@@ -1,4 +1,17 @@
+#' @title The Server for DExploreR
+#'
+#' @description
+#' This function creates the server for DExplorerR. It relies on many of the functions with the prefix *mod_*.
+#'
+#' @param input Default parameter for shiny app servers.
+#' @param output Default parameter for shiny app servers.
+#' @param session Default parameter for shiny app servers.
+#' @param config A list of configuration parameters, such as the data directory.
+#'
 app_server <- function(input, output, session, config) {
+  # Define variables locally for R CMD check
+  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- NULL
+
   ###################################################################################################
   # General Things at Start up #####
   ###################################################################################################
@@ -22,9 +35,9 @@ app_server <- function(input, output, session, config) {
   # Disable tabs at start up or when no data set is selected
   observe({
     req(length(input$data_sets_table_rows_selected) == 0)
-    shinyjs::runjs(sprintf(
+    runjs(sprintf(
       "disableTabs(%s)",
-      jsonlite::toJSON(tabs, auto_unbox = TRUE)
+      toJSON(tabs, auto_unbox = TRUE)
     ))
   })
 
@@ -43,6 +56,7 @@ app_server <- function(input, output, session, config) {
       waiter_show(
         html = tagList(
           h4("Loading data and plots ... "),
+          # Add this logo to the directory `asset_dir`, that is provided as a parameter to `runDExploreR()`
           img(
             src = "logo.png",
             class = "pulse-logo",
@@ -62,9 +76,9 @@ app_server <- function(input, output, session, config) {
 
       if (allPlotsReady) {
         # Activate tabs
-        shinyjs::runjs(sprintf(
+        runjs(sprintf(
           "enableTabs(%s)",
-          jsonlite::toJSON(tabs, auto_unbox = TRUE)
+          toJSON(tabs, auto_unbox = TRUE)
         ))
 
         # Switch to quality control in raw data tab
@@ -143,8 +157,8 @@ app_server <- function(input, output, session, config) {
     })
 
     # When rendering the file upload, hide the button to clear the uploaded gene list
-    shinyjs::hide("clear_user_genes_button_heatmap")
-    shinyjs::hide("clear_user_genes_button_volcano")
+    hide("clear_user_genes_button_heatmap")
+    hide("clear_user_genes_button_volcano")
   }
 
   # Auto-render the file upload upon start up of the app
@@ -154,7 +168,8 @@ app_server <- function(input, output, session, config) {
   # Chapter: Data Sets ####
   ###################################################################################################
 
-  # Read individual meta data tables and combine them into one table
+  # Read the meta data table `.csv`s form the user-provided directory
+  # The same directory should contain the corresponding `.rds` files with the data set
   metaFiles <- list.files(
     path = config$data_dir,
     pattern = ".csv$",
@@ -196,6 +211,8 @@ app_server <- function(input, output, session, config) {
     freezeReactiveValue(input, "volcano_contrast_select")
     freezeReactiveValue(input, "gene_sets_contrast_select")
 
+    # Using the file path from the meta data table, load the corresponding `.rds`
+    # TODO: when `.csv` and `.rds` are mandatory to be in the same directory, `data_path` form the `.csv` is no longer necessary
     file_path <- paste0(
       config$data_dir,
       "/",
@@ -276,7 +293,7 @@ app_server <- function(input, output, session, config) {
     # The plot requries these inputs and they are updated when when data is loaded
     req(input$select_PC_x, input$select_PC_y)
 
-    create_pca_plot(
+    createPCAPlot(
       df_pca = data_set_loaded()[["PCA"]],
       explained_var = data_set_loaded()[["VarianceExplained"]],
       pc_x = input$select_PC_x,
@@ -389,8 +406,8 @@ app_server <- function(input, output, session, config) {
 
   # The default state for the button in the volcano plots
   observeEvent(data_set_loaded(), {
-    shinyjs::show("gene_list_upload")
-    shinyjs::hide("gene_list_to_volcano")
+    show("gene_list_upload")
+    hide("gene_list_to_volcano")
   })
 
   # Set userGenes to NULL at the start
@@ -504,18 +521,18 @@ app_server <- function(input, output, session, config) {
       })
 
       # Change the buttons in the volcano tab
-      shinyjs::hide("gene_list_upload")
-      shinyjs::show("gene_list_to_volcano")
+      hide("gene_list_upload")
+      show("gene_list_to_volcano")
 
       # When list is uploaded, show button to clear the uploaded gene list
-      shinyjs::show("clear_user_genes_button_heatmap")
+      show("clear_user_genes_button_heatmap")
 
       # Show some information about the uploaded genes
-      shinyjs::show("tab_multi_genes")
-      shinyjs::show("genes_not_found")
+      show("tab_multi_genes")
+      show("genes_not_found")
 
       # Display a button to inspect the genes in the volcano plot
-      shinyjs::show("go_to_volcano")
+      show("go_to_volcano")
     }
   })
 
@@ -536,8 +553,8 @@ app_server <- function(input, output, session, config) {
 
   observeEvent(input$use_gene_list_in_volcano, {
     # When gene list is used in volcano, change the buttons in the volcano tab
-    shinyjs::show("clear_user_genes_button_volcano")
-    shinyjs::hide("gene_list_to_volcano")
+    show("clear_user_genes_button_volcano")
+    hide("gene_list_to_volcano")
 
     # Update the selected genes in the volcano plot, if there are genes uploaded
     updateVirtualSelect(
@@ -587,8 +604,8 @@ app_server <- function(input, output, session, config) {
       selected = "Volcano plot"
     )
     # When gene list is used in volcano, change the buttons in the volcano tab
-    shinyjs::show("clear_user_genes_button_volcano")
-    shinyjs::hide("gene_list_to_volcano")
+    show("clear_user_genes_button_volcano")
+    hide("gene_list_to_volcano")
 
     # Update the selected genes in the volcano plot, if there are genes uploaded
     updateVirtualSelect(
@@ -609,9 +626,9 @@ app_server <- function(input, output, session, config) {
     )
 
     # Hide the button to transfer gene list to the volcano plot
-    shinyjs::show("gene_list_to_volcano")
+    show("gene_list_to_volcano")
     # Hide the clear genes button
-    shinyjs::hide("clear_user_genes_button_volcano")
+    hide("clear_user_genes_button_volcano")
   })
 
   # Clear genes from both, heatmap and volcano plot
@@ -638,14 +655,14 @@ app_server <- function(input, output, session, config) {
     )
 
     # Remove information about the uploaded genes
-    shinyjs::hide("tab_multi_genes")
-    shinyjs::hide("genes_not_found")
-    shinyjs::hide("go_to_volcano")
+    hide("tab_multi_genes")
+    hide("genes_not_found")
+    hide("go_to_volcano")
 
     # Hide the button to transfer gene list to the volcano plot
-    shinyjs::hide("gene_list_to_volcano")
+    hide("gene_list_to_volcano")
     # Show the button to the file upload
-    shinyjs::show("gene_list_upload")
+    show("gene_list_upload")
 
     # Set the reactive value back to initial state: NULL
     userGenes(NULL)
@@ -1418,14 +1435,14 @@ app_server <- function(input, output, session, config) {
         isTRUE(input$plot_settings_top_gene_sets_state) |
         isTRUE(input$plot_settings_contrast_intersection_sets_state)
     ) {
-      shinyjs::show(
+      show(
         "app-overlay",
         anim = TRUE,
         animType = "fade",
         time = 0.2
       )
     } else {
-      shinyjs::hide(
+      hide(
         "app-overlay",
         anim = TRUE,
         animType = "fade",

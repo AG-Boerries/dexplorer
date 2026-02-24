@@ -2,6 +2,11 @@
 #'
 #' @description
 #' ...
+#'
+#' @param asset_dir A directory containing the assets for DExploreR, such as logos.
+#'
+#' @param data_dir A directory containing `.rds` files and corresponding `.csv`s as prepared by \code{\link{createDataSet}()}.
+#'
 #' @export
 runDExploreR <- function(
   asset_dir = "/Users/tobiashundertmark/Downloads",
@@ -9,6 +14,12 @@ runDExploreR <- function(
 ) {
   asset_dir <- normalizePath(asset_dir, mustWork = TRUE)
   data_dir <- normalizePath(data_dir, mustWork = TRUE)
+
+  # TODO: make sure the python environment is sourced and loaded correctly
+  # use_virtualenv(
+  #   virtualenv = "r-reticulate-dexplorer",
+  #   required = TRUE
+  # )
 
   addResourcePath(
     "www",

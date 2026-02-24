@@ -9,6 +9,11 @@ runDExploreR(
   data_dir = "/Users/tobiashundertmark/Downloads/data"
 )
 }
+\arguments{
+\item{asset_dir}{A directory containing the assets for DExploreR, such as logos.}
+
+\item{data_dir}{A directory containing \code{.rds} files and corresponding \code{.csv}s as prepared by \code{\link{createDataSet}()}.}
+}
 \description{
 ...
 }

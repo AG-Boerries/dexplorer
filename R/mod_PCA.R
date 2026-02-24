@@ -1,4 +1,24 @@
-create_pca_plot <- function(
+#' @title Create Interactive PCA Plot
+#'
+#' @description
+#' Generates an interactive PCA plot using `ggplot2` and `plotly`.
+#'
+#' @param df_pca A data frame containing PCA results, including columns for sample names, group assignments, and principal component scores.
+#'
+#' @param explained_var A data frame with columns `PC` and `Variance`, giving the explained variance for each principal component.
+#'
+#' @param pc_x Character. The name of the principal component to plot on the x-axis (e.g., "PC1").
+#'
+#' @param pc_y Character. The name of the principal component to plot on the y-axis (e.g., "PC2").
+#'
+#' @param selected_palette Character. The name of the color palette to use for group coloring.
+#'
+#' @param group_overlay Character. Overlay type for group visualization: "Ellipse" for confidence ellipses, "Convex hull" for convex hulls, or `NULL` for no overlay.
+#'
+#' @return An interactive plotly object representing the PCA plot.
+#'
+#' @export
+createPCAPlot <- function(
   df_pca,
   explained_var,
   pc_x,
@@ -6,6 +26,10 @@ create_pca_plot <- function(
   selected_palette,
   group_overlay
 ) {
+  # Define variables locally for R CMD check
+  SampleNameUser <- Group <- .data <- TooltipText <- NULL
+
+  # Construct the tooltip text
   df_pca <- df_pca %>%
     mutate(
       TooltipText = paste0(

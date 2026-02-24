@@ -265,7 +265,7 @@ tabContentServer <- function(
         }) %>%
           bind_rows() %>%
           # Calculate the start and end points of each domain by considering the total height
-          calculate_domains(total_height = total_height) %>%
+          calculateDomains(total_height = total_height) %>%
           # For the facet labels (annotations), use the upper y-value of the domain as position
           mutate(annotation = sapply(domain, function(x) x[2]))
 

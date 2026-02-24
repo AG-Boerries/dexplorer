@@ -41,15 +41,26 @@ heatmap_height <- function(
   ))
 }
 
-# Control the height of the facetted plots
-# This ensures the same width for bars and changes the height of each facet accordingly
-# In contrast, by default, all facets have the same height, which looks messy, when the numnber of samples differs between groups
-calculate_domains <- function(
+#' @title Calculate Facet Plot Domains
+#'
+#' @description
+#' Calculates the vertical domains for each group/facet in a facetted plot, ensuring proportional heights based on the number of samples per group and consistent bar widths. Adds white space between facets and returns the original data frame with an added `domain` column for each group.
+#'
+#' @param df A data frame with columns `group` (group/facet identifier), `n_samples` (number of samples in each group) and `yaxis` (name of the y-axis form the plotly object).
+#'
+#' @param total_height The total height (in pixels) allocated for the plot.
+#'
+#' @param white_space The amount of white space (in pixels) to insert between facets. Default is 35 (this seems suitable based on experience).
+#'
+#' @return The input data frame with an added `domain` column (a list-column of length-2 numeric vectors giving the lower and upper bounds for each facet's domain).
+calculateDomains <- function(
   df,
   total_height,
-  # This seems to be a suitable default value (based on experience)
   white_space = 35
 ) {
+  # Define variables locally for R CMD check
+  n_samples <- NULL
+
   # Calculate number of groups/facets
   n_groups <- length(df$group)
   # Fraction of white space from total height
