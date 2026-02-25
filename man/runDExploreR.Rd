@@ -6,13 +6,16 @@
 \usage{
 runDExploreR(
   asset_dir = "/Users/tobiashundertmark/Downloads",
-  data_dir = "/Users/tobiashundertmark/Downloads/data"
+  data_dir = "/Users/tobiashundertmark/Downloads/data",
+  env_path = NULL
 )
 }
 \arguments{
 \item{asset_dir}{A directory containing the assets for DExploreR, such as logos.}
 
 \item{data_dir}{A directory containing \code{.rds} files and corresponding \code{.csv}s as prepared by \code{\link{createDataSet}()}.}
+
+\item{env_path}{Path to the Python virtual environment to use for DExploreR. If \code{NULL}, the default environment created by \code{\link{configurePyEnv}()} will be used. If no environment exists, this will also create a new environment.}
 }
 \description{
 ...

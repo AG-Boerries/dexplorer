@@ -3,7 +3,6 @@
 #' @description
 #' This function calculates differentially expressed genes (DEGs) between specified sample groups using the `edgeR`-`limma`-workflow. It calculated DEGs based on the provided raw counts, contrasts and formula.
 #'
-#'
 #' @param raw_counts A data frame in the format of `RawCountsMeta` from \code{\link{prepareDfs}()}.
 #'
 #' @param samples_groups A data frame in the format of `SamplesGroups` from \code{\link{prepareDfs}()}.
