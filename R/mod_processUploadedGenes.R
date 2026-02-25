@@ -1,4 +1,25 @@
-process_user_genes <- function(available_genes, user_genes) {
+#' @title Process Uploaded User Genes
+#'
+#' @description
+#' Matches user-uploaded gene names to available gene aliases in the RNA-seq dataset. Handles case-insensitive matching, identifies genes not found, and detects user genes mapping to multiple symbols.
+#'
+#' @param available_genes A data frame of available genes with at least columns `Alias` (gene aliases, lowercased) and `Symbol` (official gene symbol).
+#'
+#' @param user_genes A file input object from \code{\link[shiny]{fileInput}()}, containing a `datapath` to the uploaded gene list.
+#'
+#' @return A list with elements:
+#'
+#' * `genesFound`: character vector of matched gene symbols.
+#'
+#' * `genesNotFound`: character vector of user genes not found.
+#'
+#' * `genesFoundMulti`: data frame of user genes mapping to multiple symbols.
+#'
+#' @export
+processUserGenes <- function(available_genes, user_genes) {
+  # Define variables locally for R CMD check
+  UserGenes <- Alias <- Symbol <- NULL
+
   # Try most generic read function to capture user's mistakes
   user_genes <- read.table(
     file = user_genes$datapath,

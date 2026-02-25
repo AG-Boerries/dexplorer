@@ -27,7 +27,7 @@ createPCAPlot(
 \item{group_overlay}{Character. Overlay type for group visualization: "Ellipse" for confidence ellipses, "Convex hull" for convex hulls, or \code{NULL} for no overlay.}
 }
 \value{
-An interactive plotly object representing the PCA plot.
+The interactive PCA plot as a \code{plotly} object.
 }
 \description{
 Generates an interactive PCA plot using \code{ggplot2} and \code{plotly}.

@@ -1,4 +1,26 @@
-plot_dgea_volcano <- function(
+#' @title Create Interactive Volcano Plot
+#'
+#' @description
+#' Generates an interactive volcano plot for differential gene expression analysis using `ggplot2` and `plotly`. Highlights significant genes based on user-defined thresholds, annotates user-selected genes, and provides detailed tooltips with gene information. Supports multiple contrasts, custom color palettes, and optimized rendering for large datasets.
+#'
+#' @param df A data frame containing gene expression results, including columns for gene symbols, log2 fold change, adjusted p-values, and contrast labels.
+#'
+#' @param selected_palette Character. The name of the color palette to use for significance coloring.
+#'
+#' @param p_threshold Numeric or character. The adjusted p-value threshold for significance.
+#'
+#' @param l2fc_threshold Numeric. The log2 fold-change threshold for significance.
+#'
+#' @param selected_genes Character vector. Gene symbols to highlight and annotate on the plot.
+#'
+#' @param selected_contrast Character vector. Contrast names to display in the plot facets.
+#'
+#' @param dot_size Numeric. Size of the points in the plot. Default is 1.5.
+#'
+#' @return The interactive volcano plot as a `plotly` object.
+#'
+#' @export
+createVolcanoPlot <- function(
   df,
   selected_palette,
   p_threshold,
@@ -7,6 +29,9 @@ plot_dgea_volcano <- function(
   selected_contrast,
   dot_size = 1.5
 ) {
+  # Define variables locally for R CMD check
+  Symbol <- Log2FC <- LogPValAdj <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- PValAdj <- Significant <- Contrast <- TooltipText <- xleft <- ypos <- left_label <- xright <- right_label <- NULL
+
   df <- df %>%
     mutate(
       TooltipText = paste0(
@@ -131,7 +156,7 @@ plot_dgea_volcano <- function(
   p <- ggplotly(
     p,
     tooltip = "text",
-    height = plot_height(
+    height = calculatePlotHeight(
       n_samples = round(length(unique(df$Contrast)) / 2),
       min_size = 600,
       per_sample_size = 600
@@ -174,6 +199,7 @@ plot_dgea_volcano <- function(
   }
 
   # Convert to WebGL for performance with many points
+  # This throws some warnings about missing attributes of `gl`, which could be suppressed by `suppressWarnings()`, but this slows down the rendering significantly
   p <- p %>% toWebGL()
 
   return(p)

@@ -1,18 +1,28 @@
-# Create the content for each sub tab
-# This ensures a consistent layout
+#' @title Create Consistent Sub Tab Layout
+#'
+#' @description
+#' Generates a consistent UI layout for sub-tabs in the DExploreR app, including plot controls, information and download buttons, and a main content area for plots or tables. Allows insertion of additional controls and buttons as needed for specific tabs.
+#'
+#' @param id Character. The namespace ID, used for namespacing UI elements. This is passed on to \code{\link{plotControls}()} to ensure that the controls are properly namespaced, too.
+#'
+#' @param further_controls UI element(s) to be included as additional controls in \code{\link{plotControls}()}. Default is `div()`.
+#'
+#' @param top_left_wide UI element to be displayed in the top left wide area. Default is `div()`.
+#'
+#' @param main_content UI element(s) for the main content area (e.g., plots or tables). Default is `div()`.
+#'
+#' @param remove_sample_selection Logical. If TRUE, removes the sample selection control from \code{\link{plotControls}()}. Default is FALSE.
+#'
+#' @param additional_button_right UI element for an additional button to be placed on the right. Default is `div()`.
+#'
+#' @return A Shiny UI element (HTML tag list) representing the sub-tab layout.
+#'
 makeSubTabContent <- function(
-  # `id` is used for the `actionButton()`, which shows further information
-  # and for the `plotControls()`
   id,
-  # This is passed to `plotControls(...)`, so that additional controls can be added
   further_controls = div(),
-  # This is the wide element on the top left, which is at the moment not used
   top_left_wide = div(),
-  # This is the main content, i.e. the plots or tables
   main_content = div(),
-  # Remove sample selection from `plotControls()`, might be useful for tabs looking a the groups
   remove_sample_selection = FALSE,
-  # In case we need an additional button, this is the place
   additional_button_right = div()
 ) {
   div(

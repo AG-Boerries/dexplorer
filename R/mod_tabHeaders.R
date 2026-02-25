@@ -1,14 +1,14 @@
-# Create list for tab details
-# The names are the IDs for the output
-# The values are the headings of `dataSetsTable` or the text itself
-tab_details <- list(
-  # These information are withdrawn from `dataSetsTable`
-  raw_data_details = "Sequencing Details",
-  dgea_details = "DGEA Details",
-  gsea_details = "GSEA Details"
-)
-
-# Generate the headers for the tabs
+#' @title Generate Tab Headers
+#'
+#' @description
+#' Creates a header layout for a tab in the DExploreR app, including a title panel and a text output area. Used to provide a consistent header with a title and descriptive text for each tab.
+#'
+#' @param title Character. The title to display in the tab header and browser window.
+#'
+#' @param text_id Character. The output ID for the descriptive text to be rendered below the title.
+#'
+#' @return A Shiny UI element (HTML tag list) representing the tab header.
+#'
 tabHeaders <- function(title, text_id) {
   fluidPage(
     div(

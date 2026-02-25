@@ -1,10 +1,31 @@
-format_for_top_dgea_genes <- function(
+#' @title Format Top Differentially Expressed Genes (DEGs) for Bar Plot
+#'
+#' @description
+#' Selects and formats the top differentially expressed genes (DEGs) for each contrast based on user-defined direction, number of genes, and ranking by log2 fold change or adjusted p-value. Applies grouping, filtering, and ordering, and prepares gene symbols for faceted plotting.
+#'
+#' @param df A data frame containing DEG information, including columns for gene symbols, log2 fold change, adjusted p-value, direction, and contrast.
+#'
+#' @param selected_contrast Character vector. Contrast names to include.
+#'
+#' @param selected_number_of_genes Integer. Number of top genes to select per contrast.
+#'
+#' @param selected_direction Logical. If TRUE, selects "up" regulated genes; if FALSE, selects "down" regulated genes.
+#'
+#' @param fc_or_pvalue Logical. If TRUE, ranks genes by absolute log2 fold change; if FALSE, ranks by -log10 adjusted p-value.
+#'
+#' @return A data frame of top DEGs per contrast, formatted for \code{\link{createTopDEGsPlot}()}.
+#'
+#' @export
+formatTopDEGs <- function(
   df,
   selected_contrast,
   selected_number_of_genes,
   selected_direction,
   fc_or_pvalue
 ) {
+  # Define variables locally for R CMD check
+  Log2FC <- Direction <- Contrast <- Symbol <- NULL
+
   # Extract the column to order the data by
   order_col <- if (fc_or_pvalue) "Log2FC" else "LogPValAdj"
 
@@ -34,8 +55,24 @@ format_for_top_dgea_genes <- function(
   return(df)
 }
 
+#' @title Create Interactive Top DEGs Bar Plot
+#'
+#' @description
+#' Generates an interactive bar plot of top differentially expressed genes (DEGs) for each contrast using `ggplot2` and `plotly`. Highlights genes by log2 fold change or adjusted p-value, provides detailed tooltips with gene information, supports custom color palettes, and facets by contrast.
+#'
+#' @param df A data frame of top DEGs per contrast, as returned by \code{formatTopDEGs()}, including gene annotation columns.
+#'
+#' @param selected_palette Character. The name of the color palette to use for bar fill.
+#'
+#' @param fc_or_pvalue Logical. If TRUE, bars are ordered and colored by absolute log2 fold change; if FALSE, by -log10 adjusted p-value.
+#'
+#' @return An interactive bar plot as a `plotly` object.
+#'
+#' @export
+createTopDEGsPlot <- function(df, selected_palette, fc_or_pvalue) {
+  # Define variables locally for R CMD check
+  Symbol <- Log2FC <- LogPValAdj <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- TooltipText <- NULL
 
-plot_top_dgea_genes <- function(df, selected_palette, fc_or_pvalue) {
   # Display empty plot message, if the sample selection returns an empty dataframe
   if (base::nrow(df) == 0) {
     return(empty_plot())
@@ -94,7 +131,6 @@ plot_top_dgea_genes <- function(df, selected_palette, fc_or_pvalue) {
     geom_bar(stat = "identity") +
     facet_wrap(~Contrast, ncol = 2, scales = "free_y") +
     labs(y = "Gene", x = x_col_lab, fill = fill_lab) +
-    scale_x_continuous(breaks = scales::pretty_breaks(n = 4)) +
     # This is needed in combination with `tidytext::reorder_within()`
     scale_y_reordered()
 
@@ -104,7 +140,7 @@ plot_top_dgea_genes <- function(df, selected_palette, fc_or_pvalue) {
   p <- ggplotly(
     p,
     tooltip = "text",
-    height = plot_height(
+    height = calculatePlotHeight(
       n_samples = round(length(unique(df$Contrast)) / 2),
       min_size = 500,
       per_sample_size = 500

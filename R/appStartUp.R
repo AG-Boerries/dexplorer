@@ -1,3 +1,8 @@
+#' @title DExploreR App Startup Functions
+#'
+#' @description
+#' Performs global setup actions for the DExploreR Shiny app, such as setting the default ggplot2 theme.
+#'
 app_startup <- function() {
   theme_set(
     theme_minimal() +

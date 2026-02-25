@@ -15,7 +15,7 @@
 #'
 #' @param group_overlay Character. Overlay type for group visualization: "Ellipse" for confidence ellipses, "Convex hull" for convex hulls, or `NULL` for no overlay.
 #'
-#' @return An interactive plotly object representing the PCA plot.
+#' @return The interactive PCA plot as a `plotly` object.
 #'
 #' @export
 createPCAPlot <- function(

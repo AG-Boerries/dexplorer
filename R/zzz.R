@@ -20,7 +20,8 @@
 #     python_path,
 #     " ...\n"
 #   )
-
+# TOOD: only create if not exists
+# TODO: how to use this environment when required, for instance the app? (https://github.com/dtonmoy/Technical/blob/main/R/general_functions.R)
 #   # Create virtual python environment
 #   env_path <- "~/.virtualenvs/r-reticulate-dexplorer"
 #   # This will no recreate the environment if it already exists
@@ -57,4 +58,21 @@
 #     "#### Welcome to 'DExploreR'! Visualize and interactively explore bulk RNA-seq data. ####\n",
 #     "########################################################################################\n"
 #   )
+# }
+
+# TODO: check if all bioconductor packages are installed:
+# checkBiocPkgs <- function(pkgs) {
+#   for (pkg in pkgs) {
+#     if (!requireNamespace(pkg, quietly = TRUE)) {
+#       stop(
+#         "Package '",
+#         pkg,
+#         "' is required but not installed.\n",
+#         "Please install it (e.g. via BiocManager::install(\"",
+#         pkg,
+#         "\")).",
+#         call. = FALSE
+#       )
+#     }
+#   }
 # }

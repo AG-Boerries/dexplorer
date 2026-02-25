@@ -1,3 +1,7 @@
+#########################################################################################################
+# This script creates the PNG images for the color palette selection and is only used during development.
+#########################################################################################################
+
 # Extract four colors per palette
 colors_for_color_picker <- function(name) {
   if (

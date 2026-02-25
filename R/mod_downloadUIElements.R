@@ -1,4 +1,13 @@
-download_settings_modal <- function(id) {
+#' @title Download Settings for Downloads from Modals
+#'
+#' @description
+#' Generates a UI elements for customizing plot download settings in the DExploreR app. Allows users to select file format, specify plot width and height, and trigger the download of the current plot.
+#'
+#' @param id Character. The namespace ID
+#' .
+#' @return A Shiny UI element (HTML tag list) representing the download settings modal.
+#'
+downloadSettingsModal <- function(id) {
   tagList(
     virtualSelectInput(
       inputId = paste0("plot_format_", id),

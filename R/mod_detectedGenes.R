@@ -1,4 +1,17 @@
-gene_count_plot <- function(df) {
+#' @title Create Gene Count Bar Plot
+#'
+#' @description
+#' Generates a horizontal bar plot showing the number of recorded genes per sample and group. Adds tooltips for interactive display, highlights the combined group, and facets by group.
+#'
+#' @param df A data frame containing columns for sample names, group assignments, and the number of recorded genes.
+#'
+#' @return A `ggplot2` object, ready for interactive use with `plotly`.
+#'
+#' @export
+createGeneCountPlot <- function(df) {
+  # Define variables locally for R CMD check
+  Group <- SampleNameUser <- GenesRecorded <- ColorGroup <- TooltipText <- NULL
+
   df <- df %>%
     # Add the tooltip text
     mutate(

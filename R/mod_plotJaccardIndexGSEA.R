@@ -1,7 +1,22 @@
-format_for_gsea_contrast_intersection <- function(
+#' @title Format Data for GSEA Contrast Intersection
+#'
+#' @description
+#' Formats a data frame of enriched gene sets for Jaccard index calculation between pairs of contrasts. Returns a summary table with gene set lists and statistics for each pair.
+#'
+#' @param df A data frame containing GSEA information, including columns for contrasts, direction and patways.
+#'
+#' @param selected_directions Character vector specifying which directions ("up", "down", "both") to include.
+#'
+#' @return A data frame summarizing Jaccard index results for each pair of contrasts and direction, including gene set lists and statistics.
+#'
+#' @export
+formatGSEAContrastIntersection <- function(
   df,
   selected_directions
 ) {
+  # Define variables locally for R CMD check
+  Direction <- Contrast <- Pathway <- Var1 <- Var2 <- NULL
+
   # Possible directions
   directions <- c("up", "down", "both")
 
@@ -52,8 +67,22 @@ format_for_gsea_contrast_intersection <- function(
   return(df_jaccard_results)
 }
 
+#' @title Create GSEA Contrast Intersection Plot
+#'
+#' @description
+#' Generates an interactive `plotly` visualization of Jaccard indices for all pairs of contrasts in a gene set enrichment analysis (GSEA). The plot displays the overlap of enriched gene sets between contrasts, with dot size and color representing the Jaccard index. Tooltips provide detailed comparison information, and facets show results for different regulation directions.
+#'
+#' @param df A data frame as returned by \code{\link{formatGSEAContrastIntersection}()}, summarizing Jaccard index results for each pair of contrasts and direction.
+#'
+#' @param selected_palette Character. The name of the color palette to use for the plot.
+#'
+#' @return An interactive dotplot for Jaccard indicies for enriched gene sets by contrasts as a `plotly` object.
+#'
+#' @export
+createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
+  # Define variables locally for R CMD check
+  Seta <- Setb <- JI <- Pathways_both_sets <- Pathways_total <- Direction <- TooltipText1 <- TooltipText2 <- JIMax <- NULL
 
-plot_gsea_contrast_intersection <- function(df, selected_palette) {
   # If data frame is empty, then return an empty plot with a message
   if (all(dim(df) == 0)) {
     return(empty_plot("Not enough contrasts provided."))

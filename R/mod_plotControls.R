@@ -1,4 +1,16 @@
-# Function to create control element for plots
+#' @title Generate Plot Controls UI
+#'
+#' @description
+#' Creates a set of user interface controls for customizing plots in the DExploreR app. Includes inputs for selecting samples, color palettes, plot settings, and additional controls as needed for specific plots or tabs.
+#'
+#' @param id Character. The namespace ID, used for namespacing UI elements.
+#'
+#' @param ... UI element(s) to be included as additional controls in the plot controls section.
+#'
+#' @param remove_sample_selection Logical. If TRUE, removes the sample selection control from the plot controls. Default is FALSE.
+#'
+#' @return A Shiny UI element (HTML tag list) representing the plot controls.
+#'
 plotControls <- function(id, remove_sample_selection = FALSE, ...) {
   div(
     dropdownButton(

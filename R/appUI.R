@@ -1,3 +1,7 @@
+#' @title DExploreR App UI
+#'
+#' @description
+#' This function defines the user interface of the DExploreR Shiny app and it is called from \code{\link{runDExploreR}()}.
 app_ui <- function() {
   fluidPage(
     style = "margin-top: 15px;",
@@ -81,7 +85,7 @@ app_ui <- function() {
           )
         ),
         div(
-          "DExploreR v0.1.0",
+          "DExploreR v0.7.0.0",
           class = "app-version-fixed"
         )
       ),

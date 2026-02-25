@@ -1,9 +1,28 @@
-format_for_dgea_contrast_intersection <- function(
+#' @title Format Data for DGEA Contrast Intersection
+#'
+#' @description
+#' Formats a data frame of differentially expressed genes (DEGs) for Jaccard index calculation between pairs of contrasts. Filters by direction, p-value, and log2 fold-change thresholds, computes gene intersections/unions, and returns a summary table with gene lists and statistics for each pair.
+#'
+#' @param df A data frame containing DEG information, including columns for gene IDs, contrasts, direction, adjusted p-values, and log2 fold changes.
+#'
+#' @param selected_directions Character vector specifying which directions ("up", "down", "both") to include.
+#'
+#' @param p_threshold Numeric. The adjusted p-value threshold for filtering DEGs.
+#'
+#' @param l2fc_threshold Numeric. The log2 fold-change threshold for filtering DEGs.
+#'
+#' @return A data frame summarizing Jaccard index results for each pair of contrasts and direction, including gene lists and statistics.
+#'
+#' @export
+formatDGEAContrastIntersection <- function(
   df,
   selected_directions,
   p_threshold,
   l2fc_threshold
 ) {
+  # Define variables locally for R CMD check
+  Direction <- PValAdj <- Log2FC <- Contrast <- GeneID <- Var1 <- Var2 <- Contrast.a <- Contrast.b <- . <- NULL
+
   # Possible directions
   directions <- c("up", "down", "both")
 
@@ -85,7 +104,7 @@ format_for_dgea_contrast_intersection <- function(
             by = "GeneID"
           )
 
-        # Rearrange column order
+        # Rearrange column order using indices because column names are user-defined contrast names
         df_genes <- df_genes[, c(2, 3, 1, 4, 5, 6, 7, 8)]
 
         tibble(
@@ -106,7 +125,22 @@ format_for_dgea_contrast_intersection <- function(
   return(df_jaccard_results)
 }
 
-plot_dgea_contrast_intersection <- function(df, selected_palette) {
+#' @title Create DGEA Contrast Intersection Plot
+#'
+#' @description
+#' Generates an interactive `plotly` visualization of Jaccard indices for all pairs of contrasts in a differential gene expression analysis (DGEA). The plot displays the overlap of differentially expressed genes (DEGs) between contrasts, with dot size and color representing the Jaccard index. Tooltips provide detailed comparison information, and facets show results for different regulation directions. Dots are clickable to extract gene lists and venn diagrams (as produced by \code{\link{createVennDiagram}()} for the selected comparison.
+#'
+#' @param df A data frame as returned by \code{\link{formatDGEAContrastIntersection}()}, summarizing Jaccard index results for each pair of contrasts and direction.
+#'
+#' @param selected_palette Character. The name of the color palette to use for the plot.
+#'
+#' @return An interactive dotplot for Jaccard indicies of up- and downregulated genes as a `plotly` object.
+#'
+#' @export
+createDGEAContrastIntersectionPlot <- function(df, selected_palette) {
+  # Define variables locally for R CMD check
+  Seta <- Setb <- JI <- DEG_both_sets <- DEG_total <- Direction <- TooltipText1 <- CustomData <- JIMax <- TooltipText2 <- NULL
+
   # If data frame is empty, then return an empty plot with a message
   if (all(dim(df) == 0)) {
     return(empty_plot("Not enough contrasts provided."))

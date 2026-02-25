@@ -1,4 +1,15 @@
-# Color scale for theme colors
+#' @title Get Theme Colors
+#'
+#' @description
+#' Returns the app's theme colors as a character vector. Can return all colors, a subset by index or name, or generate a palette of a specified length by interpolating using \code{\link[grDevices]{colorRampPalette}()} from `grDevices`.
+#'
+#' @param color Character or numeric. Name(s) or index/indices of colors to return. If NULL, returns all theme colors.
+#'
+#' @param n_values Integer. Number of colors to return as a palette. If NULL, returns all or selected colors.
+#'
+#' @return Character vector of color hex codes.
+#'
+#' @export
 get_theme_colors <- function(color = NULL, n_values = NULL) {
   # Define theme colors
   theme_colors <- c(
@@ -61,8 +72,16 @@ color_choices <- list(
 # Flatten color choices
 color_choices_flat <- base::unname(unlist(color_choices))
 
-# Extract the color family of the selected palette
-# Although this information is contained in `color_choices`, the corresponding UI element returns an unnamed value
+#' @title Get Color Family of a Selected Palette
+#'
+#' @description
+#' Returns the color family name (e.g., "Viridis", "Wes Anderson") for a selected palette. Although this information is contained in `color_choices`, the corresponding UI element returns an unnamed value.
+#'
+#' @param selected_palette Character. The palette name.
+#'
+#' @return Character. The color family name.
+#'
+#' @export
 get_color_family <- function(selected_palette) {
   return(
     names(color_choices)[vapply(
@@ -73,7 +92,20 @@ get_color_family <- function(selected_palette) {
   )
 }
 
-# When the mapped aesthetic is discrete, get the corresponding color palette
+#' @title Get Discrete Color Palette
+#'
+#' @description
+#' Returns a discrete color palette of length `n` for the specified color family and palette.
+#'
+#' @param family Character. The color family ("App theme", "Viridis", "Wes Anderson", "RColorBrewer").
+#'
+#' @param palette Character. The palette name.
+#'
+#' @param n Integer. Number of colors to return.
+#'
+#' @return Character vector of color hex codes.
+#'
+#' @export
 get_discrete_palette <- function(family, palette, n) {
   if (family == "App theme") {
     return(get_theme_colors(n_values = n))
@@ -99,7 +131,19 @@ get_discrete_palette <- function(family, palette, n) {
   }
 }
 
-# When the mapped aesthetic is continuous, get the corresponding color scale
+#' @title Get Continuous Color Scale
+#'
+#' @description
+#' Returns a `ggplot2` continuous color or fill scale for the specified color family and palette.
+#'
+#' @param family Character. The color family ("App theme", "Viridis", "Wes Anderson", "RColorBrewer").
+#'
+#' @param palette Character. The palette name.
+#'
+#' @param aes Character. The mapped aesthetic ("fill" or "colour").
+#'
+#' @return A `ggplot2` scale object.
+#' @export
 get_continuous_scale <- function(family, palette, aes) {
   # Select the correct ggplot2 scale function based on the mapped aesthetic
   scale_fun <- if (aes == "fill") {
@@ -124,6 +168,20 @@ get_continuous_scale <- function(family, palette, aes) {
   }
 }
 
+#' @title Add Selected Colors to Plot
+#'
+#' @description
+#' Adds the selected color palette to a `ggplot` object, handling both discrete and continuous mapped aesthetics.
+#'
+#' @param p A `ggplot`object.
+#'
+#' @param selected_palette Character. The name of the selected color palette.
+#'
+#' @param color_by Optional. Character vector specifying mapped aesthetics.
+#'
+#' @return A `ggplot` object with the selected color scales applied.
+#'
+#' @export
 add_selected_colors <- function(p, selected_palette, color_by = NULL) {
   # When there is no mapping, return the plot as is
   # Important for app start up
@@ -200,7 +258,16 @@ add_selected_colors <- function(p, selected_palette, color_by = NULL) {
   return(p)
 }
 
-# Create a color function for heatmaps from heatmaply
+#' @title Create Heatmap Color Function
+#'
+#' @description
+#' Creates a color function for heatmaps using the selected color palette, suitable for use with \code{\link[heatmaply]{heatmaply}()}.
+#'
+#' @param selected_colors Character. The name of the selected color palette.
+#'
+#' @return A function that generates a color palette of arbitrary length.
+#'
+#' @export
 create_heatmap_color_function <- function(selected_colors) {
   ht_color_family <- get_color_family(selected_colors)
 

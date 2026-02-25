@@ -1,11 +1,52 @@
-# Dynamically calculates the height of a plot based on the number of samples.
-plot_height <- function(n_samples, min_size = 500, per_sample_size = 30) {
+#' @title Calculate Dynamic Plot Height
+#'
+#' @description
+#' Dynamically calculates the height of a plot based on the number of samples, ensuring a minimum height for readability.
+#'
+#' @param n_samples Integer. The number of samples to display in the plot.
+#'
+#' @param min_size Numeric. The minimum height (in pixels) for the plot. Default is 500.
+#'
+#' @param per_sample_size Numeric. The height (in pixels) to allocate per sample. Default is 30.
+#'
+#' @return Numeric. The calculated plot height in pixels.
+#'
+calculatePlotHeight <- function(
+  n_samples,
+  min_size = 500,
+  per_sample_size = 30
+) {
   height <- per_sample_size * n_samples
   return(max(height, min_size))
 }
 
-# Control the height of heatmaps
-heatmap_height <- function(
+#' @title Calculate Heatmap Component Heights and Domains
+#'
+#' @description
+#' Computes the total height and vertical domains for the main components of a gene expression heatmap (tiles, group annotations, and dendrogram), based on the number of genes and user-specified component heights. Ensures a minimum total height and dynamically adjusts dendrogram height.
+#'
+#' @param n_genes Integer. Number of genes (rows) in the heatmap.
+#'
+#' @param tiles_height Numeric. Height (in pixels) allocated per gene for the heatmap tiles. Default is 40 (This proved to look nice.).
+#'
+#' @param groups_height Numeric. Height (in pixels) allocated for group annotation bars. Default is 60 (This proved to look nice.).
+#'
+#' @param dendro_height Numeric. Height (in pixels) allocated for the dendrogram. Default is 160 (This proved to look nice.).
+#'
+#' @param dendro_type Character. Dendrogram display option: "Samples", "Genes", "Samples and genes", or "None". If "Samples" is not present, dendrogram height is set to 0.
+#'
+#' @return A list with heights for the heatmap components:
+#'
+#' * `total_height`
+#'
+#' * `dendro_domain`
+#'
+#' * `group_domain`
+#'
+#' * `tiles_domain`
+#'
+#' @export
+heatmapHeights <- function(
   n_genes,
   tiles_height = 40,
   groups_height = 60,
@@ -53,6 +94,8 @@ heatmap_height <- function(
 #' @param white_space The amount of white space (in pixels) to insert between facets. Default is 35 (this seems suitable based on experience).
 #'
 #' @return The input data frame with an added `domain` column (a list-column of length-2 numeric vectors giving the lower and upper bounds for each facet's domain).
+#'
+#' @export
 calculateDomains <- function(
   df,
   total_height,

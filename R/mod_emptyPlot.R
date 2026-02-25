@@ -1,4 +1,13 @@
-# Create an empty plot with a custom message
+#' @title Create an Empty Plot with Custom Message
+#'
+#' @description
+#' Generates an empty plotly plot displaying a custom message, used to indicate that no data is available for plotting.
+#'
+#' @param message Character. The message to display in the center of the plot. Default is "Nothing to display ...".
+#'
+#' @return An interactive `plotly` object.
+#'
+#' @export
 empty_plot <- function(message = "Nothing to display ...") {
   p <- ggplot() +
     annotate(

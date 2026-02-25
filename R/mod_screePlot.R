@@ -1,4 +1,23 @@
-create_scree_plot <- function(explained_var, pc_x, pc_y, selected_palette) {
+#' @title Create Interactive Scree Plot
+#'
+#' @description
+#' Generates an interactive scree plot using `ggplot2` and `plotly`.
+#'
+#' @param explained_var A data frame with columns `PC` (principal component names) and `Variance` (explained variance for each component).
+#'
+#' @param pc_x Character. The name of the principal component selected for the x-axis in a related PCA plot.
+#'
+#' @param pc_y Character. The name of the principal component selected for the y-axis in a related PCA plot.
+#'
+#' @param selected_palette Character. The name of the color palette.
+#'
+#' @return The interactive scree plot as a `plotly` object.
+#'
+#' @export
+createScreePlot <- function(explained_var, pc_x, pc_y, selected_palette) {
+  # Define variables locally for R CMD check
+  PC <- Variance <- SelectedPC <- TooltipText <- NULL
+
   explained_var <- explained_var %>%
     # Create a column to color the selected PCs
     mutate(
@@ -48,8 +67,8 @@ create_scree_plot <- function(explained_var, pc_x, pc_y, selected_palette) {
       data = list(tooltipType = "standard")
     )
 
+  # Remove default tooltip
   for (i in seq_along(p$x$data)) {
-    # Remove default tooltip
     p$x$data[[i]]$hoverinfo <- "none"
   }
 

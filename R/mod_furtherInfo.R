@@ -1,3 +1,4 @@
+# This list contains the information displayed in a modal when clicking the "Further information" button
 # The name of each list element has to correspond to the id of the `actionButton()` that shows the modal
 further_info_contents <- list(
   info_pca = tagList(

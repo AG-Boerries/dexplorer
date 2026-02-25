@@ -1,10 +1,31 @@
-format_for_gene_expression_heatmap <- function(
+#' @title Format Data for Gene Expression Heatmap
+#'
+#' @description
+#' Prepares and formats a gene expression data frame for a heatmap. Selects top genes by median or variance, ensures user-selected genes are included, removes duplicates, z-scores expression values, and adds gene annotation columns for tooltips and downloads.
+#'
+#' @param df A data frame containing gene expression values (CPMs) and gene annotation columns.
+#'
+#' @param selected_samples Character vector of sample names to include in the heatmap.
+#'
+#' @param selected_subset_size Integer. Number of top genes to select based on median or variance.
+#'
+#' @param selected_genes Character vector of gene symbols to always include in the heatmap.
+#'
+#' @param gene_selection_by Logical. If TRUE, select top genes by variance; if FALSE, by median expression.
+#'
+#' @return A data frame formatted for \code{\link[heatmaply]{heatmaply}()}, including z-scored expression values and gene annotation columns.
+#'
+#' @export
+formatForHeatmap <- function(
   df,
   selected_samples,
   selected_subset_size,
   selected_genes,
   gene_selection_by
 ) {
+  # Define variables locally for R CMD check
+  Symbol <- .data <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- NULL
+
   # Get the user selected genes to always include them in the heatmap
   df_genes_selected <- if (
     !is.null(selected_genes) && length(selected_genes) > 0
@@ -15,7 +36,7 @@ format_for_gene_expression_heatmap <- function(
     df[0, ]
   }
 
-  # Prepare the data frame for `heatmaply()`
+  # Prepare the data frame for `heatmaply::heatmaply()`
   # `df` contains the cpm values of all genes and samples
   df <- df %>%
     # Show only top n genes with highest median expression or highest variance
@@ -56,7 +77,29 @@ format_for_gene_expression_heatmap <- function(
   return(df)
 }
 
-gene_expression_heatmap <- function(
+#' @title Create Interactive Gene Expression Heatmap
+#'
+#' @description
+#' Generates an interactive gene expression heatmap using \code{\link[heatmaply]{heatmaply}()}, with custom color palettes, group annotations, dendrogram options, and detailed tooltips for each cell. Supports dynamic row/column clustering, custom group colors, and advanced layout adjustments for publication-quality visualization.
+#'
+#' @param df A data frame formatted by \code{\link{formatForHeatmap}()}.
+#'
+#' @param id_or_sym Character. The gene identifier or symbol to use as row names in the heatmap (e.g., "GeneID", "Symbol").
+#'
+#' @param samples_groups A data frame mapping sample names to group labels for column annotations.
+#'
+#' @param heatmap_colors Character. The color palette to use for the heatmap tiles.
+#'
+#' @param group_colors Character. The color palette to use for group labels.
+#'
+#' @param dendrogram_type Character. Dendrogram display option: "Samples", "Genes", "Samples and genes", or "None".
+#'
+#' @param heatmap_heights A list of height and domain settings for the heatmap and its components, created by \code{\link{heatmapHeights}()}.
+#'
+#' @return The interactive heatmap as a `plotly` object.
+#'
+#' @export
+createGeneExpressionHeatmap <- function(
   df,
   id_or_sym,
   samples_groups,
@@ -65,6 +108,9 @@ gene_expression_heatmap <- function(
   dendrogram_type,
   heatmap_heights
 ) {
+  # Define variables locally for R CMD check
+  SampleNameUser <- Group <- . <- NULL
+
   # Check if the data frame fulfills the minimum requirements for a heatmap
   if (nrow(df) < 2 || ncol(df) < 2) {
     return(empty_plot("Please select at least\ntwo genes and two samples."))

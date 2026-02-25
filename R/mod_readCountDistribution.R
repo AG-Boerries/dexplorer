@@ -1,4 +1,17 @@
-read_count_distribution_plot <- function(df) {
+#' @title Create Read Count Distribution Plot
+#'
+#' @description
+#' Generates a density ridge plot using `ggridges` showing the distribution of read counts across recorded genes for each sample and group. Calculates median read counts per gene for tooltips, highlights quartiles, and facets by group.
+#'
+#' @param df A data frame containing columns for sample names, group assignments, and read counts per gene.
+#'
+#' @return A `ggplot2` object, ready for interactive use with `plotly`.
+#'
+#' @export
+createCountDistributionPlot <- function(df) {
+  # Define variables locally for R CMD check
+  SampleNameUser <- Group <- Counts <- MedianReadCountsPerGene <- TooltipText <- NULL
+
   # Calculate median read counts per gene for tooltip
   df <- df %>%
     group_by(SampleNameUser) %>%

@@ -1,10 +1,31 @@
-plot_gsea_top_gene_sets <- function(
+#' @title Create Interactive Top Gene Sets Plot
+#'
+#' @description
+#' Generates an interactive dotplot of top gene sets for selected contrasts in gene set enrichment analysis (GSEA) using `plotly`. The plot displays enrichment scores, set sizes, and direction of regulation, with custom tooltips, facetting by contrast, and links to gene set descriptions. This plot is registered for click events, which open a modal showing a volcano plot (\code{\link{createVolcanoPlot}()}) and a heatmap (\code{\link{createGeneExpressionHeatmap}()}) of the selected gene set.
+#'
+#' @param df A data frame containing gene set enrichment results, including enrichment scores, set sizes, direction, and contrast labels.
+#'
+#' @param df_genes A data frame with gene set annotation columns: GSName, GSDescription, and GSURL.
+#'
+#' @param selected_palette Character. The name of the color palette to use for coloring gene sets.
+#'
+#' @param selected_contrast Character vector. Contrast names to include in the plot.
+#'
+#' @param selected_gene_sets Character vector. Gene set names to include in the plot.
+#'
+#' @return The interactive dotplot as a `plotly` object.
+#'
+#' @export
+createTopGeneSetsPlot <- function(
   df,
   df_genes,
   selected_palette,
   selected_contrast,
   selected_gene_sets
 ) {
+  # Define variables locally for R CMD check
+  Contrast <- Pathway <- GSName <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- Direction <- TooltipText <- NULL
+
   df <- df %>%
     filter(
       Contrast %in% selected_contrast,
@@ -79,7 +100,7 @@ plot_gsea_top_gene_sets <- function(
 
   p <- ggplotly(
     p,
-    height = plot_height(
+    height = calculatePlotHeight(
       n_samples = length(unique(df$Contrast)),
       min_size = 800,
       per_sample_size = 800

@@ -1,7 +1,7 @@
-# This is the lookup table for the plotting functions and the info texts
+# This is the lookup table for the plotting functions and the info texts of this `moduleServer`
 assign_format_plot_info <- list(
   "Number of reads" = list(
-    plot = read_count_plot,
+    plot = createReadCountPlot,
     info = tagList(
       tags$b("Assigned reads:"),
       "Number of mapped reads that could be assigned unambiguously to an annotated genomic region.",
@@ -19,19 +19,27 @@ assign_format_plot_info <- list(
     )
   ),
   "Number of genes" = list(
-    plot = gene_count_plot,
+    plot = createGeneCountPlot,
     info = HTML(
       "To be considered as detected, a gene must have at least one read assigned, i.e. at least one count. The bar <i>All samples</i> depicts the overall number of distinct detected genes across all samples."
     )
   ),
   "Read count distribution" = list(
-    plot = read_count_distribution_plot,
+    plot = createCountDistributionPlot,
     info = "The read count distribution shows how the reads are distributed across all recorded genes in a sample. The vertical lines indicate the quartiles separating the distribution into equal proportions with 25 % of the data. Then central line indicates the median read counts per gene."
   )
 )
 
-# This creates the UI with the same layout as the other tabs
-# The other tabs use `makeSubTabContent()`, but here I could not find a way to do so
+
+#' @title Quality Control Tab UI
+#'
+#' @description
+#' Generates the user interface for the Quality Control tab in the DExploreR app. Provides controls for selecting plot type, color palette, and samples, as well as buttons for further information, data download, and plot download. Displays the selected plot using `plotly`. This has the same layout as \code{\link{makeSubTabContent}()}.
+#'
+#' @param id Character. The module namespace ID.
+#'
+#' @return A Shiny UI element (HTML tag list) for inclusion in the app UI.
+#
 tabContentUI <- function(id) {
   ns <- NS(id)
   div(
@@ -56,7 +64,7 @@ tabContentUI <- function(id) {
       ),
       # This is the same as plotControls
       # I could not find a solution with the namespacing issues
-      # Thus this is repeated here
+      # Thus, this is repeated here
       column(
         width = 3,
         div(
@@ -130,13 +138,28 @@ tabContentUI <- function(id) {
 }
 
 
-# Create the module server, which requires `data` from the parent server
+#' @title Quality Control Tab Server Logic
+#'
+#' @description
+#' Implements the server-side logic for the Quality Control tab in the DExploreR app. Handles plot selection, color palette and sample selection, data filtering, plot generation, download handlers, and modal dialogs for further information and plot downloads. Integrates with `plotly` for interactive visualization and dynamically adjusts plot layout and tooltips.
+#'
+#' @param id Character. The module namespace ID.
+#'
+#' @param data A reactive expression returning a list of data frames required for plotting. This is `data_set_loaded()` in \code{\link{app_server}()}.
+#'
+#' @param plot_status A reactiveValues object for tracking plot readiness.
+#'
+#' @param authors Character. Author information for use in download file names.
+#'
 tabContentServer <- function(
   id,
   data,
   plot_status,
   authors
 ) {
+  # Define variables locally for R CMD check
+  SampleNameUser <- Group <- domain <- NULL
+
   moduleServer(id, function(input, output, session) {
     # Get the namespace for inputs generated on the server site, like the ones in the download dialog
     ns <- session$ns
@@ -196,7 +219,7 @@ tabContentServer <- function(
         p,
         tooltip = "text",
         # Adjust the plot heigth based on the number of samples
-        height = plot_height(
+        height = calculatePlotHeight(
           n_samples = length(unique(needed_data()$SampleNameUser))
         )
       ) %>%
@@ -242,7 +265,7 @@ tabContentServer <- function(
       # Get the total height of the plot, which is defined by the number of samples
       # In this case, not `input$sample_select`
       # The gene counts plot always contains the "All samples" group
-      total_height <- plot_height(
+      total_height <- calculatePlotHeight(
         n_samples = length(unique(needed_data()$SampleNameUser))
       )
 
@@ -313,7 +336,7 @@ tabContentServer <- function(
     observeEvent(
       input$select_plot_raw_counts,
       {
-        output$download_data <- data_download(
+        output$download_data <- dataDownload(
           name = gsub(" ", "_", input$select_plot_raw_counts),
           data = needed_data(),
           authors = authors

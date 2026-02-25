@@ -32,6 +32,15 @@ app_server <- function(input, output, session, config) {
   # Tabs to disable/enable during data set loading
   tabs <- c("Raw data", "DGEA", "GSEA")
 
+  # Create list for tab details
+  # The names are the IDs for the output
+  # The values are the headings of `dataSetsTable`
+  tab_details <- list(
+    raw_data_details = "Sequencing Details",
+    dgea_details = "DGEA Details",
+    gsea_details = "GSEA Details"
+  )
+
   # Disable tabs at start up or when no data set is selected
   observe({
     req(length(input$data_sets_table_rows_selected) == 0)
@@ -279,7 +288,7 @@ app_server <- function(input, output, session, config) {
     # The plot requries these inputs and they are updated when when data is loaded
     req(input$select_PC_x, input$select_PC_y)
 
-    create_scree_plot(
+    createScreePlot(
       explained_var = data_set_loaded()[["VarianceExplained"]],
       pc_x = input$select_PC_x,
       pc_y = input$select_PC_y,
@@ -324,7 +333,7 @@ app_server <- function(input, output, session, config) {
   })
 
   # Download handler for PCA data
-  output$download_data_pca <- data_download(
+  output$download_data_pca <- dataDownload(
     name = "PCA_data",
     data = data_set_loaded()[["PCA"]],
     authors = authors()
@@ -345,7 +354,7 @@ app_server <- function(input, output, session, config) {
   # Create the data frame for the heatmap as well as the download
   df_heatmap <- reactive({
     req(data_set_loaded())
-    format_for_gene_expression_heatmap(
+    formatForHeatmap(
       df = data_set_loaded()[["NormalizedCounts"]],
       selected_samples = input$sample_select_heatmap,
       selected_subset_size = input$subset_size_select_heatmap,
@@ -356,7 +365,7 @@ app_server <- function(input, output, session, config) {
 
   # Calculate heatmap and domain heights based on selected inputs
   heatmap_heights <- reactive({
-    heatmap_height(
+    heatmapHeights(
       n_genes = nrow(df_heatmap()),
       dendro_type = input$heatmap_dendrogram
     )
@@ -364,7 +373,7 @@ app_server <- function(input, output, session, config) {
 
   # Create the heatmap plot
   heatmap_plot <- reactive({
-    gene_expression_heatmap(
+    createGeneExpressionHeatmap(
       df = df_heatmap(),
       id_or_sym = input$switch_id_symbols_heatmap,
       samples_groups = data_set_loaded()[["SamplesGroups"]],
@@ -398,7 +407,7 @@ app_server <- function(input, output, session, config) {
   })
 
   # Get the data frame for the .csv download
-  output$download_data_heatmap <- data_download(
+  output$download_data_heatmap <- dataDownload(
     name = "Heatmap_data",
     data = df_heatmap(),
     authors = authors()
@@ -420,7 +429,7 @@ app_server <- function(input, output, session, config) {
     # Upon upload of a gene list, try to extract the genes
     genes <- tryCatch(
       {
-        process_user_genes(
+        processUserGenes(
           available_genes = data_set_loaded()[["GeneInfoAliases"]],
           user_genes = input$user_gene_list_heatmap
         )
@@ -687,7 +696,7 @@ app_server <- function(input, output, session, config) {
   # Prepare data frame for top-scoring genes plot and download
   df_top_genes_dgea <- reactive({
     req(data_set_loaded())
-    format_for_top_dgea_genes(
+    formatTopDEGs(
       df = data_set_loaded()[["DGEAnalysis"]],
       selected_contrast = input$top_genes_contrast_select,
       selected_number_of_genes = input$top_genes_number_select,
@@ -699,7 +708,7 @@ app_server <- function(input, output, session, config) {
   # Create the top-scoring genes plot
   top_genes_plot <- reactive({
     req(df_top_genes_dgea())
-    plot_top_dgea_genes(
+    createTopDEGsPlot(
       df = df_top_genes_dgea(),
       selected_palette = input$color_select_top_genes,
       fc_or_pvalue = input$top_genes_fc_or_pvalue
@@ -721,7 +730,7 @@ app_server <- function(input, output, session, config) {
   })
 
   # Prepare data frame for download
-  output$download_data_top_genes <- data_download(
+  output$download_data_top_genes <- dataDownload(
     name = "Top_scoring_genes",
     data = df_top_genes_dgea() %>%
       # Remove the groups added by `tidytext::reorder_within()`
@@ -751,7 +760,7 @@ app_server <- function(input, output, session, config) {
   volcano_plot <- reactive({
     req(data_set_loaded())
     req(input$volcano_contrast_select)
-    plot_dgea_volcano(
+    createVolcanoPlot(
       df = data_set_loaded()[["DGEAnalysis"]],
       selected_palette = input$color_select_volcano,
       p_threshold = input$volcano_p_threshold,
@@ -776,7 +785,7 @@ app_server <- function(input, output, session, config) {
   })
 
   # Get the data for the .csv download
-  output$download_data_volcano <- data_download(
+  output$download_data_volcano <- dataDownload(
     name = "Volcano_plot_data",
     data = data_set_loaded()[["DGEAnalysis"]] %>%
       filter(Contrast %in% input$volcano_contrast_select),
@@ -789,7 +798,7 @@ app_server <- function(input, output, session, config) {
 
   df_dgea_ci <- reactive({
     req(data_set_loaded())
-    format_for_dgea_contrast_intersection(
+    formatDGEAContrastIntersection(
       df = data_set_loaded()[["DGEAnalysis"]],
       p_threshold = input$contrast_intersection_p_threshold,
       l2fc_threshold = input$contrast_intersection_l2fc_threshold
@@ -797,7 +806,7 @@ app_server <- function(input, output, session, config) {
   })
 
   contrast_intersection_plot <- reactive({
-    plot_dgea_contrast_intersection(
+    createDGEAContrastIntersectionPlot(
       df = df_dgea_ci(),
       selected_palette = input$color_select_contrast_intersection
     )
@@ -815,7 +824,7 @@ app_server <- function(input, output, session, config) {
     contrast_intersection_plot()
   })
 
-  output$download_data_contrast_intersection <- data_download(
+  output$download_data_contrast_intersection <- dataDownload(
     name = "Contrast_intersection_DGEA",
     # Remove the list column, which cannot be saved as .csv
     data = df_dgea_ci() %>% select(-Genes),
@@ -857,14 +866,14 @@ app_server <- function(input, output, session, config) {
       colnames(df) <- gsub("\\.", " ", colnames(df))
 
       # Get the data for the .csv download
-      output$download_dgea_ji <- data_download(
+      output$download_dgea_ji <- dataDownload(
         name = "Intersecting_genes",
         data = df,
         authors = authors()
       )
 
       venn_plot <- reactive({
-        create_venn_diagram(
+        createVennDiagram(
           df = df,
           selected_palette = input$color_select_venn_modal
         )
@@ -969,7 +978,7 @@ app_server <- function(input, output, session, config) {
       # This needs special treatment as usually shiny only allows one modal to be open at a time
       observeEvent(input$open_custom_download_modal_venn, {
         output$custom_modal_ui_venn <- renderUI({
-          download_settings_modal(id = "venn")
+          downloadSettingsModal(id = "venn")
         })
         session$sendCustomMessage("show-custom-modal-venn", list())
       })
@@ -1045,7 +1054,7 @@ app_server <- function(input, output, session, config) {
         "Select a contrast and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
       )
     } else {
-      p <- plot_gsea_top_gene_sets(
+      p <- createTopGeneSetsPlot(
         df = data_set_loaded()[["GeneSets"]],
         df_genes = data_set_loaded()[["GeneSetsGenes"]],
         selected_palette = input$color_select_top_gene_sets,
@@ -1071,7 +1080,7 @@ app_server <- function(input, output, session, config) {
   })
 
   # Prepare data for download
-  output$download_data_top_gene_sets <- data_download(
+  output$download_data_top_gene_sets <- dataDownload(
     name = "Top-scoring_gene_sets_data",
     data = data_set_loaded()[["GeneSets"]] %>%
       filter(Contrast == input$gene_sets_contrast_select),
@@ -1121,7 +1130,7 @@ app_server <- function(input, output, session, config) {
       pathway_url <- pathway_info$GSURL[1]
 
       volcano_modal_plot <- reactive({
-        plot_dgea_volcano(
+        createVolcanoPlot(
           df = data_set_loaded()[["DGEAnalysis"]] %>%
             filter(GeneID %in% pathway_genes$GeneID),
           # Allow to change the colors and the thresholds
@@ -1144,7 +1153,7 @@ app_server <- function(input, output, session, config) {
       # This is used here to get the genes from the data frame for the pathway heatmap
       # Furthermore, this allows the user to unselect unwanted genes form this pathway
       df_gsea_genes_heatmap <- reactive({
-        format_for_gene_expression_heatmap(
+        formatForHeatmap(
           df = data_set_loaded()[["NormalizedCounts"]],
           selected_samples = input$sample_select_heatmap_modal,
           selected_genes = input$gene_select_heatmap_modal,
@@ -1156,14 +1165,14 @@ app_server <- function(input, output, session, config) {
 
       # Calculate the heights using all selected genes
       heatmap_heights_modal <- reactive({
-        heatmap_height(
+        heatmapHeights(
           n_genes = nrow(df_gsea_genes_heatmap()),
           dendro_type = input$heatmap_dendrogram_modal
         )
       })
 
       heatmap_modal_plot <- reactive({
-        gene_expression_heatmap(
+        createGeneExpressionHeatmap(
           df = df_gsea_genes_heatmap(),
           id_or_sym = "Gene symbol",
           samples_groups = data_set_loaded()[["SamplesGroups"]],
@@ -1329,7 +1338,7 @@ app_server <- function(input, output, session, config) {
       # This needs special treatment as usually shiny only allows one modal to be open at a time
       observeEvent(input$open_custom_download_modal_volcano, {
         output$custom_modal_ui_volcano <- renderUI({
-          download_settings_modal(id = "volcano_modal")
+          downloadSettingsModal(id = "volcano_modal")
         })
         session$sendCustomMessage("show-custom-modal-volcano", list())
       })
@@ -1337,7 +1346,7 @@ app_server <- function(input, output, session, config) {
       # This needs special treatment as usually shiny only allows one modal to be open at a time
       observeEvent(input$open_custom_download_modal_heatmap, {
         output$custom_modal_ui_heatmap <- renderUI({
-          download_settings_modal(id = "heatmap_modal")
+          downloadSettingsModal(id = "heatmap_modal")
         })
         session$sendCustomMessage("show-custom-modal-heatmap", list())
       })
@@ -1389,13 +1398,13 @@ app_server <- function(input, output, session, config) {
 
   df_gsea_ci <- reactive({
     req(data_set_loaded())
-    format_for_gsea_contrast_intersection(
+    formatGSEAContrastIntersection(
       df = data_set_loaded()[["GeneSets"]]
     )
   })
 
   contrast_intersection_sets_plot <- reactive({
-    plot_gsea_contrast_intersection(
+    createGSEAContrastIntersectionPlot(
       df = df_gsea_ci(),
       selected_palette = input$color_select_contrast_intersection_sets
     )
@@ -1413,7 +1422,7 @@ app_server <- function(input, output, session, config) {
     contrast_intersection_sets_plot()
   })
 
-  output$download_data_contrast_intersection_sets <- data_download(
+  output$download_data_contrast_intersection_sets <- dataDownload(
     name = "Contrast_intersection_GSEA",
     data = df_gsea_ci(),
     authors = authors()

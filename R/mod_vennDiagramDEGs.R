@@ -1,4 +1,19 @@
-create_venn_diagram <- function(df, selected_palette) {
+#' @title Create Interactive Venn Diagram for DEGs between two Contrasts
+#'
+#' @description
+#' Generates an interactive Venn diagram for differentially expressed genes (DEGs) using `ggplot2`, `ComplexUpset`, and `plotly`. Handles large intersections by iterative downsampling, adds custom tooltips, and annotates region labels with gene counts.
+#'
+#' @param df A data frame containing DEG information, including columns for gene symbols, IDs, descriptions, and region assignments.
+#'
+#' @param selected_palette Character. The name of the color palette to use for region coloring.
+#'
+#' @return The interactive venn diagram plot as a `plotly` object.
+#'
+#' @export
+createVennDiagram <- function(df, selected_palette) {
+  # Define variables locally for R CMD check
+  Symbol <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- region <- x <- y <- TooltipText <- NULL
+
   # The columns with the contrast names 1 and 2
   groups <- colnames(df[, 1:2])
 
@@ -10,6 +25,7 @@ create_venn_diagram <- function(df, selected_palette) {
   # Reduce number of genes by 10% until `arrange_venn()` can calculate the grid
   repeat {
     attempt_count <- attempt_count + 1
+    # `ComplexUpset::arrange_venn()` calculates the coordinates for each gene in the venn diagram
     attempt <- tryCatch(
       arrange_venn(df, sets = groups),
       error = function(e) NULL
@@ -96,6 +112,7 @@ create_venn_diagram <- function(df, selected_palette) {
     geom_point_quiet(
       aes(x = x, y = y, color = region, text = TooltipText),
       size = 1,
+      # Add some jittering to avoid grid-arranged points
       position = position_jitter(seed = 42)
     ) +
     # Add the colors using the built-in function
