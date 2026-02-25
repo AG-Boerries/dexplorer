@@ -23,54 +23,35 @@ function enableCustomTooltip(el, tooltipType) {
     // Thus, extract the actual type string
     var type = tooltipType && tooltipType.tooltipType ? tooltipType.tooltipType : tooltipType;
     
-
-    // switch (type) {
-    //   case "gene_sets":
-    //     html = pt.customdata ? pt.customdata[0] : null;
-    //     break;
-    //   case "heatmap":
-    //     // `heatmaply::heatmaply()` stores the tooltip HTML in `text`
-    //   if (pt.data && pt.data.name === "group_row") {
-    //     // When hovering over the group row, the tooltip HTML is stored in `data.text` at the index of the hovered point
-    //     html = pt.data.text[pt.pointIndex[1]];
-    //   } else {
-    //     // For regular heatmap cells, the tooltip HTML is stored in `text`
-    //     html = pt.text;
-    //   }
-
-    //   case "top_genes":
-    //   case "raw_data":
-    //   case "jaccard":
-    //     html = pt.text ? pt.text : pt.data.text;
-    //     break;
-    //   case "standard":
-    //     break;
-    //   default:
-    //     console.warn("Unknown tooltip type:", type);
-    //     return;
-
-    // }
     // Depending on the plot, the tooltip content is stored differently
-    if (type === "gene_sets") {
-      // The gene sets plot was configured to store the tooltip HTML in customdata[0]
-      html = pt.customdata ? pt.customdata[0] : null;
-    } else if (type === "heatmap") {
-      // `heatmaply::heatmaply()` stores the tooltip HTML in `text`
-      if (pt.data && pt.data.name === "group_row") {
-        // When hovering over the group row, the tooltip HTML is stored in `data.text` at the index of the hovered point
-        html = pt.data.text[pt.pointIndex[1]];
-      } else {
-        // For regular heatmap cells, the tooltip HTML is stored in `text`
-        html = pt.text;
-      }
-    } else if (type === "top_genes" || type === "raw_data" || type === "jaccard") {
-      // The top genes plot has the tooltip HTML in `data.text`, but also this needs some trimming
-      html = pt.text ? pt.text : pt.data.text;
+    switch (type) {
+      case "gene_sets":
+        html = pt.customdata ? pt.customdata[0] : null;
+        break;
+      case "heatmap":
+        // `heatmaply::heatmaply()` stores the tooltip HTML in `text`
+        if (pt.data && pt.data.name === "group_row") {
+          // When hovering over the group row, the tooltip HTML is stored in `data.text` at the index of the hovered point
+          html = pt.data.text[pt.pointIndex[1]];
+        } else {
+          // For regular heatmap cells, the tooltip HTML is stored in `text`
+          html = pt.text;
+        }
+        break;
+      case "top_genes":
+      case "raw_data":
+      case "jaccard":
+        // These plots have the tooltip HTML in `data.text`
+        html = pt.text ? pt.text : pt.data.text;
+        break;
+      case "standard":
+        // Ensure to set the tooltip in `plotly::ggplotly()`
+        html = pt.text
+        break;
+      default:
+        console.warn("Unknown tooltip type:", type);
+        return;
 
-    } else if (type == "standard"){
-      // This works for the volcano and the venn plot at the moment
-      // Ensure to set the tooltip in `plotly::ggplotly()`
-      html = pt.text
     }
     // Return early if no tooltip content is found
     if (!html) return;

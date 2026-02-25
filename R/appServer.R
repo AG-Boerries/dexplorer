@@ -67,7 +67,7 @@ app_server <- function(input, output, session, config) {
           h4("Loading data and plots ... "),
           # Add this logo to the directory `asset_dir`, that is provided as a parameter to `runDExploreR()`
           img(
-            src = "logo.png",
+            src = "assets/logo.png",
             class = "pulse-logo",
             style = "margin-top: 100px;"
           )

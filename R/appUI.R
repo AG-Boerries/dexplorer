@@ -303,7 +303,12 @@ app_ui <- function() {
             "Top-scoring genes",
             makeSubTabContent(
               id = "top_genes",
-              top_left_wide = h4("Top-scoring differentially expressed genes"),
+              top_left_wide = div(
+                h4("Top-scoring differentially expressed genes"),
+                h5(
+                  "Identify the most differentially expressed genes for each contrast"
+                )
+              ),
               remove_sample_selection = TRUE,
               further_controls = div(
                 virtualSelectInput(
@@ -431,6 +436,12 @@ app_ui <- function() {
                 h4("Contrast intersection using Jaccard index"),
                 h5(
                   "Identify genes that are commonly differentially expressed across multiple contrasts"
+                ),
+                div(
+                  HTML(
+                    "<b>Note:</b> Click on a colored dot to get information on which genes are commonly differentially expressed in this contrast comparison."
+                  ),
+                  style = "color: var(--theme-color-green);"
                 )
               ),
               remove_sample_selection = TRUE,
@@ -489,7 +500,13 @@ app_ui <- function() {
             makeSubTabContent(
               id = "top_gene_sets",
               top_left_wide = div(
-                h4("Top-scoring enriched gene sets")
+                h4("Top-scoring enriched gene sets"),
+                div(
+                  HTML(
+                    "<b>Note:</b> Click on a colored dot to get see a volcano plot or a heatmap of this gene set."
+                  ),
+                  style = "color: var(--theme-color-green);"
+                )
               ),
               remove_sample_selection = TRUE,
               further_controls = div(
