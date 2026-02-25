@@ -4,11 +4,7 @@
 \alias{runDExploreR}
 \title{Run DExploreR Shiny App}
 \usage{
-runDExploreR(
-  asset_dir = "/Users/tobiashundertmark/Downloads",
-  data_dir = "/Users/tobiashundertmark/Downloads/data",
-  env_path = NULL
-)
+runDExploreR(asset_dir = NULL, data_dir = NULL, env_path = NULL)
 }
 \arguments{
 \item{asset_dir}{A directory containing the assets for DExploreR, such as logos.}
@@ -18,5 +14,5 @@ runDExploreR(
 \item{env_path}{Path to the Python virtual environment to use for DExploreR. If \code{NULL}, the default environment created by \code{\link{configurePyEnv}()} will be used. If no environment exists, this will also create a new environment.}
 }
 \description{
-...
+This functions runs the DExploreR Shiny app. It sets up a python environment, if not existing, using \code{\link{configurePyEnv}()}, mounts user specified assets and data directories and finally starts DExploreR using \code{\link[shiny]{runApp}()} on "0.0.0.0:1234". If running without any parameters, it uses the data and assets provided with this package form GSE273186.
 }
