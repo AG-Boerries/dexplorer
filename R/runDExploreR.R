@@ -9,11 +9,17 @@
 #'
 #' @param env_path Path to the Python virtual environment to use for DExploreR. If `NULL`, the default environment created by \code{\link{configurePyEnv}()} will be used. If no environment exists, this will also create a new environment.
 #'
+#' @param host The host address to run the Shiny app on. Default is "0.0.0.0".
+#'
+#' @param port The port to run the Shiny app on. Default is 1234.
+#'
 #' @export
 runDExploreR <- function(
   asset_dir = NULL,
   data_dir = NULL,
-  env_path = NULL
+  env_path = NULL,
+  host = "0.0.0.0",
+  port = 1234
 ) {
   # If no directories provided, use the default data and assets provided with this package
   if (is.null(asset_dir)) {
@@ -65,6 +71,6 @@ runDExploreR <- function(
     onStart = app_startup
   )
 
-  # Run the app on "0.0.0.0:1234"
-  runApp(app, host = "0.0.0.0", port = 1234)
+  # Run the app on default host and port
+  runApp(app, host = host, port = port)
 }
