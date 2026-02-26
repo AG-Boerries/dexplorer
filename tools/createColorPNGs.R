@@ -21,7 +21,7 @@ colors_for_color_picker <- function(name) {
 palette_lookup <- setNames(
   lapply(color_choices_flat, colors_for_color_picker),
   # Remove the space in the color palette names
-  sub(" ", "_", color_choices_flat)
+  color_choices_flat
 )
 
 # Create the PNGs for each color palette
@@ -42,7 +42,7 @@ for (i in seq_along(palette_lookup)) {
   ggplot2::ggsave(
     filename = paste0(
       "inst/dexplorer_assets/color_palettes/",
-      names(palette_lookup[i]),
+      sub(" ", "_", names(palette_lookup[i])),
       ".png"
     ),
     plot = color_plot,
@@ -61,7 +61,7 @@ for (name in names(image_sizes_choice_selected)) {
     sapply(names(palette_lookup), function(pal) {
       html <- sprintf(
         "<img src='color_palettes/%s.png' width=%spx style='vertical-align:middle'><div class='color-palette-choice'>%s</div>",
-        pal,
+        sub(" ", "_", pal),
         width,
         pal
       )

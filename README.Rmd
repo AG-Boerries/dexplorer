@@ -25,11 +25,15 @@ The goal of dexpreprocessr is to ...
 You can install the development version of dexpreprocessr like so:
 
 ``` r
-devtools::install_git(
-  url = "https://gitlab.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr.git",
-  git = "external",
-  build_vignettes = TRUE
-)
+# currently also requires auth_token = {GITHUB_PAT}
+BiocManager::install("AG-Boerries/dexplorer", , ask=FALSE, update=TRUE, build_vignettes = TRUE, dependencies = TRUE)
+
+
+# devtools::install_git(
+#   url = "https://gitlab.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr.git",
+#   git = "external",
+#   build_vignettes = TRUE
+# )
 ```
 
 - You need to have configured `git` to commit/push/pull/clone/... from our GitLab. [Here is the guide on how to set up the connection between `git` and GitLab.](https://ibsm.atlassian.net/wiki/spaces/TSKB/pages/1770139/Repository+-+AG+B+rries?atl_p=eyJpIjoiZDAxNTViZTctZTY3NS1iYzlmLWE4MDEtNDU5M2E5NjkwZTE4IiwidCI6ImZvbGxvd2luZ0ZlZWRSZWFkTW9yZSIsInNvdXJjZSI6ImVtYWlsIiwiZSI6ImNjLW5vdGlmaWNhdGlvbnNfZm9sbG93aW5nX2ZlZWQiLCJmYyI6IkZPTExPV0lORyIsImZyIjoxfQ)
@@ -56,7 +60,7 @@ BiocManager::install(c(
 This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
-library(dexpreprocessr)
+# library(dexpreprocessr)
 ## basic example code
 ```
 
@@ -71,7 +75,7 @@ You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-da
 You can also embed plots, for example:
 
 ```{r pressure, echo = FALSE}
-plot(pressure)
+# plot(pressure)
 ```
 
 In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

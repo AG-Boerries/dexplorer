@@ -1,6 +1,6 @@
 Package: dexplorer
 Title: Visualize and interactively explore bulk RNA-seq data
-Version: 0.7.0.0
+Version: 0.7.0.2
 Authors@R: c(
     person(
         given = "Tobias",

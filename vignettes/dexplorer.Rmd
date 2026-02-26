@@ -1,8 +1,8 @@
 ---
-title: "DEXpreprocessR: Preparing RNA-seq data for DExploreR"
+title: "Prepare public data sets for DExploreR"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{DEXpreprocessR: Preparing RNA-seq data for DExploreR}
+  %\VignetteIndexEntry{Prepare public data sets for DExploreR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,20 +14,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette shall demonstrate how to use the `dexpreprocessr` package to prepare RNA-seq data for analysis with DExploreR using the example of a bulk RNA-seq data set from [GSE273186](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE273186). The count tables from the STAR alignment are provided in the `extdata` directory of this package.
+This vignette shall demonstrate how to use the `dexplorer` package to prepare RNA-seq data for analysis with DExploreR using the example of a bulk RNA-seq data set from [GSE273186](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE273186). The count tables from the STAR alignment are provided in the `extdata` directory of this package.
 
 ## Installation
 
 <!-- TODO: This needs to be adjusted once the package is on Github -->
 
-First, you need to install the latest version from [GitLab](https://gitlab.www.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr).
+
 ```{r load-packages, message=FALSE, warning=FALSE}
-# Install dexpreprocessr from GitLab
-# devtools::install_git(
-#   url = "https://gitlab.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr.git",
-#   git = "external",
-#   build_vignettes = TRUE
-# )
+
 
 library(dexplorer)
 
@@ -41,7 +36,7 @@ library(tidyr)
 ## Load count data
 
 ```{r load-counts}
-files_star_counts <- system.file("extdata", "GSE273186", package = "dexpreprocessr")
+files_star_counts <- system.file("extdata", "GSE273186", package = "dexplorer")
 list.files(files_star_counts)
 ```
 
@@ -141,7 +136,7 @@ rownames(meta_data) <- NULL
 For convenience, the metadata file is also provided in the `extdata` directory of this package, so that you can directly load it like this:
 
 ```{r }
-path_meta_data_lab <- system.file("extdata", "meta_data_GSE273186.csv", package = "dexpreprocessr")
+path_meta_data_lab <- system.file("extdata", "meta_data_GSE273186.csv", package = "dexplorer")
 metaDataLab <- read.csv(path_meta_data_lab)
 
 metaDataLab
@@ -248,8 +243,8 @@ createDataSet(
   Details = "Mouse kidney transcriptome from Pkd1 knock-out and wild-type ten week old male mice. This data is published as part of this study: Inhibition of the inflammasome ameliorates orthologous polycystic kidney disease (10.1073/pnas.2511204122).",
   Sequencing_details = "Sequencer: Illumina HiSeq 2500, Sequencing mode: unstranded, Pipeline: FastQC (v0.11.8), cutadapt(v4.0), STAR (v2.6.1e) with '--quantMode GeneCounts'.",
   DGEA_details = paste0(
-    "Preprocessing: DEXpreprocessR v",
-    packageVersion("dexpreprocessr"),
+    "Preprocessing: DExploreR v",
+    packageVersion("dexplorer"),
     ", Differential expression analysis: edgeR v",
     packageVersion("edgeR"),
     " and limma v",
@@ -257,8 +252,8 @@ createDataSet(
     "."
   ),
   GSEA_details = paste0(
-    "Preprocessing: DEXpreprocessR v",
-    packageVersion("dexpreprocessr"),
+    "Preprocessing: DExploreR v",
+    packageVersion("dexplorer"),
     ", Gene set enrichment analysis ranked genes: GSEA v",
     packageVersion("clusterProfiler"),
     " from clusterProfiler and gene set annotation with msigdbr v",
@@ -273,7 +268,7 @@ Once you data frames pass this function, you can be sure that they are compatibl
 
 
 
-`createDataSet()` also has a parameter called `RDSpath`. If provided, the function will directly save the created `dexDataSet` object as a `.rds` file to the specified path. Prior to saving or returning, the object is converted to a list. So that the data set can be used in all R environments even if `dexpreprocessr` is not installed.
+`createDataSet()` also has a parameter called `RDSpath`. If provided, the function will directly save the created `dexDataSet` object as a `.rds` file to the specified path. Prior to saving or returning, the object is converted to a list. So that the data set can be used in all R environments even if `dexplorer` is not installed.
 
 For `pathRawCounts`, `pathMetaDataLab` and `pathMetaDataSeq`, you should provide absolute paths. Consider usage of [`library(here)`](https://here.r-lib.org), for instance like:
 
