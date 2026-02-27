@@ -2,7 +2,7 @@
 #'
 #' @description
 #' This function defines the user interface of the DExploreR Shiny app and it is called from \code{\link{runDExploreR}()}.
-app_ui <- function() {
+app_ui <- function(config) {
   fluidPage(
     style = "margin-top: 15px;",
     ###################################################################################################
@@ -96,29 +96,36 @@ app_ui <- function() {
       # Chapter: Start Page #####
       ###################################################################################################
 
-      tabPanel(
-        "Home",
-        div(
-          img(src = "assets/logo.png", style = "margin-top: 200px;"),
-          style = "text-align: center;"
+      if (config$mode == "standard") {
+        tabPanel(
+          "Home",
+          div(
+            img(src = "assets/logo.png", style = "margin-top: 200px;"),
+            style = "text-align: center;"
+          ),
+          if (config$with_upload) {
+            fileInput("upload_rds", "Upload RDS dataset:", accept = ".rds")
+          },
         )
-      ),
+      },
 
       ###################################################################################################
       # Chapter: Data Sets #####
       ###################################################################################################
 
-      tabPanel(
-        "Data sets",
-        fluidPage(
-          div(
-            titlePanel(title = "Data sets", windowTitle = "Data sets"),
-            h4("Choose and load a data set by clicking on it"),
-            class = "tab-header"
-          )
-        ),
-        DTOutput("data_sets_table"),
-      ),
+      if (config$mode == "standard") {
+        tabPanel(
+          "Data sets",
+          fluidPage(
+            div(
+              titlePanel(title = "Data sets", windowTitle = "Data sets"),
+              h4("Choose and load a data set by clicking on it"),
+              class = "tab-header"
+            )
+          ),
+          DTOutput("data_sets_table"),
+        )
+      },
 
       ###################################################################################################
       # Chapter: Raw data ####

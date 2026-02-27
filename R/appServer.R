@@ -110,11 +110,11 @@ app_server <- function(input, output, session, config) {
   # Create text outputs for each tab with unique IDs
   iwalk(tab_details, function(column, output_id) {
     output[[output_id]] <- renderText({
-      if (output_id == "data_sets_details") {
-        column
-      } else {
-        dataSetsTable[input$data_sets_table_rows_selected, column]
-      }
+      # if (output_id == "data_sets_details") {
+      #   column
+      # } else {
+      dataSetsTable[input$data_sets_table_rows_selected, column]
+      # }
     })
   })
 
@@ -129,7 +129,7 @@ app_server <- function(input, output, session, config) {
     # The first column contains the user-defined sample names from meta_data_lab
     # The second column contains the user-defined groups
     # The third column contains the `RunID` column from `RawCounts`
-    # Further information can be obtained from `dexpreprocessr::prepareDfs()`
+    # Further information can be obtained from `dexplorer::prepareDfs()`
     split(df$SampleNameUser, df$Group)
   })
 
