@@ -39,9 +39,6 @@ calculateDEG <- function(
   # Define variables locally for R CMD check
   GeneID <- Counts <- log2FoldChange <- pvalue <- padj <- baseMean <- Symbol <- Alias <- EntrezID <- Description <- Contrast <- Direction <- AveExpr <- Log2FC <- PVal <- PValAdj <- SampleNameUser <- logFC <- P.Value <- adj.P.Val <- . <- NCBIURL <- contrast <- NULL
 
-  # Check for package dependencies from Bioconductor
-  checkBiocPkgs(c("limma", "DESeq2", "edgeR"))
-
   # Check if the optional parameters are correct
   method_for_normalization <- match.arg(method_for_normalization)
   lm_fit_method <- match.arg(lm_fit_method)

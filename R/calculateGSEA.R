@@ -49,9 +49,6 @@ calculateGSEA <- function(
     )
   }
 
-  # Check package dependencies from Bioconductor
-  checkBiocPkgs(c("gage", "msigdbr"))
-
   # For mouse, hallmark gene sets are called "MH" in `msigdbr`
   if ("H" %in% collection && species == "mouse") {
     collection[which(collection == "H")] <- "MH"

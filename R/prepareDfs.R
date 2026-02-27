@@ -65,9 +65,6 @@ prepareDfs <- function(
   # Define variables locally for R CMD check
   Group <- GeneID <- Counts <- NumMinCounts <- AverageCount <- RunID <- Variance <- PC <- Rowmedian <- Rowvariance <- EntrezID <- Symbol <- Alias <- Description <- SampleNameUser <- . <- n_matches <- NCBIURL <- OtherEntrezIDs <- NULL
 
-  # Check for package dependencies from Bioconductor
-  checkBiocPkgs(c("edgeR"))
-
   # Check if the user specified correct values for `log_transform`, `centering` and `scaling`
   log_transform <- match.arg(log_transform)
   centering <- match.arg(centering)

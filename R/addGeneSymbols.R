@@ -24,13 +24,10 @@ addGeneSymbols <- function(raw_counts, species = c("mouse", "human")) {
   # Check if the user specified a correct value for `species`
   species <- match.arg(species)
 
-  # Check for package dependencies from Bioconductor
   # Assign required database
   if (species == "mouse") {
-    checkBiocPkgs(c("AnnotationDbi", "org.Mm.eg.db"))
     db <- org.Mm.eg.db::org.Mm.eg.db
   } else {
-    checkBiocPkgs(c("AnnotationDbi", "org.Hs.eg.db"))
     db <- org.Hs.eg.db::org.Hs.eg.db
   }
 
