@@ -4,7 +4,10 @@
 \alias{app_ui}
 \title{DExploreR App UI}
 \usage{
-app_ui()
+app_ui(config)
+}
+\arguments{
+\item{config}{The list of configs that is created in \code{\link{runDExploreR}()}.}
 }
 \description{
 This function defines the user interface of the DExploreR Shiny app and it is called from \code{\link{runDExploreR}()}.

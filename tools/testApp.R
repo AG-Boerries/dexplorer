@@ -13,3 +13,10 @@ runDExploreR(data = d)
 data_dir <- system.file("extdata", "data", package = "dexplorer")
 asset_dir <- system.file("extdata", "assets", package = "dexplorer")
 runDExploreR(data = data_dir, asset_dir = asset_dir)
+
+# TODO: this logic needs to be impemented
+runDExploreR(
+  data = data_dir,
+  asset_dir = asset_dir,
+  with_upload = TRUE
+)

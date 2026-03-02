@@ -2,6 +2,9 @@
 #'
 #' @description
 #' This function defines the user interface of the DExploreR Shiny app and it is called from \code{\link{runDExploreR}()}.
+#'
+#' @param config The list of configs that is created in \code{\link{runDExploreR}()}.
+#'
 app_ui <- function(config) {
   fluidPage(
     style = "margin-top: 15px;",
