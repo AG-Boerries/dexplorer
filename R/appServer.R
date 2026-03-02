@@ -16,7 +16,22 @@ app_server <- function(input, output, session, config) {
   # General Things at Start up #####
   ###################################################################################################
 
-  # Reactive values to track, which plots are ready
+  # Immediately show the waiter, when user provided a data set directly, e.g. no data set selection necessary
+  if (config$mode != "standard") {
+    waiter_show(
+      html = tagList(
+        h4("Loading data and plots ... "),
+        img(
+          src = "assets/logo.png",
+          class = "pulse-logo",
+          style = "margin-top: 100px;"
+        )
+      ),
+      color = "white"
+    )
+  }
+
+  # Reactive values to track plotting status
   plots_ready <- reactiveValues(
     bar_plot = FALSE,
     scree = FALSE,
@@ -32,18 +47,12 @@ app_server <- function(input, output, session, config) {
   # Tabs to disable/enable during data set loading
   tabs <- c("Raw data", "DGEA", "GSEA")
 
-  # Create list for tab details
-  # The names are the IDs for the output
-  # The values are the headings of `dataSetsTable`
-  tab_details <- list(
-    raw_data_details = "Sequencing Details",
-    dgea_details = "DGEA Details",
-    gsea_details = "GSEA Details"
-  )
-
-  # Disable tabs at start up or when no data set is selected
+  # Disable tabs at start up only when user has to select a data set
   observe({
-    req(length(input$data_sets_table_rows_selected) == 0)
+    req(
+      length(input$data_sets_table_rows_selected) == 0 &&
+        config$mode == "standard"
+    )
     runjs(sprintf(
       "disableTabs(%s)",
       toJSON(tabs, auto_unbox = TRUE)
@@ -65,7 +74,6 @@ app_server <- function(input, output, session, config) {
       waiter_show(
         html = tagList(
           h4("Loading data and plots ... "),
-          # Add this logo to the directory `asset_dir`, that is provided as a parameter to `runDExploreR()`
           img(
             src = "assets/logo.png",
             class = "pulse-logo",
@@ -74,10 +82,11 @@ app_server <- function(input, output, session, config) {
         ),
         color = "white"
       )
-    }
+    },
+    ignoreInit = FALSE
   )
 
-  # Check if all plots are ready, after a data set is loaded
+  # Check if all plots are ready, after data set loading
   # Then, hide waiter and enable tabs
   observe(
     {
@@ -108,14 +117,37 @@ app_server <- function(input, output, session, config) {
   )
 
   # Create text outputs for each tab with unique IDs
-  iwalk(tab_details, function(column, output_id) {
-    output[[output_id]] <- renderText({
-      # if (output_id == "data_sets_details") {
-      #   column
-      # } else {
-      dataSetsTable[input$data_sets_table_rows_selected, column]
-      # }
-    })
+  iwalk(
+    # The names are the IDs for the output
+    # The values are the headings of `dataSetsTable`
+    list(
+      raw_data_details = "Sequencing Details",
+      dgea_details = "DGEA Details",
+      gsea_details = "GSEA Details"
+    ),
+    function(column, output_id) {
+      output[[output_id]] <- renderText({
+        if (config$mode == "internal") {
+          dTypes$dataSetsTable[1, column]
+        } else {
+          dTypes$dataSetsTable[input$data_sets_table_rows_selected, column]
+        }
+        # When `config$mode == "interactive"`, there is no `dataSetsTable`, thus nothing is returned and rendered
+      })
+    }
+  )
+
+  # Get the author information
+  authors <- reactive({
+    if (config$mode != "interactive") {
+      dTypes$dataSetsTable[
+        input$data_sets_table_rows_selected,
+        "Authors"
+      ] %>%
+        gsub(" ", "_", .)
+    } else {
+      ""
+    }
   })
 
   # Available samples for selection in the plots
@@ -177,74 +209,77 @@ app_server <- function(input, output, session, config) {
   # Chapter: Data Sets ####
   ###################################################################################################
 
-  # Read the meta data table `.csv`s form the user-provided directory
-  # The same directory should contain the corresponding `.rds` files with the data set
-  metaFiles <- list.files(
-    path = config$data_dir,
-    pattern = ".csv$",
-    full.names = TRUE
-  )
+  # Check the provided data and read files accordingly
+  dTypes <- dataTypeSelector(config = config)
 
-  dataSetsTable <- lapply(metaFiles, read.csv, check.names = FALSE) %>%
-    bind_rows()
-
-  # Render the table with the data sets
-  output$data_sets_table <- renderDT(
-    dataSetsTable %>%
-      select(
-        "Cell line or tissue",
-        "Study target",
-        "Authors",
-        "Date",
-        "Details"
-      ),
-    rownames = FALSE,
-    # Allow to select only a single row
-    selection = "single",
-    escape = FALSE,
-    options = list(
-      # Hide the `Details` column (index 4 in 0-based JS)
-      columnDefs = list(list(visible = FALSE, targets = 4)),
-      # Display `Details` column as tooltip on hovering over row
-      rowCallback = JS("dataSetDetails"),
-      drawCallback = JS("dtTooltip")
-    )
-  )
-
-  # Load the selected data set
-  data_set_loaded <- reactive({
-    req(length(input$data_sets_table_rows_selected) == 1)
-    # Prevents errors like `samples not found`, when switching between data sets
-    freezeReactiveValue(input, "sample_select_heatmap")
-    # Prevents volcano plot from crashing, when switching between data sets
-    freezeReactiveValue(input, "volcano_contrast_select")
-    freezeReactiveValue(input, "gene_sets_contrast_select")
-
-    # Using the file path from the meta data table, load the corresponding `.rds`
-    # TODO: when `.csv` and `.rds` are mandatory to be in the same directory, `data_path` form the `.csv` is no longer necessary
-    file_path <- paste0(
-      config$data_dir,
-      "/",
-      dataSetsTable[
-        input$data_sets_table_rows_selected,
-        "data_path"
-      ]
+  # When `config$mode == "standard"`, a data set selection is necessary
+  # All available data sets are shown to the user
+  if (!is.null(dTypes$dataSetsTable) && is.null(dTypes$dataSet)) {
+    # Render the table with the data sets
+    output$data_sets_table <- renderDT(
+      dTypes$dataSetsTable %>%
+        select(
+          "Cell line or tissue",
+          "Study target",
+          "Authors",
+          "Date",
+          "Details"
+        ),
+      rownames = FALSE,
+      # Allow to select only a single row
+      selection = "single",
+      escape = FALSE,
+      options = list(
+        # Hide the `Details` column (index 4 in 0-based JS)
+        columnDefs = list(list(visible = FALSE, targets = 4)),
+        # Display `Details` column as tooltip on hovering over row
+        rowCallback = JS("dataSetDetails"),
+        drawCallback = JS("dtTooltip")
+      )
     )
 
-    d <- readRDS(file_path)
-    message("\n\n****** Data set loaded from: ", file_path, " ******\n\n")
-    d
-  })
+    # Load the selected data set
+    data_set_loaded <- reactive({
+      req(length(input$data_sets_table_rows_selected) == 1)
+      # Prevents errors like `samples not found`, when switching between data sets
+      freezeReactiveValue(input, "sample_select_heatmap")
+      # Prevents volcano plot from crashing, when switching between data sets
+      freezeReactiveValue(input, "volcano_contrast_select")
+      freezeReactiveValue(input, "gene_sets_contrast_select")
+      # Using the file path from the meta data table, load the corresponding `.rds`
+      file_path <- paste0(
+        config$data,
+        "/",
+        dTypes$dataSetsTable[
+          input$data_sets_table_rows_selected,
+          "data_path"
+        ]
+      )
 
-  # Get the author information
-  authors <- reactive({
-    req(length(input$data_sets_table_rows_selected) == 1)
-    dataSetsTable[
-      input$data_sets_table_rows_selected,
-      "Authors"
-    ] %>%
-      gsub(" ", "_", .)
-  })
+      d <- readRDS(file_path)
+      message("\n\n****** Loading data set from: ", file_path, " ******\n\n")
+      d
+    })
+  } else if (!is.null(dTypes$dataSet)) {
+    # This handles two cases, either the user provided data set as a list or the internal data set
+    # Thus, create a corresponding message for loading
+    loading_msg <- if (config$mode == "internal") {
+      "\n\n****** Loading internal data set ... ******\n\n"
+    } else {
+      "\n\n****** Loading data set provided by you ... ******\n\n"
+    }
+
+    data_set_loaded <- reactive({
+      # These values need to be frozen to prevent reactivity issues
+      freezeReactiveValue(input, "sample_select_heatmap")
+      freezeReactiveValue(input, "volcano_contrast_select")
+      freezeReactiveValue(input, "gene_sets_contrast_select")
+
+      d <- dTypes$dataSet
+      message(loading_msg)
+      d
+    })
+  }
 
   ###################################################################################################
   # Chapter: Raw data ####

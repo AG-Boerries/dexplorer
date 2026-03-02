@@ -49,7 +49,7 @@ processUserGenes <- function(available_genes, user_genes) {
     group_by(Alias) %>%
     filter(n() > 1) %>%
     dplyr::select(Alias, Symbol) %>%
-    dplyr::rename("User's Gene" = "Alias", "Found symbol" = "Symbol")
+    dplyr::rename("User's gene" = "Alias", "Found symbol" = "Symbol")
 
   return(
     list(

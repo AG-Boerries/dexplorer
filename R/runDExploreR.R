@@ -50,17 +50,6 @@ runDExploreR <- function(
     data <- normalizePath(data, mustWork = TRUE)
   }
 
-  # Data is a path, when either a path is provided or `data == NULL`
-  # Then, normalize path because we read from it
-  # if (is.character(data)) {
-  #   data <- normalizePath(data, mustWork = TRUE)
-  # }
-  # if (is.null(data_dir)) {
-  #   # If using the data provided with the package, set mode to internal
-  #   mode <- "internal"
-  #   data_dir <- system.file("extdata", "data", package = "dexplorer")
-  # }
-
   # Create a config list to pass to the server function
   config <- list(
     # Data can be a path or a list
@@ -80,6 +69,7 @@ runDExploreR <- function(
   )
 
   # Add further assets contained in the package
+  # Custom JS and HTML components
   addResourcePath(
     "www",
     system.file("dexplorer_assets", package = "dexplorer")
