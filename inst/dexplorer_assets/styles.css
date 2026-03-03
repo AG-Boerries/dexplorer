@@ -523,7 +523,6 @@ a:hover {
 
 .card-reqs {
   width: 270px;
-  height: 260px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -538,4 +537,18 @@ a:hover {
   justify-items: center;
   align-items: start;
   width: 100%;
+}
+
+.card-body-reqs {
+ overflow-y: auto;
+ flex: 1;
+ border: 1px solid var(--alt-border-color);
+ border-radius: var(--box-border-radius);
+ padding-top: 5px;
+}
+
+.card-req-cols {
+  margin-top: 10px;
+  font-weight: bold;
+  color: var(--theme-color-pink);
 }

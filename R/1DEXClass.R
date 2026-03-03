@@ -30,7 +30,6 @@
   # At least the first two PCs should be present
   # However, the number of PCs can vary depending on the dataset
   PCA = c("PC1", "PC2", "RunID", "SampleNameUser", "Group"),
-  # This will also contain all the columns form `meta_data_lab`
   SamplesGroups = c("RunID", "SampleNameUser", "Group"),
   GeneInfoAliases = c(
     "GeneID",
@@ -77,6 +76,25 @@
     "Description",
     "NCBIURL"
   )
+)
+
+# Some information on the required slots for `dexDataSet` objects
+.dex_info <- list(
+  QualityControl = "Quality metrics for each sample from the STAR aligner.",
+  RawCounts = "Raw counts for each sample and gene with at least one read assigned (long format: one row per gene/sample).",
+  NormalizedCounts = "Normalized gene expression values and gene annotation (wide format: one row per gene).",
+  VarianceExplained = "Variance explained by each principal component (PCA). Must match the number of PCs passed to the PCA data frame.",
+  PCA = "Principal component scores for each sample but least PC1 and PC2 must be contained (samples as rows and PCs as columns).",
+  SamplesGroups = "Sample metadata: sample names, user-defined names, and group assignments.",
+  GeneInfoAliases = "Gene annotation: ensembl IDs, symbols, aliases, Entrez IDs, descriptions, NCBI URLs (one row per gene alias).",
+  DGEAnalysis = "Differential gene expression results for all contrasts of interest (long format: one row per gene/contrast).",
+  GeneSets = "Gene set enrichment results for all contrasts and gene set collections of interest (long format: one row per gene set/contrast).",
+  GeneSetsGenes = "Gene set membership: which genes belong to which sets, with annotation.",
+  sessionInfo = "R session info, automatically captured when creating the data set object using `createDataSet()`.",
+  workingDirectory = "Working directory, automatically captured when creating the data set object using `createDataSet()`.",
+  pathRawCounts = "File path to raw counts input file.",
+  pathMetaDataLab = "File path to lab metadata input file (optional).",
+  pathMetaDataSeq = "File path to sequencing metadata input file (optional)."
 )
 
 #' @title Check DExploreR Data Set
@@ -151,38 +169,26 @@ setClass(
 #'
 #' @export
 printDataSetReqs <- function() {
+  # Get the class and the slots
   cls <- getClass("dexDataSet")
   slot_classes <- cls@slots
-  #   cls <- getClass("dexDataSet")
-  # slot_classes <- cls@slots
+
   reqs <- list()
+
   for (slot in names(slot_classes)) {
+    # Extract the class of the slot
     slot_class <- slot_classes[[slot]]
-    cols <- .dex_requirements[[slot]]
+    # Extract the required columns
+    slot_cols <- .dex_requirements[[slot]]
+    # Extract the information about the slot
+    slot_info <- .dex_info[[slot]]
+
     reqs[[slot]] <- list(
       class = slot_class,
-      columns = cols
+      columns = slot_cols,
+      info = slot_info
     )
   }
+
   reqs
-  # paste(
-  #   capture.output(
-  #     for (nm in names(slot_classes)) {
-  #       cat(sprintf("\nSlot: %s\n", nm))
-  #       cat(sprintf("  Class: %s\n", slot_classes[[nm]]))
-
-  #       if (slot_classes[[nm]] == "data.frame") {
-  #         cols <- .dex_requirements[[nm]]
-
-  #         if (is.null(cols)) {
-  #           cat("  Columns: <no column requirements defined>\n")
-  #         } else {
-  #           cat("  Required columns:\n")
-  #           cat("   -", paste(cols, collapse = "\n   - "), "\n")
-  #         }
-  #       }
-  #     }
-  #   ),
-  #   collapse = "\n"
-  # )
 }

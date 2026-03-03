@@ -227,37 +227,56 @@ app_server <- function(input, output, session, config) {
     })
   }
 
-  # Render upload section, when `with_upload == TRUE`
   if (config$with_upload) {
+    # Render upload section, when `with_upload == TRUE`
     render_rds_upload()
+    # Hide the hide button, to display on the show requirements button
     hide("hide_dataset_reqs")
+
+    # Create the UI output with the requirements
     output$dataset_reqs <- renderUI({
+      # Get requirements
       reqs <- printDataSetReqs()
+
+      # Iterate over the requirements and create a card for each slot with the information and required columns
       cards <- lapply(names(reqs), function(slot) {
         slot_info <- reqs[[slot]]
+
+        # When the slot is not a data frame, there are no required columns, thus the card can be smaller
+        card_height <- ifelse(slot_info$class != "data.frame", "150px", "320px")
+
         tags$div(
           class = "card tab-header card-reqs",
+          style = paste0("height: ", card_height, ";"),
           tags$div(
             class = "card-header card-header-reqs",
             paste0(slot, " (", slot_info$class, ")")
           ),
           tags$div(
-            class = "card-body",
-            style = "overflow-y: auto; flex: 1;",
-            if (!is.null(slot_info$columns) && length(slot_info$columns) > 0) {
-              tags$ul(
-                lapply(slot_info$columns, function(col) tags$li(col))
+            tags$i(slot_info$info)
+          ),
+          # Only add this when the class is a data frame
+          if (slot_info$class == "data.frame") {
+            tagList(
+              tags$div(
+                class = "card-req-cols",
+                "Required columns:"
+              ),
+              tags$div(
+                class = "card-body card-body-reqs",
+                tags$ul(
+                  lapply(slot_info$columns, function(col) tags$li(col))
+                )
               )
-            } else {
-              tags$em("No required columns")
-            }
-          )
+            )
+          }
         )
       })
       tags$div(
         id = "dataset-reqs-cards",
         # Hide cards by default
         style = "display: none;",
+        # Arrange cards in a flexible grid
         tags$div(
           class = "card-grid",
           cards
@@ -265,6 +284,7 @@ app_server <- function(input, output, session, config) {
       )
     })
 
+    # Control the `actionButton()`s to show and hide the requirements
     observeEvent(input$show_dataset_reqs, {
       hide("show_dataset_reqs")
       show("hide_dataset_reqs")
