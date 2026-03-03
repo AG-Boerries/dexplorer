@@ -34,6 +34,12 @@
   border-width: 4px;
 }
 
+.centered-buttons .custom-button {
+  margin-left: unset !important;
+  margin-right: unset !important;
+  display: inline-block;
+}
+
 #use_gene_list_in_volcano {
   margin-top: 10px;
   margin-left: auto;
@@ -378,6 +384,12 @@ a {
   color: var(--theme-color-pink);
 }
 
+a:hover {
+  color: var(--theme-color-green);
+  font-weight: bold;
+  text-decoration: underline;
+}
+
 .modal-body {
   text-align: justify;
 }
@@ -488,4 +500,42 @@ a {
 #customModalVolcano .modal-dialog,
 #customModalHeatmap .modal-dialog {
   z-index: 1071 !important;
+}
+
+#goto-datasets-tab {
+  color: var(--theme-color-pink);
+  cursor: pointer;
+}
+
+#goto-datasets-tab:hover {
+  color: var(--theme-color-green);
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.card-header-reqs {
+  color: var(--theme-color-blue);
+  font-weight: bold;
+  border-bottom: 2px solid var(--theme-color-blue);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.card-reqs {
+  width: 270px;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  justify-items: center;
+  align-items: start;
+  width: 100%;
 }

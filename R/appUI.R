@@ -103,10 +103,45 @@ app_ui <- function(config) {
         tabPanel(
           "Home",
           div(
-            img(src = "assets/logo.png", style = "margin-top: 200px;"),
+            img(src = "assets/logo.png", style = "margin-top: 20px;"),
             style = "text-align: center;"
           ),
-          uiOutput("upload_rds_ui")
+          if (config$with_upload) {
+            div(
+              h4("Welcome to DExploreR!"),
+              includeHTML(
+                system.file(
+                  "dexplorer_assets/homeTextWithInput.html",
+                  package = "dexplorer"
+                )
+              ),
+              # HTML(
+              #   paste0(
+              #     "With <span style='color: var(--theme-color-blue);'><b>DExploreR</b></span> you can interactively explore your bulk RNA-seq data. To get started, select a data set from the
+              #     <span id='goto-datasets-tab' style='color: var(--theme-color-pink); cursor: pointer;'><i>Data sets tab</i></span>. These are publicly available data sets <a href='https://github.com/AG-Boerries/dexplorer-scripts' target='_blank'><i>processed using the R package DExploreR.</i></a><br><br>Alternatively, you can upload your own data set in the required format. To meet the requirements, you can either use the functions of the <a href='https://github.com/AG-Boerries/dexplorer' target='_blank'><i>DExploreR R package</i></a> as suggested in the vignette or use your own processing pipeline and as an additional last step create a <pre style='display: inline; background: #f8f8f8; padding: 2px 6px; border-radius: 4px;'>dexDataSet</pre> object using <pre style='display: inline; background: #f8f8f8; padding: 2px 6px; border-radius: 4px;'>dexplorer::createDataSet()</pre>. This function creates the data set based on your input and checks validity to meet the app\'s requirements."
+              #   )
+              # ),
+              div(
+                class = "centered-buttons",
+                style = "text-align: center; margin-top: 20px;",
+                actionButton(
+                  "show_dataset_reqs",
+                  "Show Data Set Requirements",
+                  width = "220px",
+                  class = "custom-button"
+                ),
+                actionButton(
+                  "hide_dataset_reqs",
+                  "Hide Data Set Requirements",
+                  width = "220px",
+                  class = "custom-button"
+                ),
+              ),
+              style = "text-align: center; margin-top: 20px;"
+            )
+          },
+          uiOutput("upload_rds_ui"),
+          uiOutput("dataset_reqs")
         )
       },
 

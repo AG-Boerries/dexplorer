@@ -215,10 +215,14 @@ app_server <- function(input, output, session, config) {
   # Function to render the upload section for user-provided RDS files
   render_rds_upload <- function() {
     output$upload_rds_ui <- renderUI({
-      fileInput(
-        inputId = "upload_rds",
-        label = "Upload pre-processed data set as .rds file:",
-        accept = ".rds"
+      div(
+        fileInput(
+          inputId = "upload_rds",
+          label = "Upload pre-processed data set as .rds file:",
+          accept = ".rds",
+          width = "400px"
+        ),
+        style = "display: flex; align-items: center; justify-content: center; margin-top: 20px;"
       )
     })
   }
@@ -226,6 +230,55 @@ app_server <- function(input, output, session, config) {
   # Render upload section, when `with_upload == TRUE`
   if (config$with_upload) {
     render_rds_upload()
+    hide("hide_dataset_reqs")
+    output$dataset_reqs <- renderUI({
+      reqs <- printDataSetReqs()
+      cards <- lapply(names(reqs), function(slot) {
+        slot_info <- reqs[[slot]]
+        tags$div(
+          class = "card tab-header card-reqs",
+          tags$div(
+            class = "card-header card-header-reqs",
+            paste0(slot, " (", slot_info$class, ")")
+          ),
+          tags$div(
+            class = "card-body",
+            style = "overflow-y: auto; flex: 1;",
+            if (!is.null(slot_info$columns) && length(slot_info$columns) > 0) {
+              tags$ul(
+                lapply(slot_info$columns, function(col) tags$li(col))
+              )
+            } else {
+              tags$em("No required columns")
+            }
+          )
+        )
+      })
+      tags$div(
+        id = "dataset-reqs-cards",
+        # Hide cards by default
+        style = "display: none;",
+        tags$div(
+          class = "card-grid",
+          cards
+        )
+      )
+    })
+
+    observeEvent(input$show_dataset_reqs, {
+      hide("show_dataset_reqs")
+      show("hide_dataset_reqs")
+      runjs(
+        'document.getElementById("dataset-reqs-cards").style.display = "block";'
+      )
+    })
+    observeEvent(input$hide_dataset_reqs, {
+      show("show_dataset_reqs")
+      hide("hide_dataset_reqs")
+      runjs(
+        'document.getElementById("dataset-reqs-cards").style.display = "none";'
+      )
+    })
   }
 
   ###################################################################################################

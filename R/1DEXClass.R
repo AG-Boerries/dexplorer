@@ -153,22 +153,36 @@ setClass(
 printDataSetReqs <- function() {
   cls <- getClass("dexDataSet")
   slot_classes <- cls@slots
-
-  for (nm in names(slot_classes)) {
-    cat(sprintf("\nSlot: %s\n", nm))
-    cat(sprintf("  Class: %s\n", slot_classes[[nm]]))
-
-    if (slot_classes[[nm]] == "data.frame") {
-      cols <- .dex_requirements[[nm]]
-
-      if (is.null(cols)) {
-        cat("  Columns: <no column requirements defined>\n")
-      } else {
-        cat("  Required columns:\n")
-        cat("   -", paste(cols, collapse = "\n   - "), "\n")
-      }
-    }
+  #   cls <- getClass("dexDataSet")
+  # slot_classes <- cls@slots
+  reqs <- list()
+  for (slot in names(slot_classes)) {
+    slot_class <- slot_classes[[slot]]
+    cols <- .dex_requirements[[slot]]
+    reqs[[slot]] <- list(
+      class = slot_class,
+      columns = cols
+    )
   }
+  reqs
+  # paste(
+  #   capture.output(
+  #     for (nm in names(slot_classes)) {
+  #       cat(sprintf("\nSlot: %s\n", nm))
+  #       cat(sprintf("  Class: %s\n", slot_classes[[nm]]))
 
-  invisible(NULL)
+  #       if (slot_classes[[nm]] == "data.frame") {
+  #         cols <- .dex_requirements[[nm]]
+
+  #         if (is.null(cols)) {
+  #           cat("  Columns: <no column requirements defined>\n")
+  #         } else {
+  #           cat("  Required columns:\n")
+  #           cat("   -", paste(cols, collapse = "\n   - "), "\n")
+  #         }
+  #       }
+  #     }
+  #   ),
+  #   collapse = "\n"
+  # )
 }
