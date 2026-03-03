@@ -12,6 +12,10 @@ app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
   . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- NULL
 
+  # Increase the maximum file upload size to 30 MB
+  # This is necessary for user-prepared RDS files,
+  options(shiny.maxRequestSize = 50 * 1024^2)
+
   ###################################################################################################
   # General Things at Start up #####
   ###################################################################################################
@@ -30,6 +34,9 @@ app_server <- function(input, output, session, config) {
       color = "white"
     )
   }
+
+  # Central reactive value to store the loaded data set
+  data_set_loaded <- reactiveVal(NULL)
 
   # Reactive values to track plotting status
   plots_ready <- reactiveValues(
@@ -205,6 +212,22 @@ app_server <- function(input, output, session, config) {
   # Auto-render the file upload upon start up of the app
   render_gene_list_file_upload()
 
+  # Function to render the upload section for user-provided RDS files
+  render_rds_upload <- function() {
+    output$upload_rds_ui <- renderUI({
+      fileInput(
+        inputId = "upload_rds",
+        label = "Upload pre-processed data set as .rds file:",
+        accept = ".rds"
+      )
+    })
+  }
+
+  # Render upload section, when `with_upload == TRUE`
+  if (config$with_upload) {
+    render_rds_upload()
+  }
+
   ###################################################################################################
   # Chapter: Data Sets ####
   ###################################################################################################
@@ -214,7 +237,7 @@ app_server <- function(input, output, session, config) {
 
   # When `config$mode == "standard"`, a data set selection is necessary
   # All available data sets are shown to the user
-  if (!is.null(dTypes$dataSetsTable) && is.null(dTypes$dataSet)) {
+  if (config$mode == "standard" && !is.null(dTypes$dataSetsTable)) {
     # Render the table with the data sets
     output$data_sets_table <- renderDT(
       dTypes$dataSetsTable %>%
@@ -237,49 +260,132 @@ app_server <- function(input, output, session, config) {
         drawCallback = JS("dtTooltip")
       )
     )
+  }
 
-    # Load the selected data set
-    data_set_loaded <- reactive({
-      req(length(input$data_sets_table_rows_selected) == 1)
-      # Prevents errors like `samples not found`, when switching between data sets
-      freezeReactiveValue(input, "sample_select_heatmap")
-      # Prevents volcano plot from crashing, when switching between data sets
-      freezeReactiveValue(input, "volcano_contrast_select")
-      freezeReactiveValue(input, "gene_sets_contrast_select")
-      # Using the file path from the meta data table, load the corresponding `.rds`
-      file_path <- paste0(
-        config$data,
-        "/",
-        dTypes$dataSetsTable[
-          input$data_sets_table_rows_selected,
-          "data_path"
-        ]
-      )
+  # Handle upload from table selection
+  # This is only happens, when `config$mode == "standard"`
+  observeEvent(input$data_sets_table_rows_selected, {
+    req(length(input$data_sets_table_rows_selected) == 1)
 
-      d <- readRDS(file_path)
-      message("\n\n****** Loading data set from: ", file_path, " ******\n\n")
-      d
-    })
-  } else if (!is.null(dTypes$dataSet)) {
-    # This handles two cases, either the user provided data set as a list or the internal data set
-    # Thus, create a corresponding message for loading
+    # Prevents errors like "samples not found", when switching between data sets
+    freezeReactiveValue(input, "sample_select_heatmap")
+    # Prevents volcano plot from crashing, when switching between data sets
+    freezeReactiveValue(input, "volcano_contrast_select")
+    freezeReactiveValue(input, "gene_sets_contrast_select")
+
+    # Using the file path from the meta data table, load the corresponding `.rds`
+    file_path <- paste0(
+      config$data,
+      "/",
+      dTypes$dataSetsTable[
+        input$data_sets_table_rows_selected,
+        "data_path"
+      ]
+    )
+
+    # Load the data set and store it in the reactive value
+    message("\n\n****** Loading data set from: ", file_path, " ******\n\n")
+    data_set_loaded(readRDS(file_path))
+
+    # Re-render the file upload to reset for new upload, if required
+    if (isTRUE(config$with_upload)) {
+      render_rds_upload()
+    }
+  })
+
+  # This handles two cases, either the user provided data set as a list or the internal data set
+  # I.e. `config$mode == "internal"` or `config$mode == "interactive"`
+  # Thus, create a corresponding message for loading
+  if (!is.null(dTypes$dataSet)) {
+    # Prevent errors
+    freezeReactiveValue(input, "sample_select_heatmap")
+    freezeReactiveValue(input, "volcano_contrast_select")
+    freezeReactiveValue(input, "gene_sets_contrast_select")
+
     loading_msg <- if (config$mode == "internal") {
       "\n\n****** Loading internal data set ... ******\n\n"
     } else {
       "\n\n****** Loading data set provided by you ... ******\n\n"
     }
 
-    data_set_loaded <- reactive({
-      # These values need to be frozen to prevent reactivity issues
+    # Upload the internal data or the user-provided data set
+    message(loading_msg)
+    data_set_loaded(dTypes$dataSet)
+  }
+
+  # Handle upload of user-provided RDS file, when `with_upload == TRUE`
+  observeEvent(input$upload_rds, {
+    req(input$upload_rds)
+
+    # Remove any previously loaded data sets
+    data_set_loaded(NULL)
+
+    # Reset all plot statuses
+    lapply(names(plots_ready), function(nm) {
+      plots_ready[[nm]] <- FALSE
+    })
+
+    # Try to load the provided RDS file and catch errors, e.g. when the file does not meet the formatting requirements
+    d <- tryCatch(
+      {
+        message(
+          "\n\n****** Checking data set from uploaded RDS file ... ******\n\n"
+        )
+        # This function converts to S4 `dexDataSet` object, which immediately runs some checks on the validity of the data set
+        toObject(readRDS(input$upload_rds$datapath))
+      },
+      error = function(e) {
+        # Show modal that requirements are not met
+        showModal(modalDialog(
+          title = "Error in reading the uploaded RDS file.",
+          easyClose = TRUE,
+          footer = NULL,
+          HTML(
+            "Please make sure that the uploaded RDS file is correctly formatted. It should be a list of data frames created using `dexplorer::createDataSet()` or prepared according to the app's data formatting requirements."
+          )
+        ))
+        message(
+          "\n\n****** The uploaded data set does not meet the requirements! ******\n\n"
+        )
+
+        # Re-render the file upload to reset for new upload
+        render_rds_upload()
+
+        # Disable tabs, as the uploaded data set cannot be used
+        runjs(sprintf(
+          "disableTabs(%s)",
+          toJSON(tabs, auto_unbox = TRUE)
+        ))
+
+        return(NULL)
+      }
+    )
+
+    # If the data set is valid, then set the reactive value
+    if (!is.null(d)) {
+      # Show waiter as long as data ist loading
+      waiter_show(
+        html = tagList(
+          h4("Loading data and plots ... "),
+          img(
+            src = "assets/logo.png",
+            class = "pulse-logo",
+            style = "margin-top: 100px;"
+          )
+        ),
+        color = "white"
+      )
+
+      # Prevent errors
       freezeReactiveValue(input, "sample_select_heatmap")
       freezeReactiveValue(input, "volcano_contrast_select")
       freezeReactiveValue(input, "gene_sets_contrast_select")
 
-      d <- dTypes$dataSet
-      message(loading_msg)
-      d
-    })
-  }
+      # Load data
+      message("\n\n****** Loading data set provided by you ... ******\n\n")
+      data_set_loaded(toList(d))
+    }
+  })
 
   ###################################################################################################
   # Chapter: Raw data ####

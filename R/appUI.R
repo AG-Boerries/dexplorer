@@ -88,7 +88,7 @@ app_ui <- function(config) {
           )
         ),
         div(
-          "DExploreR v0.7.0.5",
+          "DExploreR v0.8.1.0",
           class = "app-version-fixed"
         )
       ),
@@ -106,9 +106,7 @@ app_ui <- function(config) {
             img(src = "assets/logo.png", style = "margin-top: 200px;"),
             style = "text-align: center;"
           ),
-          if (config$with_upload) {
-            fileInput("upload_rds", "Upload RDS dataset:", accept = ".rds")
-          },
+          uiOutput("upload_rds_ui")
         )
       },
 
