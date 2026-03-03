@@ -5,17 +5,20 @@
 \title{Run DExploreR Shiny App}
 \usage{
 runDExploreR(
+  data = NULL,
   asset_dir = NULL,
-  data_dir = NULL,
+  with_upload = FALSE,
   env_path = NULL,
   host = "0.0.0.0",
   port = 1234
 )
 }
 \arguments{
-\item{asset_dir}{A directory containing the assets for DExploreR, such as logos.}
+\item{data}{A directory containing \code{.rds} files and corresponding \code{.csv}s as prepared by \code{\link{createDataSet}()}.}
 
-\item{data_dir}{A directory containing \code{.rds} files and corresponding \code{.csv}s as prepared by \code{\link{createDataSet}()}.}
+\item{asset_dir}{A directory containing the assets for DExploreR, such as logos. If you want your logo to appear on the home and as a loading icon, name it \code{logo.png} in \code{assed_dir}. Other assets are not yet specified.}
+
+\item{with_upload}{Boolean. Only needed when \code{data} is a path to a directory with \code{.rds} files. This uses mode "standard".}
 
 \item{env_path}{Path to the Python virtual environment to use for DExploreR. If \code{NULL}, the default environment created by \code{\link{configurePyEnv}()} will be used. If no environment exists, this will also create a new environment.}
 

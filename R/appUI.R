@@ -2,7 +2,10 @@
 #'
 #' @description
 #' This function defines the user interface of the DExploreR Shiny app and it is called from \code{\link{runDExploreR}()}.
-app_ui <- function() {
+#'
+#' @param config The list of configs that is created in \code{\link{runDExploreR}()}.
+#'
+app_ui <- function(config) {
   fluidPage(
     style = "margin-top: 15px;",
     ###################################################################################################
@@ -85,7 +88,7 @@ app_ui <- function() {
           )
         ),
         div(
-          "DExploreR v0.7.0.5",
+          "DExploreR v0.8.1.0",
           class = "app-version-fixed"
         )
       ),
@@ -96,29 +99,64 @@ app_ui <- function() {
       # Chapter: Start Page #####
       ###################################################################################################
 
-      tabPanel(
-        "Home",
-        div(
-          img(src = "assets/logo.png", style = "margin-top: 200px;"),
-          style = "text-align: center;"
+      if (config$mode == "standard") {
+        tabPanel(
+          "Home",
+          div(
+            img(src = "assets/logo.png", style = "margin-top: 20px;"),
+            style = "text-align: center;"
+          ),
+          # Add more information to the home, when upload enabled
+          if (config$with_upload) {
+            div(
+              h4("Welcome to DExploreR!"),
+              includeHTML(
+                system.file(
+                  "dexplorer_assets/homeTextWithInput.html",
+                  package = "dexplorer"
+                )
+              ),
+              div(
+                class = "centered-buttons",
+                style = "text-align: center; margin-top: 20px;",
+                actionButton(
+                  "show_dataset_reqs",
+                  "Show Data Set Requirements",
+                  width = "220px",
+                  class = "custom-button"
+                ),
+                actionButton(
+                  "hide_dataset_reqs",
+                  "Hide Data Set Requirements",
+                  width = "220px",
+                  class = "custom-button"
+                ),
+              ),
+              style = "text-align: center; margin-top: 20px;"
+            )
+          },
+          uiOutput("upload_rds_ui"),
+          uiOutput("dataset_reqs")
         )
-      ),
+      },
 
       ###################################################################################################
       # Chapter: Data Sets #####
       ###################################################################################################
 
-      tabPanel(
-        "Data sets",
-        fluidPage(
-          div(
-            titlePanel(title = "Data sets", windowTitle = "Data sets"),
-            h4("Choose and load a data set by clicking on it"),
-            class = "tab-header"
-          )
-        ),
-        DTOutput("data_sets_table"),
-      ),
+      if (config$mode == "standard") {
+        tabPanel(
+          "Data sets",
+          fluidPage(
+            div(
+              titlePanel(title = "Data sets", windowTitle = "Data sets"),
+              h4("Choose and load a data set by clicking on it"),
+              class = "tab-header"
+            )
+          ),
+          DTOutput("data_sets_table"),
+        )
+      },
 
       ###################################################################################################
       # Chapter: Raw data ####

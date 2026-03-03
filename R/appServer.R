@@ -12,11 +12,33 @@ app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
   . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- NULL
 
+  # Increase the maximum file upload size to 30 MB
+  # This is necessary for user-prepared RDS files,
+  options(shiny.maxRequestSize = 50 * 1024^2)
+
   ###################################################################################################
   # General Things at Start up #####
   ###################################################################################################
 
-  # Reactive values to track, which plots are ready
+  # Immediately show the waiter, when user provided a data set directly, e.g. no data set selection necessary
+  if (config$mode != "standard") {
+    waiter_show(
+      html = tagList(
+        h4("Loading data and plots ... "),
+        img(
+          src = "assets/logo.png",
+          class = "pulse-logo",
+          style = "margin-top: 100px;"
+        )
+      ),
+      color = "white"
+    )
+  }
+
+  # Central reactive value to store the loaded data set
+  data_set_loaded <- reactiveVal(NULL)
+
+  # Reactive values to track plotting status
   plots_ready <- reactiveValues(
     bar_plot = FALSE,
     scree = FALSE,
@@ -32,18 +54,12 @@ app_server <- function(input, output, session, config) {
   # Tabs to disable/enable during data set loading
   tabs <- c("Raw data", "DGEA", "GSEA")
 
-  # Create list for tab details
-  # The names are the IDs for the output
-  # The values are the headings of `dataSetsTable`
-  tab_details <- list(
-    raw_data_details = "Sequencing Details",
-    dgea_details = "DGEA Details",
-    gsea_details = "GSEA Details"
-  )
-
-  # Disable tabs at start up or when no data set is selected
+  # Disable tabs at start up only when user has to select a data set
   observe({
-    req(length(input$data_sets_table_rows_selected) == 0)
+    req(
+      length(input$data_sets_table_rows_selected) == 0 &&
+        config$mode == "standard"
+    )
     runjs(sprintf(
       "disableTabs(%s)",
       toJSON(tabs, auto_unbox = TRUE)
@@ -65,7 +81,6 @@ app_server <- function(input, output, session, config) {
       waiter_show(
         html = tagList(
           h4("Loading data and plots ... "),
-          # Add this logo to the directory `asset_dir`, that is provided as a parameter to `runDExploreR()`
           img(
             src = "assets/logo.png",
             class = "pulse-logo",
@@ -74,10 +89,11 @@ app_server <- function(input, output, session, config) {
         ),
         color = "white"
       )
-    }
+    },
+    ignoreInit = FALSE
   )
 
-  # Check if all plots are ready, after a data set is loaded
+  # Check if all plots are ready, after data set loading
   # Then, hide waiter and enable tabs
   observe(
     {
@@ -108,14 +124,37 @@ app_server <- function(input, output, session, config) {
   )
 
   # Create text outputs for each tab with unique IDs
-  iwalk(tab_details, function(column, output_id) {
-    output[[output_id]] <- renderText({
-      if (output_id == "data_sets_details") {
-        column
-      } else {
-        dataSetsTable[input$data_sets_table_rows_selected, column]
-      }
-    })
+  iwalk(
+    # The names are the IDs for the output
+    # The values are the headings of `dataSetsTable`
+    list(
+      raw_data_details = "Sequencing Details",
+      dgea_details = "DGEA Details",
+      gsea_details = "GSEA Details"
+    ),
+    function(column, output_id) {
+      output[[output_id]] <- renderText({
+        if (config$mode == "internal") {
+          dTypes$dataSetsTable[1, column]
+        } else {
+          dTypes$dataSetsTable[input$data_sets_table_rows_selected, column]
+        }
+        # When `config$mode == "interactive"`, there is no `dataSetsTable`, thus nothing is returned and rendered
+      })
+    }
+  )
+
+  # Get the author information
+  authors <- reactive({
+    if (config$mode != "interactive") {
+      dTypes$dataSetsTable[
+        input$data_sets_table_rows_selected,
+        "Authors"
+      ] %>%
+        gsub(" ", "_", .)
+    } else {
+      ""
+    }
   })
 
   # Available samples for selection in the plots
@@ -129,7 +168,7 @@ app_server <- function(input, output, session, config) {
     # The first column contains the user-defined sample names from meta_data_lab
     # The second column contains the user-defined groups
     # The third column contains the `RunID` column from `RawCounts`
-    # Further information can be obtained from `dexpreprocessr::prepareDfs()`
+    # Further information can be obtained from `dexplorer::prepareDfs()`
     split(df$SampleNameUser, df$Group)
   })
 
@@ -173,77 +212,252 @@ app_server <- function(input, output, session, config) {
   # Auto-render the file upload upon start up of the app
   render_gene_list_file_upload()
 
+  # Function to render the upload section for user-provided RDS files
+  render_rds_upload <- function() {
+    output$upload_rds_ui <- renderUI({
+      div(
+        fileInput(
+          inputId = "upload_rds",
+          label = "Upload pre-processed data set as .rds file:",
+          accept = ".rds",
+          width = "400px"
+        ),
+        style = "display: flex; align-items: center; justify-content: center; margin-top: 20px;"
+      )
+    })
+  }
+
+  if (config$with_upload) {
+    # Render upload section, when `with_upload == TRUE`
+    render_rds_upload()
+    # Hide the hide button, to display on the show requirements button
+    hide("hide_dataset_reqs")
+
+    # Create the UI output with the requirements
+    output$dataset_reqs <- renderUI({
+      # Get requirements
+      reqs <- printDataSetReqs()
+
+      # Iterate over the requirements and create a card for each slot with the information and required columns
+      cards <- lapply(names(reqs), function(slot) {
+        slot_info <- reqs[[slot]]
+
+        # When the slot is not a data frame, there are no required columns, thus the card can be smaller
+        card_height <- ifelse(slot_info$class != "data.frame", "150px", "320px")
+
+        tags$div(
+          class = "card tab-header card-reqs",
+          style = paste0("height: ", card_height, ";"),
+          tags$div(
+            class = "card-header card-header-reqs",
+            paste0(slot, " (", slot_info$class, ")")
+          ),
+          tags$div(
+            tags$i(slot_info$info)
+          ),
+          # Only add this when the class is a data frame
+          if (slot_info$class == "data.frame") {
+            tagList(
+              tags$div(
+                class = "card-req-cols",
+                "Required columns:"
+              ),
+              tags$div(
+                class = "card-body card-body-reqs",
+                tags$ul(
+                  lapply(slot_info$columns, function(col) tags$li(col))
+                )
+              )
+            )
+          }
+        )
+      })
+      tags$div(
+        id = "dataset-reqs-cards",
+        # Hide cards by default
+        style = "display: none;",
+        # Arrange cards in a flexible grid
+        tags$div(
+          class = "card-grid",
+          cards
+        )
+      )
+    })
+
+    # Control the `actionButton()`s to show and hide the requirements
+    observeEvent(input$show_dataset_reqs, {
+      hide("show_dataset_reqs")
+      show("hide_dataset_reqs")
+      runjs(
+        'document.getElementById("dataset-reqs-cards").style.display = "block";'
+      )
+    })
+    observeEvent(input$hide_dataset_reqs, {
+      show("show_dataset_reqs")
+      hide("hide_dataset_reqs")
+      runjs(
+        'document.getElementById("dataset-reqs-cards").style.display = "none";'
+      )
+    })
+  }
+
   ###################################################################################################
   # Chapter: Data Sets ####
   ###################################################################################################
 
-  # Read the meta data table `.csv`s form the user-provided directory
-  # The same directory should contain the corresponding `.rds` files with the data set
-  metaFiles <- list.files(
-    path = config$data_dir,
-    pattern = ".csv$",
-    full.names = TRUE
-  )
+  # Check the provided data and read files accordingly
+  dTypes <- dataTypeSelector(config = config)
 
-  dataSetsTable <- lapply(metaFiles, read.csv, check.names = FALSE) %>%
-    bind_rows()
-
-  # Render the table with the data sets
-  output$data_sets_table <- renderDT(
-    dataSetsTable %>%
-      select(
-        "Cell line or tissue",
-        "Study target",
-        "Authors",
-        "Date",
-        "Details"
-      ),
-    rownames = FALSE,
-    # Allow to select only a single row
-    selection = "single",
-    escape = FALSE,
-    options = list(
-      # Hide the `Details` column (index 4 in 0-based JS)
-      columnDefs = list(list(visible = FALSE, targets = 4)),
-      # Display `Details` column as tooltip on hovering over row
-      rowCallback = JS("dataSetDetails"),
-      drawCallback = JS("dtTooltip")
+  # When `config$mode == "standard"`, a data set selection is necessary
+  # All available data sets are shown to the user
+  if (config$mode == "standard" && !is.null(dTypes$dataSetsTable)) {
+    # Render the table with the data sets
+    output$data_sets_table <- renderDT(
+      dTypes$dataSetsTable %>%
+        select(
+          "Cell line or tissue",
+          "Study target",
+          "Authors",
+          "Date",
+          "Details"
+        ),
+      rownames = FALSE,
+      # Allow to select only a single row
+      selection = "single",
+      escape = FALSE,
+      options = list(
+        # Hide the `Details` column (index 4 in 0-based JS)
+        columnDefs = list(list(visible = FALSE, targets = 4)),
+        # Display `Details` column as tooltip on hovering over row
+        rowCallback = JS("dataSetDetails"),
+        drawCallback = JS("dtTooltip")
+      )
     )
-  )
+  }
 
-  # Load the selected data set
-  data_set_loaded <- reactive({
+  # Handle upload from table selection
+  # This is only happens, when `config$mode == "standard"`
+  observeEvent(input$data_sets_table_rows_selected, {
     req(length(input$data_sets_table_rows_selected) == 1)
-    # Prevents errors like `samples not found`, when switching between data sets
+
+    # Prevents errors like "samples not found", when switching between data sets
     freezeReactiveValue(input, "sample_select_heatmap")
     # Prevents volcano plot from crashing, when switching between data sets
     freezeReactiveValue(input, "volcano_contrast_select")
     freezeReactiveValue(input, "gene_sets_contrast_select")
 
     # Using the file path from the meta data table, load the corresponding `.rds`
-    # TODO: when `.csv` and `.rds` are mandatory to be in the same directory, `data_path` form the `.csv` is no longer necessary
     file_path <- paste0(
-      config$data_dir,
+      config$data,
       "/",
-      dataSetsTable[
+      dTypes$dataSetsTable[
         input$data_sets_table_rows_selected,
         "data_path"
       ]
     )
 
-    d <- readRDS(file_path)
-    message("\n\n****** Data set loaded from: ", file_path, " ******\n\n")
-    d
+    # Load the data set and store it in the reactive value
+    message("\n\n****** Loading data set from: ", file_path, " ******\n\n")
+    data_set_loaded(readRDS(file_path))
+
+    # Re-render the file upload to reset for new upload, if required
+    if (isTRUE(config$with_upload)) {
+      render_rds_upload()
+    }
   })
 
-  # Get the author information
-  authors <- reactive({
-    req(length(input$data_sets_table_rows_selected) == 1)
-    dataSetsTable[
-      input$data_sets_table_rows_selected,
-      "Authors"
-    ] %>%
-      gsub(" ", "_", .)
+  # This handles two cases, either the user provided data set as a list or the internal data set
+  # I.e. `config$mode == "internal"` or `config$mode == "interactive"`
+  # Thus, create a corresponding message for loading
+  if (!is.null(dTypes$dataSet)) {
+    # Prevent errors
+    freezeReactiveValue(input, "sample_select_heatmap")
+    freezeReactiveValue(input, "volcano_contrast_select")
+    freezeReactiveValue(input, "gene_sets_contrast_select")
+
+    loading_msg <- if (config$mode == "internal") {
+      "\n\n****** Loading internal data set ... ******\n\n"
+    } else {
+      "\n\n****** Loading data set provided by you ... ******\n\n"
+    }
+
+    # Upload the internal data or the user-provided data set
+    message(loading_msg)
+    data_set_loaded(dTypes$dataSet)
+  }
+
+  # Handle upload of user-provided RDS file, when `with_upload == TRUE`
+  observeEvent(input$upload_rds, {
+    req(input$upload_rds)
+
+    # Remove any previously loaded data sets
+    data_set_loaded(NULL)
+
+    # Reset all plot statuses
+    lapply(names(plots_ready), function(nm) {
+      plots_ready[[nm]] <- FALSE
+    })
+
+    # Try to load the provided RDS file and catch errors, e.g. when the file does not meet the formatting requirements
+    d <- tryCatch(
+      {
+        message(
+          "\n\n****** Checking data set from uploaded RDS file ... ******\n\n"
+        )
+        # This function converts to S4 `dexDataSet` object, which immediately runs some checks on the validity of the data set
+        toObject(readRDS(input$upload_rds$datapath))
+      },
+      error = function(e) {
+        # Show modal that requirements are not met
+        showModal(modalDialog(
+          title = "Error in reading the uploaded RDS file.",
+          easyClose = TRUE,
+          footer = NULL,
+          HTML(
+            "Please make sure that the uploaded RDS file is correctly formatted. It should be a list of data frames created using `dexplorer::createDataSet()` or prepared according to the app's data formatting requirements."
+          )
+        ))
+        message(
+          "\n\n****** The uploaded data set does not meet the requirements! ******\n\n"
+        )
+
+        # Re-render the file upload to reset for new upload
+        render_rds_upload()
+
+        # Disable tabs, as the uploaded data set cannot be used
+        runjs(sprintf(
+          "disableTabs(%s)",
+          toJSON(tabs, auto_unbox = TRUE)
+        ))
+
+        return(NULL)
+      }
+    )
+
+    # If the data set is valid, then set the reactive value
+    if (!is.null(d)) {
+      # Show waiter as long as data ist loading
+      waiter_show(
+        html = tagList(
+          h4("Loading data and plots ... "),
+          img(
+            src = "assets/logo.png",
+            class = "pulse-logo",
+            style = "margin-top: 100px;"
+          )
+        ),
+        color = "white"
+      )
+
+      # Prevent errors
+      freezeReactiveValue(input, "sample_select_heatmap")
+      freezeReactiveValue(input, "volcano_contrast_select")
+      freezeReactiveValue(input, "gene_sets_contrast_select")
+
+      # Load data
+      message("\n\n****** Loading data set provided by you ... ******\n\n")
+      data_set_loaded(toList(d))
+    }
   })
 
   ###################################################################################################

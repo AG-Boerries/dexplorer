@@ -57,11 +57,6 @@ createPCAPlot <- function(
       color = Group
     )
   ) +
-    geom_point_quiet(
-      aes(text = TooltipText),
-      fill = NA,
-      show.legend = TRUE
-    ) +
     geom_hline(yintercept = 0, linetype = "dashed") +
     geom_vline(xintercept = 0, linetype = "dashed") +
     # Add the PCs as axis labels with explained variance
@@ -110,6 +105,13 @@ createPCAPlot <- function(
         show.legend = FALSE
       )
   }
+
+  p <- p +
+    geom_point_quiet(
+      aes(text = TooltipText),
+      fill = NA,
+      show.legend = TRUE
+    )
 
   # Add the selected color scale to the plot
   p <- add_selected_colors(p = p, selected_palette = selected_palette)

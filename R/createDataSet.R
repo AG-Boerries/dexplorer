@@ -98,7 +98,7 @@ createDataSet <- function(
       !is.null(Sequencing_details),
       !is.null(DGEA_details),
       !is.null(GSEA_details),
-      msg = "All metadata fields (Cell_line_or_tissue, Study_target, Authors, Date, Details, Sequencing_details, DGEA_details, GSEA_details) must be provided when data_path is specified. This is the information display in DExploreR for the data set overview."
+      msg = "All metadata fields (Cell_line_or_tissue, Study_target, Authors, Date, Details, Sequencing_details, DGEA_details, GSEA_details) must be provided when `data_path` is specified. This is the information displayed in DExploreR for the data set overview and as header of the respective tabs."
     )
   }
 
