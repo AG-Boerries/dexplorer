@@ -260,11 +260,13 @@ app_ui <- function(config) {
                 virtualSelectInput(
                   inputId = "color_select_heatmap_groups",
                   label = "Select color palette for groups:",
-                  # The color choices are defined in `controls_colors.R`
                   choices = color_choices,
                   selected = "inferno",
                   search = TRUE,
-                  showSelectedOptionsFirst = TRUE
+                  showSelectedOptionsFirst = TRUE,
+                  # Add custom renderers for the colors, which include images of the color scales
+                  labelRenderer = "colorsWithIconChoice",
+                  selectedLabelRenderer = "colorsWithIconSelected"
                 ),
                 virtualSelectInput(
                   inputId = "heatmap_dendrogram",
