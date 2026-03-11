@@ -1,8 +1,8 @@
 ---
-title: "Prepare public data sets for DExploreR"
+title: "Prepare a public data set for DExploreR"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Prepare public data sets for DExploreR}
+  %\VignetteIndexEntry{Prepare a public data set for DExploreR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

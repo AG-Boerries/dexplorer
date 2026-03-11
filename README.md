@@ -1,79 +1,54 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+# DExploreR <img src="inst/dexplorer_assets/DExploreRLogo.png" align="right" height="138" />
 
-# dexpreprocessr
+The goal of `DExploreR` is to provide a user-friendly interface for
+exploring and analyzing gene expression data from bulk RNA-seq. It is
+designed for bioinformaticians who want to share data with their
+collaborators or for interested biologists who want to run their own
+RNA-seq downstream analyses.
 
-<!-- badges: start -->
+`DExploreR` consists of two main components:
 
-<!-- badges: end -->
-
-The goal of dexpreprocessr is to …
+- a set of data preprocessing functions to
+  - create count tables from raw RNA-seq data
+    (`createRawCountsWithStats()`)
+  - translate between gene identifiers (`addGeneSymbols()`)
+  - combine count data and metadata (`prepareDfs()`)
+  - filter lowly expressed genes (`prepareDfs()`)
+  - perform PCA (`prepareDfs()`)
+  - perform differential gene expression analysis (`calculateDEG()`)
+  - perform gene set enrichment analysis (`calculateGSEA()`)
+- [an R Shiny app for data visualization and
+  exploration](https://dexplorer-ibsm.uniklinik-freiburg.de/public/),
+  which can be launch using `runDExploreR()`.
 
 ## Installation
 
-You can install the development version of dexpreprocessr like so:
+You best install `DExploreR` via `BiocManager` to ensure installation
+[Bioconductor](https://bioconductor.org) package dependencies.
 
 ``` r
-# currently also requires auth_token = {GITHUB_PAT}
-BiocManager::install("AG-Boerries/dexplorer", , ask=FALSE, update=TRUE, build_vignettes = TRUE, dependencies = TRUE)
-
-
-# devtools::install_git(
-#   url = "https://gitlab.ibsm.uniklinik-freiburg.de/tobias.hundertmark/dexpreprocessr.git",
-#   git = "external",
-#   build_vignettes = TRUE
-# )
+if (!require('BiocManager', quietly = TRUE))
+        install.packages('BiocManager')
+BiocManager::install(
+    'AG-Boerries/dexplorer',
+    ask=FALSE,
+    update=TRUE,
+    dependencies=TRUE,
+    build_vignettes = TRUE
+)
 ```
 
-- You need to have configured `git` to commit/push/pull/clone/… from our
-  GitLab. [Here is the guide on how to set up the connection between
-  `git` and
-  GitLab.](https://ibsm.atlassian.net/wiki/spaces/TSKB/pages/1770139/Repository+-+AG+B+rries?atl_p=eyJpIjoiZDAxNTViZTctZTY3NS1iYzlmLWE4MDEtNDU5M2E5NjkwZTE4IiwidCI6ImZvbGxvd2luZ0ZlZWRSZWFkTW9yZSIsInNvdXJjZSI6ImVtYWlsIiwiZSI6ImNjLW5vdGlmaWNhdGlvbnNfZm9sbG93aW5nX2ZlZWQiLCJmYyI6IkZPTExPV0lORyIsImZyIjoxfQ)
+## Examples
 
-Also make sure required BioConductor packages are installed:
+### Create heatmaps
 
-``` r
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+![](tools/heatmap.gif)
 
-BiocManager::install(c(
-    "AnnotationDbi",
-    "org.Mm.eg.db",
-    "org.Hs.eg.db",
-    "edgeR",
-    "limma",
-    "gage",
-    "msigdbr"
-))
-```
+### Explore differentially expressed genes
 
-## Example
+![](tools/volcano.gif)
 
-This is a basic example which shows you how to solve a common problem:
+### Explore gene sets
 
-``` r
-# library(dexpreprocessr)
-## basic example code
-```
-
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
-
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+![](tools/geneset.gif)

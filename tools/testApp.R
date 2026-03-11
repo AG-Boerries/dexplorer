@@ -14,9 +14,9 @@ data_dir <- system.file("extdata", "data", package = "dexplorer")
 data_dir <- system.file("extdata", "data", package = "dexplorer")
 runDExploreR(data = data_dir, asset_dir = asset_dir)
 
-# Contain more complex data set
-asset_dir <- "~/Downloads"
-data_dir <- "~/Downloads/data"
+# Contains more complex data set
+# asset_dir <- "~/Downloads"
+# data_dir <- "~/Downloads/data"
 
 # This runs DExploreR with a directory containing `.rds` and `.csv` files to select from different data sets, and with the upload functionality enabled, which allows users to upload their own data sets in the app
 runDExploreR(
