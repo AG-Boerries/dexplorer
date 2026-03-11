@@ -164,14 +164,11 @@ createTopGeneSetsPlot <- function(
 
   p <- p %>%
     layout(
-      # Put legend above the plot
       legend = list(
         orientation = "h",
-        y = 1.02,
-        yanchor = "bottom",
-        yref = "container",
+        y = 1.1,
         xanchor = "center",
-        xref = "container",
+        xref = "paper",
         x = 0.5
       )
     ) %>%

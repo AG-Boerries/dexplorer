@@ -56,33 +56,22 @@ createVolcanoPlot <- function(
       ),
       # Using user-defined thresholds to define significance
       # `p_threshold` comes from a `sliderTextInput()`, which returns a character
-      Significant = PValAdj < as.numeric(p_threshold) &
-        abs(Log2FC) > l2fc_threshold,
-      Significant = ifelse(Significant, "Yes", "No")
+      Significant = case_when(
+        PValAdj < as.numeric(p_threshold) &
+          Log2FC > l2fc_threshold ~ paste0(
+          "Upregulated in ",
+          str_extract(Contrast, "^[^ ]+")
+        ),
+        PValAdj < as.numeric(p_threshold) &
+          Log2FC < -l2fc_threshold ~ paste0(
+          "Upregulated in ",
+          str_extract(Contrast, "(?<=vs )[A-Za-z0-9_]+")
+        ),
+        TRUE ~ "Not significant"
+      )
     ) %>%
     # Display only user-selected contrasts
     filter(Contrast %in% selected_contrast)
-
-  # Create a dataframe to annotate the contrasts on the plot
-  contrast_annotation <- df %>%
-    distinct(Contrast) %>%
-    rowwise() %>%
-    mutate(
-      left_label = str_split_1(Contrast, " vs ")[2],
-      right_label = str_split_1(Contrast, " vs ")[1]
-    ) %>%
-    left_join(
-      crossing(
-        Contrast = unique(df$Contrast),
-        df %>%
-          summarise(
-            xleft = -max(abs(df$Log2FC)) / 2,
-            xright = max(abs(df$Log2FC)) / 2,
-            ypos = max(LogPValAdj) * 0.9
-          )
-      ),
-      by = "Contrast"
-    )
 
   p <- ggplot(
     data = df,
@@ -94,24 +83,21 @@ createVolcanoPlot <- function(
     )
   ) +
     geom_point(alpha = 0.5, size = dot_size) +
-    # Add the addtional user-selected genes as text
-    # `geom_label()` would be a better option but this is no supported by plotly
+    # Highlight the user-selected genes with larger white points and text labels
+    geom_point(
+      data = df %>% filter(Symbol %in% selected_genes),
+      aes(x = Log2FC, y = LogPValAdj),
+      size = 3,
+      color = "white",
+      inherit.aes = FALSE,
+      show.legend = FALSE
+    ) +
     geom_text(
       data = df %>% filter(Symbol %in% selected_genes),
       aes(x = Log2FC, y = LogPValAdj, label = Symbol),
       color = "black",
       inherit.aes = FALSE,
       show.legend = FALSE,
-      nudge_y = 0.5
-    ) +
-    geom_point(
-      data = df %>% filter(Symbol %in% selected_genes),
-      aes(x = Log2FC, y = LogPValAdj),
-      size = 3,
-      alpha = 0.8,
-      color = "black",
-      inherit.aes = FALSE,
-      show.legend = FALSE
     ) +
     # Add threshold lines
     geom_hline(
@@ -124,29 +110,11 @@ createVolcanoPlot <- function(
       linetype = "dashed",
       show.legend = FALSE
     ) +
-    geom_text(
-      data = contrast_annotation,
-      aes(
-        x = xleft,
-        y = ypos,
-        label = left_label
-      ),
-      inherit.aes = FALSE
-    ) +
-    geom_text(
-      data = contrast_annotation,
-      aes(
-        x = xright,
-        y = ypos,
-        label = right_label
-      ),
-      inherit.aes = FALSE
-    ) +
     facet_wrap(~Contrast, ncol = 2) +
     labs(
       y = "-Log10 adjusted p-value",
       x = "Log2 fold change",
-      color = "Significant differential expression"
+      color = ""
     ) +
     xlim(c(-max(abs(df$Log2FC)) - 0.5, max(abs(df$Log2FC)) + 0.5))
 
@@ -158,8 +126,8 @@ createVolcanoPlot <- function(
     tooltip = "text",
     height = calculatePlotHeight(
       n_samples = round(length(unique(df$Contrast)) / 2),
-      min_size = 600,
-      per_sample_size = 600
+      min_size = 800,
+      per_sample_size = 800
     )
   ) %>%
     layout(

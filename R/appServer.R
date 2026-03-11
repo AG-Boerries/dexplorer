@@ -1248,11 +1248,11 @@ app_server <- function(input, output, session, config) {
         group_by(GSCollectionName) %>%
         summarise(values = list(GSName), .groups = "drop") %>%
         deframe(),
-      # By default select the hallmark gene sets
-      selected = data_set_loaded()[["GeneSetsGenes"]] %>%
-        filter(GSCollectionName == "Hallmark") %>%
-        pull(GSName) %>%
-        unique()
+      # By default select the top 40 gene sets by absolute enrichment score
+      selected = data_set_loaded()[["GeneSets"]] %>%
+        arrange(desc(abs(EnrichmentScore))) %>%
+        slice_head(n = 40) %>%
+        pull(Pathway)
     )
   })
 
