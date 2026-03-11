@@ -10,7 +10,7 @@
 #'
 app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
-  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- NULL
+  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- EnrichmentScore <- Pathway <- NULL
 
   # Increase the maximum file upload size to 30 MB
   # This is necessary for user-prepared RDS files,
