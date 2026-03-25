@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare createDataSet Input"
+  short_description: "Map analyzed RNA-seq outputs to dexplorer inputs"
+  default_prompt: "Use $create-dataset-prep to inspect my analyzed RNA-seq outputs, map them to `dexplorer::createDataSet()`, report what is missing, and wait for permission before transforming anything."
