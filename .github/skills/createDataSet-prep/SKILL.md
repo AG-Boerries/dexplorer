@@ -42,9 +42,17 @@ Include:
 - which inputs are missing or ambiguous
 - which gaps are simple reshaping or renaming problems
 - which gaps require genuinely missing analyses rather than formatting
+- whether those missing analyses appear feasible with dexplorer functions and what additional inputs would be needed
 - which files you relied on for each conclusion
 
 Before any transformation, ask the user for permission to proceed. Explicitly invite them to correct missed or misinterpreted files before you touch anything.
+
+If required artifacts are missing but seem derivable with dexplorer helpers, ask for separate, explicit approval for analysis work. Make the distinction clear between:
+
+- reshaping existing analyzed outputs
+- running dexplorer preprocessing or downstream analysis functions to generate missing artifacts
+
+Do not start the second category without the user's approval.
 
 If the user does not approve, stop after the report.
 
@@ -56,9 +64,21 @@ After permission, spawn one worker agent to own the transformation. Tell that wo
 - preserve provenance so each generated slot can be traced back to its source file(s)
 - standardize names and shapes to the dexplorer contract from the reference file
 - retry after debugging if `createDataSet()` reveals a fixable mismatch
-- stop and report back if success would require fabricating analyses the user does not have
+- stop and report back if success would require analyses the user has not approved
 
-Prefer deriving valid inputs from existing results over rerunning biology-heavy analysis. Renaming columns, reshaping long or wide tables, joining annotation tables, harmonizing sample IDs, and splitting combined outputs are acceptable transformations. Inventing missing PCA, DGEA, GSEA, or gene annotation results is not.
+Prefer deriving valid inputs from existing results over rerunning analysis. Renaming columns, reshaping long or wide tables, joining annotation tables, harmonizing sample IDs, and splitting combined outputs are acceptable transformations.
+
+If the user has explicitly approved analysis work, the worker may also try dexplorer helpers when the needed source inputs exist. Typical examples include:
+
+- `createRawCountsWithStats()`
+- `addGeneSymbols()`
+- `prepareDfs()`
+- `calculateDEG()`
+- `calculateGSEA()`
+
+Only run these when the required source inputs are available and the step is a reasonable way to fill a missing `createDataSet()` artifact. Keep the user informed about which missing slots will be generated this way.
+
+Do not fabricate results when the necessary source inputs are absent. If dexplorer-based generation is impossible because raw counts, metadata, contrasts, species, or pathway-collection choices are missing, stop and report the exact blocker.
 
 When testing the transformed data, prefer an actual `dexplorer::createDataSet(..., data_path = NULL)` call so the S4 validity checks run. Use `dexplorer::printDataSetReqs()` or the reference file to interpret failures precisely.
 
@@ -66,6 +86,7 @@ If the attempted `createDataSet()` call fails, classify the blocker:
 
 - formatting bug: fix the transformation and retry
 - ambiguous source mapping: pause and ask the user
+- approved analysis needed: run the relevant dexplorer helper if approval and inputs are both present
 - missing upstream analysis: report the exact missing artifact and why it cannot be inferred safely
 
 ### 4. Run a final QC pass
@@ -88,6 +109,7 @@ Have the QC agent report anomalies, caveats, and residual assumptions clearly.
 - Do not claim a slot is present unless you can point to the source file or object.
 - Do not overwrite or mutate the user's original data in place.
 - Do not silently fabricate missing biological analyses.
+- Do not run dexplorer preprocessing or analysis functions unless the user approved that scope.
 - Do not hide uncertainty. Surface ambiguous mappings early.
 - Keep transformed outputs and a short provenance manifest together.
 - Try to use the exact slot and column names from the reference file except where different names are required by dexplorer.
@@ -109,7 +131,8 @@ During the inventory phase, present:
 - missing or ambiguous slots
 - proposed transformations
 - any missing analyses that would still be required
-- a direct permission request to proceed
+- whether dexplorer functions could likely generate missing artifacts
+- a direct permission request to proceed, clearly separating transformation approval from analysis approval
 
 After transformation, present:
 
