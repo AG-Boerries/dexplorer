@@ -26,8 +26,9 @@ Do not modify unless the dexplorer package API changes.
 **Returns:** `list($Symbols, $CountsSymbols)`
 - `$Symbols`: inflated (one row per alias), columns `GeneID`, `Symbol`, `EntrezID`, `Description`, `Alias`, `NCBIURL`.
 - `$CountsSymbols`: deduplicated (one row per gene per sample), columns `GeneID`, `Symbol`, `EntrezID`, `Description`, `Alias`, `OtherEntrezIDs`, `NCBIURL`, `RunID`, `Counts`. Pass this as `raw_counts` to `prepareDfs()`.
+- `$NCBIURL`: URL to the NCBI gene page for each gene, constructed as `https://www.ncbi.nlm.nih.gov/gene/<EntrezID>`. Optional, may be `NA` if `EntrezID` is missing.
 
-**Save the full list** as `gene_symbols.rds` so both `$Symbols` and `$CountsSymbols` are available downstream.
+**Save the full list** as `gene_symbols.rds` so `$Symbols`, `$CountsSymbols` and `$NCBIURL` are available downstream.
 
 ---
 
@@ -48,6 +49,7 @@ Do not modify unless the dexplorer package API changes.
 - `$RawCountsMeta`: same structure as `raw_counts` but filtered, with `SampleNameUser` and `Group` columns added.
 - `$DfPCA`: columns `PC1`, `PC2`, ..., `SampleNameUser`, `RunID`, `Group` (only PCs explaining ≥ 1% variance).
 - `$VarianceExplained`: columns `PC` (factor), `Variance` (numeric %).
+- `$CPMCounts`: Similar to raw_counts but transformed with edgeR::cpm()
 
 ---
 

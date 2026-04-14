@@ -78,8 +78,13 @@ Required columns:
 - `EntrezID`
 - `Description`
 - `NCBIURL`
+- `Rowmedian`
+- `Rowvariance`
 
 Also require one expression column per sample.
+
+Common upstream note:
+NCBIURL can be created by a simple addition of the EntrezID to the base URL "https://www.ncbi.nlm.nih.gov/datasets/gene/". If no EntrezID is available, it can be set to NA.
 
 ### VarianceExplained
 
