@@ -13,6 +13,8 @@
 #'
 #' @param selected_gene_sets Character vector. Gene set names to include in the plot.
 #'
+#' @param selected_gene_set_collections Character vector. Gene set collection names to include in the plot.
+#'
 #' @return The interactive dotplot as a `plotly` object.
 #'
 #' @export
@@ -21,15 +23,21 @@ createTopGeneSetsPlot <- function(
   df_genes,
   selected_palette,
   selected_contrast,
-  selected_gene_sets
+  selected_gene_sets,
+  selected_gene_set_collections
 ) {
   # Define variables locally for R CMD check
-  Contrast <- Pathway <- GSName <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- Direction <- TooltipText <- NULL
+  Contrast <- Pathway <- GSName <- GSCollectionName <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- Direction <- TooltipText <- NULL
 
   df <- df %>%
+    left_join(
+      df_genes %>% distinct(GSName, GSCollectionName),
+      by = c("Pathway" = "GSName")
+    ) %>%
     filter(
       Contrast %in% selected_contrast,
-      Pathway %in% selected_gene_sets
+      Pathway %in% selected_gene_sets,
+      GSCollectionName %in% selected_gene_set_collections
     ) %>%
     left_join(
       df_genes %>% distinct(GSName, GSDescription, GSURL),
