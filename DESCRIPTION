@@ -1,12 +1,18 @@
 Package: dexplorer
 Title: Visualize and interactively explore bulk RNA-seq data
-Version: 0.8.1.5
+Version: 0.8.1.4
 Authors@R: c(
     person(
         given = "Tobias",
         family = "Hundertmark",
         email = "tobias.hundertmark@dkfz-heidelberg.de",
         role = c("aut", "cre")
+    ),
+    person(
+        given = "Maximilian",
+        family = "von der Linde",
+        email = "maximilian.linde@uniklinik-freiburg.de",
+        role = c("aut")
     ),
     person(
         given = "IBSM - Institute of Medical Bioinformatics and Systems Medicine",

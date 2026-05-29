@@ -14,6 +14,7 @@ This package contains a shiny app for the visualization and interactive explorat
 Authors:
 \itemize{
   \item Tobias Hundertmark \email{tobias.hundertmark@dkfz-heidelberg.de}
+  \item Maximilian von der Linde \email{maximilian.linde@uniklinik-freiburg.de}
 }
 
 Other contributors:
