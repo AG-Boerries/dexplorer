@@ -244,5 +244,14 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
     p$x$layout[[axis_name]]$automargin <- TRUE
   }
 
+  # Scale total plot height with the number of unique contrasts so all rows are visible
+  n_contrasts <- length(unique(c(df$Seta, df$Setb)))
+  total_height <- calculatePlotHeight(
+    n_samples = n_contrasts,
+    min_size = 500,
+    per_sample_size = 50
+  ) * 2
+  p <- p %>% layout(height = total_height)
+
   return(p)
 }

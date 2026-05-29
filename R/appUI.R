@@ -512,7 +512,7 @@ app_ui <- function(config) {
               ),
               main_content = plotlyOutput(
                 "jaccard_dgea",
-                height = "1000px",
+                height = "auto",
                 width = "98%"
               )
             ),
@@ -595,7 +595,7 @@ app_ui <- function(config) {
               remove_sample_selection = TRUE,
               main_content = plotlyOutput(
                 "jaccard_gsea",
-                height = "1000px",
+                height = "auto",
                 width = "98%"
               )
             )
