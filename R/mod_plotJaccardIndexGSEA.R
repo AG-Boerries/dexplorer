@@ -209,7 +209,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
       # )
     ),
     nrows = 2,
-    margin = 0.05
+    margin = 0.2
   ) %>%
     # Reduce the modebar to only essential tools
     config(
@@ -241,6 +241,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
   # Always tilt x-axis labels to avoid overlap for long contrast names
   for (axis_name in names(p$x$layout)[grepl("^xaxis", names(p$x$layout))]) {
     p$x$layout[[axis_name]]$tickangle <- 45
+    p$x$layout[[axis_name]]$automargin <- TRUE
   }
 
   return(p)
