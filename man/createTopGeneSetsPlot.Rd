@@ -9,7 +9,8 @@ createTopGeneSetsPlot(
   df_genes,
   selected_palette,
   selected_contrast,
-  selected_gene_sets
+  selected_gene_sets,
+  selected_gene_set_collections
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ createTopGeneSetsPlot(
 \item{selected_contrast}{Character vector. Contrast names to include in the plot.}
 
 \item{selected_gene_sets}{Character vector. Gene set names to include in the plot.}
+
+\item{selected_gene_set_collections}{Character vector. Gene set collection names to include in the plot.}
 }
 \value{
 The interactive dotplot as a \code{plotly} object.
