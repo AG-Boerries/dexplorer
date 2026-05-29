@@ -502,11 +502,15 @@ app_server <- function(input, output, session, config) {
     # The plot requries these inputs and they are updated when when data is loaded
     req(input$select_PC_x, input$select_PC_y)
 
-    createScreePlot(
-      explained_var = data_set_loaded()[["VarianceExplained"]],
-      pc_x = input$select_PC_x,
-      pc_y = input$select_PC_y,
-      selected_palette = input$color_select_pca
+    safe_analysis_plot(
+      createScreePlot(
+        explained_var = data_set_loaded()[["VarianceExplained"]],
+        pc_x = input$select_PC_x,
+        pc_y = input$select_PC_y,
+        selected_palette = input$color_select_pca
+      ),
+      context = "Raw data > Dimensionality reduction > Scree plot",
+      data_hint = "VarianceExplained"
     )
   })
 
@@ -516,13 +520,17 @@ app_server <- function(input, output, session, config) {
     # The plot requries these inputs and they are updated when when data is loaded
     req(input$select_PC_x, input$select_PC_y)
 
-    createPCAPlot(
-      df_pca = data_set_loaded()[["PCA"]],
-      explained_var = data_set_loaded()[["VarianceExplained"]],
-      pc_x = input$select_PC_x,
-      pc_y = input$select_PC_y,
-      selected_palette = input$color_select_pca,
-      group_overlay = input$pca_grouping
+    safe_analysis_plot(
+      createPCAPlot(
+        df_pca = data_set_loaded()[["PCA"]],
+        explained_var = data_set_loaded()[["VarianceExplained"]],
+        pc_x = input$select_PC_x,
+        pc_y = input$select_PC_y,
+        selected_palette = input$color_select_pca,
+        group_overlay = input$pca_grouping
+      ),
+      context = "Raw data > Dimensionality reduction > PCA plot",
+      data_hint = "PCA / VarianceExplained"
     )
   })
 
@@ -587,14 +595,18 @@ app_server <- function(input, output, session, config) {
 
   # Create the heatmap plot
   heatmap_plot <- reactive({
-    createGeneExpressionHeatmap(
-      df = df_heatmap(),
-      id_or_sym = input$switch_id_symbols_heatmap,
-      samples_groups = data_set_loaded()[["SamplesGroups"]],
-      heatmap_colors = input$color_select_heatmap,
-      group_colors = input$color_select_heatmap_groups,
-      dendrogram_type = input$heatmap_dendrogram,
-      heatmap_heights = heatmap_heights()
+    safe_analysis_plot(
+      createGeneExpressionHeatmap(
+        df = df_heatmap(),
+        id_or_sym = input$switch_id_symbols_heatmap,
+        samples_groups = data_set_loaded()[["SamplesGroups"]],
+        heatmap_colors = input$color_select_heatmap,
+        group_colors = input$color_select_heatmap_groups,
+        dendrogram_type = input$heatmap_dendrogram,
+        heatmap_heights = heatmap_heights()
+      ),
+      context = "Raw data > Gene expression heatmap",
+      data_hint = "NormalizedCounts / SamplesGroups"
     )
   })
 
@@ -922,10 +934,14 @@ app_server <- function(input, output, session, config) {
   # Create the top-scoring genes plot
   top_genes_plot <- reactive({
     req(df_top_genes_dgea())
-    createTopDEGsPlot(
-      df = df_top_genes_dgea(),
-      selected_palette = input$color_select_top_genes,
-      fc_or_pvalue = input$top_genes_fc_or_pvalue
+    safe_analysis_plot(
+      createTopDEGsPlot(
+        df = df_top_genes_dgea(),
+        selected_palette = input$color_select_top_genes,
+        fc_or_pvalue = input$top_genes_fc_or_pvalue
+      ),
+      context = "DGEA > Top-scoring genes",
+      data_hint = "DGEAnalysis"
     )
   })
 
@@ -974,13 +990,17 @@ app_server <- function(input, output, session, config) {
   volcano_plot <- reactive({
     req(data_set_loaded())
     req(input$volcano_contrast_select)
-    createVolcanoPlot(
-      df = data_set_loaded()[["DGEAnalysis"]],
-      selected_palette = input$color_select_volcano,
-      p_threshold = input$volcano_p_threshold,
-      l2fc_threshold = input$volcano_l2fc_threshold,
-      selected_genes = input$gene_select_volcano,
-      selected_contrast = input$volcano_contrast_select
+    safe_analysis_plot(
+      createVolcanoPlot(
+        df = data_set_loaded()[["DGEAnalysis"]],
+        selected_palette = input$color_select_volcano,
+        p_threshold = input$volcano_p_threshold,
+        l2fc_threshold = input$volcano_l2fc_threshold,
+        selected_genes = input$gene_select_volcano,
+        selected_contrast = input$volcano_contrast_select
+      ),
+      context = "DGEA > Volcano plot",
+      data_hint = "DGEAnalysis"
     )
   })
 
@@ -1020,9 +1040,13 @@ app_server <- function(input, output, session, config) {
   })
 
   contrast_intersection_plot <- reactive({
-    createDGEAContrastIntersectionPlot(
-      df = df_dgea_ci(),
-      selected_palette = input$color_select_contrast_intersection
+    safe_analysis_plot(
+      createDGEAContrastIntersectionPlot(
+        df = df_dgea_ci(),
+        selected_palette = input$color_select_contrast_intersection
+      ),
+      context = "DGEA > Contrast intersection",
+      data_hint = "DGEAnalysis"
     )
   })
 
@@ -1087,9 +1111,13 @@ app_server <- function(input, output, session, config) {
       )
 
       venn_plot <- reactive({
-        createVennDiagram(
-          df = df,
-          selected_palette = input$color_select_venn_modal
+        safe_analysis_plot(
+          createVennDiagram(
+            df = df,
+            selected_palette = input$color_select_venn_modal
+          ),
+          context = "DGEA > Contrast intersection > Venn diagram",
+          data_hint = "Intersecting DGE genes"
         )
       })
 
@@ -1259,24 +1287,29 @@ app_server <- function(input, output, session, config) {
   # Create the top-scoring gene sets plot
   top_gene_sets_plot <- reactive({
     req(data_set_loaded())
-    if (
-      is.null(input$gene_sets_contrast_select) ||
-        is.null(input$select_gene_sets) ||
-        length(input$select_gene_sets) == 0
-    ) {
-      p <- empty_plot(
-        "Select a contrast and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
-      )
-    } else {
-      p <- createTopGeneSetsPlot(
-        df = data_set_loaded()[["GeneSets"]],
-        df_genes = data_set_loaded()[["GeneSetsGenes"]],
-        selected_palette = input$color_select_top_gene_sets,
-        selected_contrast = input$gene_sets_contrast_select,
-        selected_gene_sets = input$select_gene_sets
-      )
-    }
-    p
+    safe_analysis_plot(
+      {
+        if (
+          is.null(input$gene_sets_contrast_select) ||
+            is.null(input$select_gene_sets) ||
+            length(input$select_gene_sets) == 0
+        ) {
+          empty_plot(
+            "Select a contrast and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
+          )
+        } else {
+          createTopGeneSetsPlot(
+            df = data_set_loaded()[["GeneSets"]],
+            df_genes = data_set_loaded()[["GeneSetsGenes"]],
+            selected_palette = input$color_select_top_gene_sets,
+            selected_contrast = input$gene_sets_contrast_select,
+            selected_gene_sets = input$select_gene_sets
+          )
+        }
+      },
+      context = "GSEA > Top-scoring gene sets",
+      data_hint = "GeneSets / GeneSetsGenes"
+    )
   })
 
   # Notify when the plot is ready
@@ -1344,17 +1377,21 @@ app_server <- function(input, output, session, config) {
       pathway_url <- pathway_info$GSURL[1]
 
       volcano_modal_plot <- reactive({
-        createVolcanoPlot(
-          df = data_set_loaded()[["DGEAnalysis"]] %>%
-            filter(GeneID %in% pathway_genes$GeneID),
-          # Allow to change the colors and the thresholds
-          selected_palette = input$color_select_volcano_modal,
-          p_threshold = input$p_threshold_volcano_modal,
-          l2fc_threshold = input$l2fc_threshold_volcano_modal,
-          # No need to further select any genes
-          selected_genes = c(),
-          selected_contrast = contrast,
-          dot_size = 3
+        safe_analysis_plot(
+          createVolcanoPlot(
+            df = data_set_loaded()[["DGEAnalysis"]] %>%
+              filter(GeneID %in% pathway_genes$GeneID),
+            # Allow to change the colors and the thresholds
+            selected_palette = input$color_select_volcano_modal,
+            p_threshold = input$p_threshold_volcano_modal,
+            l2fc_threshold = input$l2fc_threshold_volcano_modal,
+            # No need to further select any genes
+            selected_genes = c(),
+            selected_contrast = contrast,
+            dot_size = 3
+          ),
+          context = "GSEA > Pathway modal > Volcano plot",
+          data_hint = "DGEAnalysis / GeneSetsGenes"
         )
       })
 
@@ -1386,14 +1423,18 @@ app_server <- function(input, output, session, config) {
       })
 
       heatmap_modal_plot <- reactive({
-        createGeneExpressionHeatmap(
-          df = df_gsea_genes_heatmap(),
-          id_or_sym = "Gene symbol",
-          samples_groups = data_set_loaded()[["SamplesGroups"]],
-          heatmap_colors = input$color_select_heatmap_tiles_modal,
-          group_colors = input$color_select_heatmap_groups_modal,
-          dendrogram_type = input$heatmap_dendrogram_modal,
-          heatmap_heights = heatmap_heights_modal()
+        safe_analysis_plot(
+          createGeneExpressionHeatmap(
+            df = df_gsea_genes_heatmap(),
+            id_or_sym = "Gene symbol",
+            samples_groups = data_set_loaded()[["SamplesGroups"]],
+            heatmap_colors = input$color_select_heatmap_tiles_modal,
+            group_colors = input$color_select_heatmap_groups_modal,
+            dendrogram_type = input$heatmap_dendrogram_modal,
+            heatmap_heights = heatmap_heights_modal()
+          ),
+          context = "GSEA > Pathway modal > Heatmap",
+          data_hint = "NormalizedCounts / SamplesGroups"
         )
       })
 
@@ -1618,9 +1659,13 @@ app_server <- function(input, output, session, config) {
   })
 
   contrast_intersection_sets_plot <- reactive({
-    createGSEAContrastIntersectionPlot(
-      df = df_gsea_ci(),
-      selected_palette = input$color_select_contrast_intersection_sets
+    safe_analysis_plot(
+      createGSEAContrastIntersectionPlot(
+        df = df_gsea_ci(),
+        selected_palette = input$color_select_contrast_intersection_sets
+      ),
+      context = "GSEA > Contrast intersection",
+      data_hint = "GeneSets"
     )
   })
 
