@@ -1257,7 +1257,7 @@ app_server <- function(input, output, session, config) {
       # By default select the top 40 gene sets by absolute enrichment score
       selected = data_set_loaded()[["GeneSets"]] %>%
         arrange(desc(abs(EnrichmentScore))) %>%
-        slice_head(n = 40) %>%
+        slice_head(n = 40L) %>%
         pull(Pathway)
     )
   })

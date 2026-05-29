@@ -76,6 +76,10 @@ createTopGeneSetsPlot <- function(
         Direction == "down" ~ paste("Upregulated gene sets in", contrast_right)
       )
     )
+  
+if (nrow(df) == 0) {
+  return(empty_plot("No gene sets available for the selected pathway class."))
+}
 
   p <- ggplot(
     data = df,
