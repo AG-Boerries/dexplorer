@@ -238,5 +238,10 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
     p$x$data[[i]]$hoverinfo <- "none"
   }
 
+  # Always tilt x-axis labels to avoid overlap for long contrast names
+  for (axis_name in names(p$x$layout)[grepl("^xaxis", names(p$x$layout))]) {
+    p$x$layout[[axis_name]]$tickangle <- 45
+  }
+
   return(p)
 }
