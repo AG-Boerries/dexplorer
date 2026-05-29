@@ -558,6 +558,13 @@ app_ui <- function(config) {
                   multiple = TRUE
                 ),
                 virtualSelectInput(
+                  inputId = "gene_sets_collection_select",
+                  label = "Select gene set databases:",
+                  choices = c(),
+                  search = TRUE,
+                  multiple = TRUE
+                ),
+                virtualSelectInput(
                   inputId = "select_gene_sets",
                   label = "Select gene sets of interest:",
                   choices = c(),

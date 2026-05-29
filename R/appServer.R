@@ -1241,6 +1241,12 @@ app_server <- function(input, output, session, config) {
     )
 
     updateVirtualSelect(
+      inputId = "gene_sets_collection_select",
+      choices = unique(data_set_loaded()[["GeneSetsGenes"]]$GSCollectionName),
+      selected = unique(data_set_loaded()[["GeneSetsGenes"]]$GSCollectionName)
+    )
+
+    updateVirtualSelect(
       inputId = "select_gene_sets",
       # Create list of named vectors for grouped choices
       choices = data_set_loaded()[["GeneSetsGenes"]] %>%
@@ -1251,21 +1257,62 @@ app_server <- function(input, output, session, config) {
       # By default select the top 40 gene sets by absolute enrichment score
       selected = data_set_loaded()[["GeneSets"]] %>%
         arrange(desc(abs(EnrichmentScore))) %>%
-        slice_head(n = 40) %>%
+        slice_head(n = 40L) %>%
         pull(Pathway)
     )
   })
+
+  # Reactive: filtered gene sets by selected collections
+  filtered_gene_sets_by_collection <- reactive({
+    req(data_set_loaded(), input$gene_sets_collection_select)
+
+    data_set_loaded()[["GeneSets"]] %>%
+      filter(Pathway %in% (
+        data_set_loaded()[["GeneSetsGenes"]] %>%
+          filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
+          pull(GSName) %>%
+          unique()
+      ))
+  })
+
+  # Observer: when collection selection changes, update gene sets selector
+  observeEvent(input$gene_sets_collection_select, {
+    req(data_set_loaded())
+
+    # Compute top 40 from filtered collection
+    top_40_in_collection <- filtered_gene_sets_by_collection() %>%
+      arrange(desc(abs(EnrichmentScore))) %>%
+      slice_head(n = 40) %>%
+      pull(Pathway)
+
+    # Update choices to show all gene sets in selected collections
+    new_choices <- data_set_loaded()[["GeneSetsGenes"]] %>%
+      filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
+      distinct(GSCollectionName, GSName) %>%
+      group_by(GSCollectionName) %>%
+      summarise(values = list(GSName), .groups = "drop") %>%
+      deframe()
+
+    # Update the selector: options = newly filtered choices, selected = top 40 from filtered
+    updateVirtualSelect(
+      inputId = "select_gene_sets",
+      choices = new_choices,
+      selected = top_40_in_collection
+    )
+  }, ignoreInit = TRUE)  # Don't trigger on app load (already handled above)
 
   # Create the top-scoring gene sets plot
   top_gene_sets_plot <- reactive({
     req(data_set_loaded())
     if (
       is.null(input$gene_sets_contrast_select) ||
+        is.null(input$gene_sets_collection_select) ||
         is.null(input$select_gene_sets) ||
-        length(input$select_gene_sets) == 0
+        length(input$select_gene_sets) == 0 ||
+        length(input$gene_sets_collection_select) == 0
     ) {
       p <- empty_plot(
-        "Select a contrast and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
+        "Select a contrast, at least one gene set database and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
       )
     } else {
       p <- createTopGeneSetsPlot(
@@ -1273,7 +1320,8 @@ app_server <- function(input, output, session, config) {
         df_genes = data_set_loaded()[["GeneSetsGenes"]],
         selected_palette = input$color_select_top_gene_sets,
         selected_contrast = input$gene_sets_contrast_select,
-        selected_gene_sets = input$select_gene_sets
+        selected_gene_sets = input$select_gene_sets,
+        selected_gene_set_collections = input$gene_sets_collection_select
       )
     }
     p
