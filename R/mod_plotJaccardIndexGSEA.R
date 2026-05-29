@@ -209,7 +209,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
       # )
     ),
     nrows = 2,
-    margin = 0.05
+    margin = 0.2
   ) %>%
     # Reduce the modebar to only essential tools
     config(
@@ -237,6 +237,21 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
   for (i in seq_along(p$x$data)) {
     p$x$data[[i]]$hoverinfo <- "none"
   }
+
+  # Always tilt x-axis labels to avoid overlap for long contrast names
+  for (axis_name in names(p$x$layout)[grepl("^xaxis", names(p$x$layout))]) {
+    p$x$layout[[axis_name]]$tickangle <- 45
+    p$x$layout[[axis_name]]$automargin <- TRUE
+  }
+
+  # Scale total plot height with the number of unique contrasts so all rows are visible
+  n_contrasts <- length(unique(c(df$Seta, df$Setb)))
+  total_height <- calculatePlotHeight(
+    n_samples = n_contrasts,
+    min_size = 500,
+    per_sample_size = 50
+  ) * 2
+  p <- p %>% layout(height = total_height)
 
   return(p)
 }

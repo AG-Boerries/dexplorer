@@ -1,12 +1,18 @@
 Package: dexplorer
 Title: Visualize and interactively explore bulk RNA-seq data
-Version: 0.8.1.3
+Version: 0.8.1.4
 Authors@R: c(
     person(
         given = "Tobias",
         family = "Hundertmark",
         email = "tobias.hundertmark@dkfz-heidelberg.de",
         role = c("aut", "cre")
+    ),
+    person(
+        given = "Maximilian",
+        family = "von der Linde",
+        email = "maximilian.linde@uniklinik-freiburg.de",
+        role = c("aut")
     ),
     person(
         given = "IBSM - Institute of Medical Bioinformatics and Systems Medicine",
@@ -17,7 +23,6 @@ Description: This package contains a shiny app for the visualization and interac
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends: R (>= 4.5)
 Imports: 
     AnnotationDbi,
@@ -69,3 +74,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0
