@@ -186,136 +186,144 @@ tabContentServer <- function(
     bar_plot <- reactive({
       req(needed_data())
 
-      # Extract function for plotting form lookup table
-      plotter <- assign_format_plot_info[[input$select_plot_raw_counts]]$plot
-      # Based on the selected plot different data is required
-      if (input$select_plot_raw_counts == "Read count distribution") {
-        p <- plotter(needed_data())
+      safe_analysis_plot({
+        # Extract function for plotting form lookup table
+        plotter <- assign_format_plot_info[[input$select_plot_raw_counts]]$plot
+        # Based on the selected plot different data is required
+        if (input$select_plot_raw_counts == "Read count distribution") {
+          p <- plotter(needed_data())
 
-        # This plot uses a fixed color scale with 4 colors for the quartiles
-        # The aesthetic is `factor(after_stat(quantile))`, which is not a column in the data
-        # Thus, this needs to be specified manually
-        plot_components <- data.frame(
-          aes = "fill",
-          aes_name = NA_character_,
-          aes_cont = FALSE,
-          aes_n = 4
-        )
+          # This plot uses a fixed color scale with 4 colors for the quartiles
+          # The aesthetic is `factor(after_stat(quantile))`, which is not a column in the data
+          # Thus, this needs to be specified manually
+          plot_components <- data.frame(
+            aes = "fill",
+            aes_name = NA_character_,
+            aes_cont = FALSE,
+            aes_n = 4
+          )
 
-        p <- add_selected_colors(
-          p = p,
-          selected_palette = input$color_select,
-          color_by = plot_components
-        )
-      } else {
-        p <- plotter(needed_data())
+          p <- add_selected_colors(
+            p = p,
+            selected_palette = input$color_select,
+            color_by = plot_components
+          )
+        } else {
+          p <- plotter(needed_data())
 
-        # Add the selected color scale to the plot
-        p <- add_selected_colors(p = p, selected_palette = input$color_select)
-      }
+          # Add the selected color scale to the plot
+          p <- add_selected_colors(p = p, selected_palette = input$color_select)
+        }
 
-      # Turn plot in to ggplotly and adjust tooltip color and legend position
-      p <- ggplotly(
-        p,
-        tooltip = "text",
-        # Adjust the plot heigth based on the number of samples
-        height = calculatePlotHeight(
+        # Turn plot in to ggplotly and adjust tooltip color and legend position
+        p <- ggplotly(
+          p,
+          tooltip = "text",
+          # Adjust the plot heigth based on the number of samples
+          height = calculatePlotHeight(
+            n_samples = length(unique(needed_data()$SampleNameUser))
+          )
+        ) %>%
+          layout(
+            # Plotly overwrites legend setting of ggplot
+            # Bottom position of legend requries extra space to avoid overplotting with x-axis title
+            legend = list(
+              orientation = "h",
+              y = 1.1,
+              xanchor = "center",
+              xref = "paper",
+              x = 0.5
+            ),
+            yaxis = list(
+              title = list(standoff = 20)
+            )
+          ) %>%
+          # Reduce the modebar to only essential tools
+          config(
+            displaylogo = FALSE,
+            modeBarButtons = list(
+              list("toImage"),
+              list("zoom2d"),
+              list("pan2d"),
+              list("resetScale2d")
+            )
+          ) %>%
+          # Attach custom tooltip
+          onRender(
+            "
+          function(el, x, tooltipType) {
+            enableCustomTooltip(el, tooltipType);
+          }
+        ",
+            data = list(tooltipType = "raw_data")
+          )
+
+        for (i in seq_along(p$x$data)) {
+          # Remove default tooltip
+          p$x$data[[i]]$hoverinfo <- "none"
+        }
+
+        # Get the total height of the plot, which is defined by the number of samples
+        # In this case, not `input$sample_select`
+        # The gene counts plot always contains the "All samples" group
+        total_height <- calculatePlotHeight(
           n_samples = length(unique(needed_data()$SampleNameUser))
         )
-      ) %>%
-        layout(
-          # Plotly overwrites legend setting of ggplot
-          # Bottom position of legend requries extra space to avoid overplotting with x-axis title
-          legend = list(
-            orientation = "h",
-            y = 1.1,
-            xanchor = "center",
-            xref = "paper",
-            x = 0.5
-          ),
-          yaxis = list(
-            title = list(standoff = 20)
-          )
-        ) %>%
-        # Reduce the modebar to only essential tools
-        config(
-          displaylogo = FALSE,
-          modeBarButtons = list(
-            list("toImage"),
-            list("zoom2d"),
-            list("pan2d"),
-            list("resetScale2d")
-          )
-        ) %>%
-        # Attach custom tooltip
-        onRender(
-          "
-        function(el, x, tooltipType) {
-          enableCustomTooltip(el, tooltipType);
-        }
-      ",
-          data = list(tooltipType = "raw_data")
-        )
 
-      for (i in seq_along(p$x$data)) {
-        # Remove default tooltip
-        p$x$data[[i]]$hoverinfo <- "none"
-      }
+        # Identify the number of y-axis in the plot, usually it is one per facet
+        y_axis <- na.omit(str_extract(names(p$x$layout), "^yaxis.*"))
 
-      # Get the total height of the plot, which is defined by the number of samples
-      # In this case, not `input$sample_select`
-      # The gene counts plot always contains the "All samples" group
-      total_height <- calculatePlotHeight(
-        n_samples = length(unique(needed_data()$SampleNameUser))
-      )
+        if (length(y_axis) > 1) {
+          df <- lapply(y_axis, function(yax) {
+            # Identify mapped samples
+            samples <- p$x$layout[[yax]]$ticktext
+            # Use samples to identify group
+            # There must be a better way to extract the group name from `p`, too
+            group <- needed_data() %>%
+              filter(SampleNameUser %in% samples) %>%
+              pull(Group) %>%
+              unique()
 
-      # Identify the number of y-axis in the plot, usually it is one per facet
-      y_axis <- na.omit(str_extract(names(p$x$layout), "^yaxis.*"))
+            # Save as dataframe
+            data.frame(yaxis = yax, n_samples = length(samples), group = group)
+          }) %>%
+            bind_rows() %>%
+            # Calculate the start and end points of each domain by considering the total height
+            calculateDomains(total_height = total_height) %>%
+            # For the facet labels (annotations), use the upper y-value of the domain as position
+            mutate(annotation = sapply(domain, function(x) x[2]))
 
-      if (length(y_axis) > 1) {
-        df <- lapply(y_axis, function(yax) {
-          # Identify mapped samples
-          samples <- p$x$layout[[yax]]$ticktext
-          # Use samples to identify group
-          # There must be a better way to extract the group name from `p`, too
-          group <- needed_data() %>%
-            filter(SampleNameUser %in% samples) %>%
-            pull(Group) %>%
-            unique()
+          # Assign domains to y-axis
+          for (i in seq_along(p$x$layout)) {
+            if (str_detect(names(p$x$layout[i]), "yaxis")) {
+              y <- names(p$x$layout[i])
+              p$x$layout[[y]]$domain <- base::unlist(df[df$yaxis == y, ]$domain)
+            }
+          }
 
-          # Save as dataframe
-          data.frame(yaxis = yax, n_samples = length(samples), group = group)
-        }) %>%
-          bind_rows() %>%
-          # Calculate the start and end points of each domain by considering the total height
-          calculateDomains(total_height = total_height) %>%
-          # For the facet labels (annotations), use the upper y-value of the domain as position
-          mutate(annotation = sapply(domain, function(x) x[2]))
-
-        # Assign domains to y-axis
-        for (i in seq_along(p$x$layout)) {
-          if (str_detect(names(p$x$layout[i]), "yaxis")) {
-            y <- names(p$x$layout[i])
-            p$x$layout[[y]]$domain <- base::unlist(df[df$yaxis == y, ]$domain)
+          # Then adjust the y-position of the facet labels (e.g. annotations)
+          for (i in seq_along(p$x$layout$annotations)) {
+            # Let's how stable this is ...
+            # It assumes that the facet labels do not have an `annotationType`
+            if (is.null(p$x$layout$annotations[[i]]$annotationType)) {
+              # Extract the group name, which is equal to the facet label
+              annotation <- p$x$layout$annotations[[i]]$text
+              # Use the group name to identify the y-position
+              p$x$layout$annotations[[i]]$y <- df[
+                df$group == annotation,
+              ]$annotation
+            }
           }
         }
 
-        # Then adjust the y-position of the facet labels (e.g. annotations)
-        for (i in seq_along(p$x$layout$annotations)) {
-          # Let's how stable this is ...
-          # It assumes that the facet labels do not have an `annotationType`
-          if (is.null(p$x$layout$annotations[[i]]$annotationType)) {
-            # Extract the group name, which is equal to the facet label
-            annotation <- p$x$layout$annotations[[i]]$text
-            # Use the group name to identify the y-position
-            p$x$layout$annotations[[i]]$y <- df[
-              df$group == annotation,
-            ]$annotation
-          }
-        }
-      }
-
-      return(p)
+        p
+      },
+      context = "Raw data > Quality control",
+      data_hint = if (input$select_plot_raw_counts == "Read count distribution") {
+        "RawCounts"
+      } else {
+        "QualityControl"
+      })
     })
 
     # Set plot status to TRUE when done
