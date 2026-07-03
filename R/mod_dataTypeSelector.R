@@ -16,7 +16,8 @@ dataTypeSelector <- function(config) {
   if (is.character(config$data)) {
     metaFiles <- list.files(config$data, pattern = "\\.csv$", full.names = TRUE)
     dataSetsTable <- lapply(metaFiles, read.csv, check.names = FALSE) %>%
-      bind_rows()
+      bind_rows() %>%
+      mutate(across(everything(), as.character))
 
     # When mode is "internal", there is only one data set, thus, we can directly load the data set and skip the data set selection step
     if (config$mode == "internal") {

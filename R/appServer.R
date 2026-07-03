@@ -1267,39 +1267,44 @@ app_server <- function(input, output, session, config) {
     req(data_set_loaded(), input$gene_sets_collection_select)
 
     data_set_loaded()[["GeneSets"]] %>%
-      filter(Pathway %in% (
-        data_set_loaded()[["GeneSetsGenes"]] %>%
-          filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
-          pull(GSName) %>%
-          unique()
-      ))
+      filter(
+        Pathway %in%
+          (data_set_loaded()[["GeneSetsGenes"]] %>%
+            filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
+            pull(GSName) %>%
+            unique())
+      )
   })
 
   # Observer: when collection selection changes, update gene sets selector
-  observeEvent(input$gene_sets_collection_select, {
-    req(data_set_loaded())
+  observeEvent(
+    input$gene_sets_collection_select,
+    {
+      req(data_set_loaded())
 
-    # Compute top 40 from filtered collection
-    top_40_in_collection <- filtered_gene_sets_by_collection() %>%
-      arrange(desc(abs(EnrichmentScore))) %>%
-      slice_head(n = 40) %>%
-      pull(Pathway)
+      # Compute top 40 from filtered collection
+      top_40_in_collection <- filtered_gene_sets_by_collection() %>%
+        arrange(desc(abs(EnrichmentScore))) %>%
+        slice_head(n = 40) %>%
+        pull(Pathway)
 
-    # Update choices to show all gene sets in selected collections
-    new_choices <- data_set_loaded()[["GeneSetsGenes"]] %>%
-      filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
-      distinct(GSCollectionName, GSName) %>%
-      group_by(GSCollectionName) %>%
-      summarise(values = list(GSName), .groups = "drop") %>%
-      deframe()
+      # Update choices to show all gene sets in selected collections
+      new_choices <- data_set_loaded()[["GeneSetsGenes"]] %>%
+        filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
+        distinct(GSCollectionName, GSName) %>%
+        group_by(GSCollectionName) %>%
+        summarise(values = list(GSName), .groups = "drop") %>%
+        deframe()
 
-    # Update the selector: options = newly filtered choices, selected = top 40 from filtered
-    updateVirtualSelect(
-      inputId = "select_gene_sets",
-      choices = new_choices,
-      selected = top_40_in_collection
-    )
-  }, ignoreInit = TRUE)  # Don't trigger on app load (already handled above)
+      # Update the selector: options = newly filtered choices, selected = top 40 from filtered
+      updateVirtualSelect(
+        inputId = "select_gene_sets",
+        choices = new_choices,
+        selected = top_40_in_collection
+      )
+    },
+    ignoreInit = TRUE
+  ) # Don't trigger on app load (already handled above)
 
   # Create the top-scoring gene sets plot
   top_gene_sets_plot <- reactive({

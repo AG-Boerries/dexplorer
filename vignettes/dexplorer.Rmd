@@ -141,7 +141,11 @@ rownames(meta_data) <- NULL
 For convenience, the metadata file is also provided in the `extdata` directory of this package, so that you can directly load it like this:
 
 ```{r }
-path_meta_data_lab <- system.file("extdata", "meta_data_GSE273186.csv", package = "dexplorer")
+path_meta_data_lab <- system.file(
+  "extdata",
+  "meta_data_GSE273186.csv",
+  package = "dexplorer"
+)
 metaDataLab <- read.csv(path_meta_data_lab)
 
 metaDataLab
@@ -180,8 +184,8 @@ Prior to running the differential gene expression analysis, you need to define t
 ```{r define-contrasts}
 unique(dfs$SamplesGroups$Group)
 
-# This example only has two groups ... 
-contrasts = c("Pkd1 vs Control" = "Pkd1-control")
+# This example only has two groups ...
+contrasts <- c("Pkd1 vs Control" = "Pkd1-control")
 ```
 
 Then, we can run differential gene expression analysis using `calculateDEG()`. This function is basically a wrapper for the [`limma-edgeR` workflow](https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/thursday/DE.html) or the [`DESeq2` workflow](https://www.bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html), depending on the `deg_tool` parameter and is meant to maintain the correct data formatting for `DExploreR`.

@@ -1,6 +1,6 @@
 Package: dexplorer
 Title: Visualize and interactively explore bulk RNA-seq data
-Version: 0.8.1.4
+Version: 0.8.1.5
 Authors@R: c(
     person(
         given = "Tobias",
@@ -75,3 +75,4 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3
