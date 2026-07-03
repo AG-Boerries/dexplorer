@@ -15,9 +15,13 @@ dataTypeSelector <- function(config) {
   # If the user provided a directory (or if `data` in `runDExploreR()` is `NUll`, which sets a path to the internal data), then read the available meta data
   if (is.character(config$data)) {
     metaFiles <- list.files(config$data, pattern = "\\.csv$", full.names = TRUE)
-    dataSetsTable <- lapply(metaFiles, read.csv, check.names = FALSE) %>%
-      bind_rows() %>%
-      mutate(across(everything(), as.character))
+    dataSetsTable <- lapply(
+      metaFiles,
+      read.csv,
+      check.names = FALSE,
+      colClasses = "character"
+    ) %>%
+      bind_rows()
 
     # When mode is "internal", there is only one data set, thus, we can directly load the data set and skip the data set selection step
     if (config$mode == "internal") {

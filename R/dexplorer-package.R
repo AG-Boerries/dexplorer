@@ -22,7 +22,6 @@
 #' @importFrom dplyr case_when
 #' @importFrom dplyr desc
 #' @importFrom dplyr distinct
-#' @importFrom dplyr everything
 #' @importFrom dplyr filter
 #' @importFrom dplyr first
 #' @importFrom dplyr full_join
