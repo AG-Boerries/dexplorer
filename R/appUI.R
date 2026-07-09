@@ -88,7 +88,7 @@ app_ui <- function(config) {
           )
         ),
         div(
-          "DExploreR v0.8.1.6",
+          "DExploreR v0.8.2.0",
           class = "app-version-fixed"
         )
       ),

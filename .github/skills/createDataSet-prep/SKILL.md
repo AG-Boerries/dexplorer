@@ -3,6 +3,12 @@ name: create-dataset-prep
 description: Prepare already-analyzed differential gene expression data so it conforms to `dexplorer::createDataSet()`. Use when a user already has counts, metadata, normalized expression, PCA, DGEA, GSEA, or gene annotation outputs and wants an agentic inventory of what is available, a gap analysis against the `dexDataSet` requirements, permission-gated transformation into valid `createDataSet()` inputs, a trial `createDataSet()` run, and a final sanity check against the original data.
 ---
 
+# TODO:
+Here are some adjustments to this skill that I want you to implement:
+- Screeplot:
+  - the PCs should be ordered by variance explained, not alphabetically. This is a bug in the current implementation.
+  - PCs explaining less than 1 % of total variance can be removed.
+
 # Create DataSet Prep
 
 ## Overview

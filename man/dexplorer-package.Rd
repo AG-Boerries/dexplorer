@@ -18,6 +18,7 @@ Authors:
 
 Other contributors:
 \itemize{
+  \item Katharina Moos \email{katharina.moos@uniklinik-freiburg.de} [contributor]
   \item IBSM - Institute of Medical Bioinformatics and Systems Medicine [copyright holder, funder]
 }
 

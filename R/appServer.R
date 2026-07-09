@@ -506,7 +506,8 @@ app_server <- function(input, output, session, config) {
       explained_var = data_set_loaded()[["VarianceExplained"]],
       pc_x = input$select_PC_x,
       pc_y = input$select_PC_y,
-      selected_palette = input$color_select_pca
+      selected_palette = input$color_select_pca,
+      standalone = FALSE
     )
   })
 
