@@ -12,7 +12,7 @@ Authors@R: c(
         given = "Maximilian",
         family = "von der Linde",
         email = "maximilian.linde@uniklinik-freiburg.de",
-        role = c("aut")
+        role = c("ctb")
     ),
     person(
         given = "Katharina",

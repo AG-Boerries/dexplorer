@@ -225,15 +225,24 @@ tabContentServer <- function(
       ) %>%
         layout(
           # Plotly overwrites legend setting of ggplot
-          # Bottom position of legend requries extra space to avoid overplotting with x-axis title
+          # Legend is placed in the fixed top margin (independent of plot height)
           legend = list(
             orientation = "h",
-            y = 1.1,
+            yref = "paper",
+            yanchor = "bottom",
+            y = 1.0,
             xanchor = "center",
             xref = "paper",
             x = 0.5
           ),
+          margin = list(
+            t = 80,
+            l = max(nchar(unique(needed_data()$SampleNameUser)), na.rm = TRUE) *
+              8
+          ),
+          # TODO: what is going on here? The title never changes positions -.-
           yaxis = list(
+            automargin = TRUE,
             title = list(standoff = 20)
           )
         ) %>%
@@ -315,6 +324,14 @@ tabContentServer <- function(
         }
       }
 
+      y_legend_pos <- 25 / total_height + 1
+      p$x$layoutAttrs[[1]]$legend$y <- y_legend_pos
+
+      # p$x$layoutAttrs[[1]]$margin <- list(
+      #   l = max(nchar(unique(needed_data()$SampleNameUser)), na.rm = TRUE) * 7
+      # )
+      # p$x$layoutAttrs[[1]]$yaxis$title$standoff <- 500
+      # browser()
       return(p)
     })
 

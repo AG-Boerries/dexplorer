@@ -58,17 +58,16 @@ createReadCountPlot <- function(df) {
   p <- ggplot(
     data = df,
     aes(
-      x = SampleNameUser,
-      y = NumberOfReads,
+      x = NumberOfReads,
+      y = SampleNameUser,
       fill = ReadType,
       text = TooltipText
     )
   ) +
-    geom_bar(stat = "identity") +
-    coord_flip() +
+    geom_col() +
     labs(
-      y = "Total number of reads",
-      x = "Sample name",
+      x = "Total number of reads",
+      y = "Sample name",
       fill = ""
     ) +
     facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")

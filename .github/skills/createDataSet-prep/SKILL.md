@@ -8,6 +8,9 @@ Here are some adjustments to this skill that I want you to implement:
 - Screeplot:
   - the PCs should be ordered by variance explained, not alphabetically. This is a bug in the current implementation.
   - PCs explaining less than 1 % of total variance can be removed.
+- Number of genes plot:
+  - This plot contains one bar, which displays the number of unique genes across all samples. This will always be the largest number because it is the union of all genes across all samples. Sanity check that this is true, if not tell the user and ask for help and provide the necessary information for the user to help you.
+
 
 # Create DataSet Prep
 
