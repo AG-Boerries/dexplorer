@@ -45,7 +45,7 @@ createGeneCountPlot <- function(df, standalone = FALSE) {
       text = TooltipText
     )
   ) +
-    geom_bar(stat = "identity") +
+    geom_col() +
     coord_flip() +
     labs(
       y = "Number of recorded genes",

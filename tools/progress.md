@@ -30,7 +30,7 @@
 | mod_plotJaccardIndexDGEA.R  | NA     |
 | mod_plotJaccardIndexGSEA.R  | NA     |
 | mod_processUploadedGenes.R  | NA     |
-| mod_readCountDistribution.R | NA     |
+| readCountDistribution.R | updated     |
 | readCountPlot.R            | updated    |
 | mod_serverQC.R              | in progress     |
 | mod_subTabLayout.R          | NA     |

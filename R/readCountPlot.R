@@ -14,10 +14,10 @@ createReadCountPlot <- function(df, standalone = FALSE) {
   # Define variables locally for R CMD check
   SampleNameUser <- Group <- AssignedReads <- UnassignedMappedReads <- UnassignedUnmappedReads <- TotalReads <- NumberOfReads <- ReadType <- TooltipText <- NULL
 
-  # Display empty plot message, if the sample selection returns an empty dataframe
+  # This can be an empty dataframe, when the data was not aligned with STAR
   if (nrow(df) == 0) {
     return(empty_plot(
-      message = "No read statistics available. This can happen when your sequencing run was not aligned with STAR or if you unselected all samples in the plot controls."
+      message = "No read statistics available. This can happen when your sequencing run was not aligned with STAR."
     ))
   }
 
@@ -57,6 +57,11 @@ createReadCountPlot <- function(df, standalone = FALSE) {
         ReadType == "UnassignedUnmappedReads" ~ "Unassigned / unmapped reads"
       )
     )
+
+  # This can also be an empty dataframe, when the user filtered out all samples
+  if (nrow(df) == 0) {
+    return(empty_plot())
+  }
 
   # Plot a stacked bar plot
   p <- ggplot(

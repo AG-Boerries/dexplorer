@@ -133,7 +133,7 @@ tabContentUI <- function(id) {
         div(
           # Using auto height allows to
           plotlyOutput(ns("plot"), height = "auto", width = "98%"),
-          class = "panel_plot_box"
+          class = "plot-loader-wrap plot-loader-wrap-dynamic panel_plot_box"
         )
       )
     )
@@ -241,9 +241,7 @@ tabContentServer <- function(
             xanchor = "center",
             xref = "paper",
             x = 0.5
-          ),
-          # Add margin to the top of the plot for the legend
-          margin = list(t = 80)
+          )
         ) |>
         # Reduce the modebar to only essential tools
         config(
@@ -315,7 +313,9 @@ tabContentServer <- function(
             # Extract the group name, which is equal to the facet label
             annotation <- ann$text
             # Use the group name to identify the y-position
-            ann$y <- df[df$group == annotation, ]$annotation
+            p$x$layout$annotations[[i]]$y <- df[
+              df$group == annotation,
+            ]$annotation
           }
 
           # Adjust the x-position of the y-axis title based on the longest sample name

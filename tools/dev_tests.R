@@ -23,7 +23,6 @@ createScreePlot(
   explained_var = df3$VarianceExplained,
   pc_x = c("PC1", "PC2"),
   pc_y = "",
-  # selected_palette = "App colors",
   standalone = TRUE
 )
 
@@ -35,5 +34,12 @@ createReadCountPlot(
 
 # ---- Detected genes plot ----
 createGeneCountPlot(
-  df = df2$QualityControl
+  df = df2$QualityControl,
+  standalone = TRUE
+)
+
+# ---- Read count distribution plot ----
+createCountDistributionPlot(
+  df = df2$RawCounts,
+  standalone = TRUE
 )
