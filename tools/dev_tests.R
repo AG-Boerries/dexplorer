@@ -20,9 +20,20 @@ df3 <- readRDS(
 
 # ---- Scree plot ----
 createScreePlot(
-  df3$VarianceExplained,
+  explained_var = df3$VarianceExplained,
   pc_x = c("PC1", "PC2"),
   pc_y = "",
   # selected_palette = "App colors",
   standalone = TRUE
+)
+
+# ---- Read counts plot ----
+createReadCountPlot(
+  df = df2$QualityControl,
+  standalone = TRUE
+)
+
+# ---- Detected genes plot ----
+createGeneCountPlot(
+  df = df2$QualityControl
 )

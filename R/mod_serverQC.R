@@ -1,34 +1,37 @@
 # This is the lookup table for the plotting functions and the info texts of this `moduleServer`
-assign_format_plot_info <- list(
-  "Number of reads" = list(
-    plot = createReadCountPlot,
-    info = tagList(
-      tags$b("Assigned reads:"),
-      "Number of mapped reads that could be assigned unambiguously to an annotated genomic region.",
-      br(),
-      br(),
-      tags$b("Unassigned / mapped reads:"),
-      "Number of reads that could be mapped to the reference but without unique assignement, for instance, because of overlapping annotated genomic regions or no available annotation.",
-      br(),
-      br(),
-      tags$b("Unassigned / unmapped reads:"),
-      "Number of reads that did not map to the reference or that mapped to many locations.",
-      br(),
-      br(),
-      "In the case of paired-end sequencing, read pairs are counted instead of single reads."
+# Wrapped in a function so function references are resolved at call time, not at parse time
+assign_format_plot_info <- function() {
+  list(
+    "Number of reads" = list(
+      plot = createReadCountPlot,
+      info = tagList(
+        tags$b("Assigned reads:"),
+        "Number of mapped reads that could be assigned unambiguously to an annotated genomic region.",
+        br(),
+        br(),
+        tags$b("Unassigned / mapped reads:"),
+        "Number of reads that could be mapped to the reference but without unique assignement, for instance, because of overlapping annotated genomic regions or no available annotation.",
+        br(),
+        br(),
+        tags$b("Unassigned / unmapped reads:"),
+        "Number of reads that did not map to the reference or that mapped to many locations.",
+        br(),
+        br(),
+        "In the case of paired-end sequencing, read pairs are counted instead of single reads."
+      )
+    ),
+    "Number of genes" = list(
+      plot = createGeneCountPlot,
+      info = HTML(
+        "To be considered as detected, a gene must have at least one read assigned, i.e. at least one count. The bar <i>All samples</i> depicts the overall number of distinct detected genes across all samples."
+      )
+    ),
+    "Read count distribution" = list(
+      plot = createCountDistributionPlot,
+      info = "The read count distribution shows how the reads are distributed across all recorded genes in a sample. The vertical lines indicate the quartiles separating the distribution into equal proportions with 25 % of the data. Then central line indicates the median read counts per gene."
     )
-  ),
-  "Number of genes" = list(
-    plot = createGeneCountPlot,
-    info = HTML(
-      "To be considered as detected, a gene must have at least one read assigned, i.e. at least one count. The bar <i>All samples</i> depicts the overall number of distinct detected genes across all samples."
-    )
-  ),
-  "Read count distribution" = list(
-    plot = createCountDistributionPlot,
-    info = "The read count distribution shows how the reads are distributed across all recorded genes in a sample. The vertical lines indicate the quartiles separating the distribution into equal proportions with 25 % of the data. Then central line indicates the median read counts per gene."
   )
-)
+}
 
 
 #' @title Quality Control Tab UI
@@ -187,7 +190,7 @@ tabContentServer <- function(
       req(needed_data())
 
       # Extract function for plotting form lookup table
-      plotter <- assign_format_plot_info[[input$select_plot_raw_counts]]$plot
+      plotter <- assign_format_plot_info()[[input$select_plot_raw_counts]]$plot
       # Based on the selected plot different data is required
       if (input$select_plot_raw_counts == "Read count distribution") {
         p <- plotter(needed_data())
@@ -214,18 +217,22 @@ tabContentServer <- function(
         p <- add_selected_colors(p = p, selected_palette = input$color_select)
       }
 
-      # Turn plot in to ggplotly and adjust tooltip color and legend position
+      # ---- Calculate plot height ----
+      p_height <- calculatePlotHeight(
+        n_samples = length(unique(needed_data()$SampleNameUser))
+      )
+
+      # ---- Convert ggplot to plotly ----
       p <- ggplotly(
         p,
         tooltip = "text",
-        # Adjust the plot heigth based on the number of samples
-        height = calculatePlotHeight(
-          n_samples = length(unique(needed_data()$SampleNameUser))
-        )
+        height = p_height
       ) %>%
         layout(
           # Plotly overwrites legend setting of ggplot
-          # Legend is placed in the fixed top margin (independent of plot height)
+          # Place legend at the top of the plot
+          # This is only relative positioning and will be screwed up when the plot is large
+          # Below the position is dynamically adjusted
           legend = list(
             orientation = "h",
             yref = "paper",
@@ -235,16 +242,8 @@ tabContentServer <- function(
             xref = "paper",
             x = 0.5
           ),
-          margin = list(
-            t = 80,
-            l = max(nchar(unique(needed_data()$SampleNameUser)), na.rm = TRUE) *
-              8
-          ),
-          # TODO: what is going on here? The title never changes positions -.-
-          yaxis = list(
-            automargin = TRUE,
-            title = list(standoff = 20)
-          )
+          # Add margin to the top of the plot for the legend
+          margin = list(t = 80)
         ) %>%
         # Reduce the modebar to only essential tools
         config(
@@ -259,26 +258,24 @@ tabContentServer <- function(
         # Attach custom tooltip
         onRender(
           "
-        function(el, x, tooltipType) {
-          enableCustomTooltip(el, tooltipType);
-        }
-      ",
+          function(el, x, tooltipType) {
+            enableCustomTooltip(el, tooltipType);
+          }
+          ",
           data = list(tooltipType = "raw_data")
         )
 
+      # ---- Manual plot stylings ----
+      # ---- Remove default tooltip ----
       for (i in seq_along(p$x$data)) {
-        # Remove default tooltip
         p$x$data[[i]]$hoverinfo <- "none"
       }
 
-      # Get the total height of the plot, which is defined by the number of samples
-      # In this case, not `input$sample_select`
-      # The gene counts plot always contains the "All samples" group
-      total_height <- calculatePlotHeight(
-        n_samples = length(unique(needed_data()$SampleNameUser))
-      )
+      # ---- Adjust the y-axis domain for each facet ----
+      # This ensures that the bars all have the same height rather than the facets having the same height
 
-      # Identify the number of y-axis in the plot, usually it is one per facet
+      # Identify the number of y-axis in the plot
+      # Usually it is one per facet
       y_axis <- na.omit(str_extract(names(p$x$layout), "^yaxis.*"))
 
       if (length(y_axis) > 1) {
@@ -286,7 +283,6 @@ tabContentServer <- function(
           # Identify mapped samples
           samples <- p$x$layout[[yax]]$ticktext
           # Use samples to identify group
-          # There must be a better way to extract the group name from `p`, too
           group <- needed_data() %>%
             filter(SampleNameUser %in% samples) %>%
             pull(Group) %>%
@@ -297,7 +293,7 @@ tabContentServer <- function(
         }) %>%
           bind_rows() %>%
           # Calculate the start and end points of each domain by considering the total height
-          calculateDomains(total_height = total_height) %>%
+          calculateDomains(total_height = p_height) %>%
           # For the facet labels (annotations), use the upper y-value of the domain as position
           mutate(annotation = sapply(domain, function(x) x[2]))
 
@@ -306,32 +302,39 @@ tabContentServer <- function(
           if (str_detect(names(p$x$layout[i]), "yaxis")) {
             y <- names(p$x$layout[i])
             p$x$layout[[y]]$domain <- base::unlist(df[df$yaxis == y, ]$domain)
+            # Set the automargin to TRUE to ensure that the y-axis tick labels are not cut off
+            p$x$layout[[y]]$automargin <- TRUE
           }
         }
 
-        # Then adjust the y-position of the facet labels (e.g. annotations)
         for (i in seq_along(p$x$layout$annotations)) {
-          # Let's how stable this is ...
-          # It assumes that the facet labels do not have an `annotationType`
-          if (is.null(p$x$layout$annotations[[i]]$annotationType)) {
+          ann <- p$x$layout$annotations[[i]]
+          # Adjust the y-position of the facet labels (i.e. annotations)
+          # This assumes that the facet labels do not have an `annotationType`
+          if (is.null(ann$annotationType)) {
             # Extract the group name, which is equal to the facet label
-            annotation <- p$x$layout$annotations[[i]]$text
+            annotation <- ann$text
             # Use the group name to identify the y-position
-            p$x$layout$annotations[[i]]$y <- df[
-              df$group == annotation,
-            ]$annotation
+            ann$y <- df[df$group == annotation, ]$annotation
+          }
+
+          # Adjust the x-position of the y-axis title based on the longest sample name
+          if (!is.null(ann$text) && ann$text == "Sample name") {
+            p$x$layout$annotations[[i]]$xshift <- -max(
+              nchar(unique(needed_data()$SampleNameUser)),
+              na.rm = TRUE
+            ) *
+              7 -
+              10
           }
         }
       }
 
-      y_legend_pos <- 25 / total_height + 1
+      # ---- Adjust the y-position of the legend ----
+      # The factor 25 px was determined empirically
+      y_legend_pos <- 25 / p_height + 1
       p$x$layoutAttrs[[1]]$legend$y <- y_legend_pos
 
-      # p$x$layoutAttrs[[1]]$margin <- list(
-      #   l = max(nchar(unique(needed_data()$SampleNameUser)), na.rm = TRUE) * 7
-      # )
-      # p$x$layoutAttrs[[1]]$yaxis$title$standoff <- 500
-      # browser()
       return(p)
     })
 
@@ -368,7 +371,7 @@ tabContentServer <- function(
         title = "Further information",
         easyClose = TRUE,
         footer = NULL,
-        assign_format_plot_info[[input$select_plot_raw_counts]]$info
+        assign_format_plot_info()[[input$select_plot_raw_counts]]$info
       ))
     })
     # Show modal with download option upon clicking the corresponding `actionButton()`

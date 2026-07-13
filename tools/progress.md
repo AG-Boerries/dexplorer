@@ -18,7 +18,7 @@
 | geom_point_quiet.R          | NA     |
 | mod_colors.R                | NA     |
 | mod_dataTypeSelector.R      | NA     |
-| mod_detectedGenes.R         | NA     |
+| plotDetectedGenes.R         | updated     |
 | mod_downloadHandler.R       | NA     |
 | mod_downloadUIElements.R    | NA     |
 | mod_emptyPlot.R             | NA     |
@@ -31,7 +31,7 @@
 | mod_plotJaccardIndexGSEA.R  | NA     |
 | mod_processUploadedGenes.R  | NA     |
 | mod_readCountDistribution.R | NA     |
-| mod_readCounts.R            | in progress    |
+| readCountPlot.R            | updated    |
 | mod_serverQC.R              | in progress     |
 | mod_subTabLayout.R          | NA     |
 | mod_tabHeaders.R            | NA     |
@@ -43,5 +43,5 @@
 | runDExploreR.R              | NA     |
 | runGAGE.R                   | NA     |
 | screePlot.R                 | updated     |
-| utils-pipe.R                | no action required     |
+| utils-pipe.R                | NA     |
 | zzz.R                       | no action required     |

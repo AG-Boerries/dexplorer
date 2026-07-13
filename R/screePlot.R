@@ -86,7 +86,7 @@ createScreePlot <- function(
         function(el, x, tooltipType) {
           enableCustomTooltip(el, tooltipType);
         }
-      ",
+        ",
         data = list(tooltipType = "standard")
       )
 

@@ -5,12 +5,21 @@
 #'
 #' @param df A data frame containing columns for sample names, group assignments, assigned reads, unassigned mapped reads, unassigned unmapped reads, and total reads.
 #'
+#' @param standalone Logical. If `TRUE`, the plot is generated as a standalone plot. If `FALSE` (required inside DExploreR). Defaults to `FALSE`.
+#'
 #' @return A `ggplot2` object, ready for interactive use with `plotly`.
 #'
 #' @export
-createReadCountPlot <- function(df) {
+createReadCountPlot <- function(df, standalone = FALSE) {
   # Define variables locally for R CMD check
   SampleNameUser <- Group <- AssignedReads <- UnassignedMappedReads <- UnassignedUnmappedReads <- TotalReads <- NumberOfReads <- ReadType <- TooltipText <- NULL
+
+  # Display empty plot message, if the sample selection returns an empty dataframe
+  if (nrow(df) == 0) {
+    return(empty_plot(
+      message = "No read statistics available. This can happen when your sequencing run was not aligned with STAR or if you unselected all samples in the plot controls."
+    ))
+  }
 
   # Tooltips are generated on the fly, allows cleaner download formats
   df <- df %>%
@@ -49,11 +58,6 @@ createReadCountPlot <- function(df) {
       )
     )
 
-  # Display empty plot message, if the sample selection returns an empty dataframe
-  if (nrow(df) == 0) {
-    return(empty_plot())
-  }
-
   # Plot a stacked bar plot
   p <- ggplot(
     data = df,
@@ -71,6 +75,19 @@ createReadCountPlot <- function(df) {
       fill = ""
     ) +
     facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")
+
+  # ---- Fine tune plot for usage outside of DExploreR ----
+  if (standalone) {
+    p <- p +
+      theme(
+        panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey80"),
+        legend.position = "top",
+        strip.background = element_rect(fill = "white")
+      )
+
+    p <- add_selected_colors(p = p, selected_palette = "App colors")
+  }
 
   return(p)
 }

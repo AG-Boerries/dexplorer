@@ -11,13 +11,9 @@ This package contains a shiny app for the visualization and interactive explorat
 \author{
 \strong{Maintainer}: Tobias Hundertmark \email{tobias.hundertmark@dkfz-heidelberg.de}
 
-Authors:
-\itemize{
-  \item Maximilian von der Linde \email{maximilian.linde@uniklinik-freiburg.de}
-}
-
 Other contributors:
 \itemize{
+  \item Maximilian von der Linde \email{maximilian.linde@uniklinik-freiburg.de} [contributor]
   \item Katharina Moos \email{katharina.moos@uniklinik-freiburg.de} [contributor]
   \item IBSM - Institute of Medical Bioinformatics and Systems Medicine [copyright holder, funder]
 }
