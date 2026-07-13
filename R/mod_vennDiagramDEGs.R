@@ -38,9 +38,9 @@ createVennDiagram <- function(df, selected_palette) {
     }
 
     # Group by the contrasts, which are in columns 1 and 2 and sample within each group
-    df <- df %>%
-      group_by(pick(1, 2)) %>%
-      slice_sample(prop = prop_per_fail) %>%
+    df <- df |>
+      group_by(pick(1, 2)) |>
+      slice_sample(prop = prop_per_fail) |>
       ungroup()
   }
 
@@ -48,7 +48,7 @@ createVennDiagram <- function(df, selected_palette) {
   fraction_displayed <- prop_per_fail^(attempt_count - 1)
 
   # Add the tooltips
-  df <- df %>%
+  df <- df |>
     mutate(
       TooltipText = paste0(
         "<b><div style='font-size:16px;'>",
@@ -69,11 +69,11 @@ createVennDiagram <- function(df, selected_palette) {
     )
 
   # Construct the region labels
-  left_region = df %>% filter(x == min(x)) %>% pull(region) %>% unique()
-  right_region = df %>% filter(x == max(x)) %>% pull(region) %>% unique()
-  middle_region = df %>%
-    filter(pick(1) == pick(2)) %>%
-    pull(region) %>%
+  left_region = df |> filter(x == min(x)) |> pull(region) |> unique()
+  right_region = df |> filter(x == max(x)) |> pull(region) |> unique()
+  middle_region = df |>
+    filter(pick(1) == pick(2)) |>
+    pull(region) |>
     unique()
 
   left_region_label = paste0(
@@ -91,7 +91,7 @@ createVennDiagram <- function(df, selected_palette) {
   middle_region_label = paste0(
     middle_region,
     " (",
-    round(sum(df %>% pull(1) == df %>% pull(2)) / fraction_displayed),
+    round(sum(df |> pull(1) == df |> pull(2)) / fraction_displayed),
     " DEGs)"
   )
 
@@ -125,12 +125,12 @@ createVennDiagram <- function(df, selected_palette) {
     theme_void() +
     theme(plot.margin = margin(t = 20, b = 30))
 
-  p <- ggplotly(p, tooltip = "text") %>%
+  p <- ggplotly(p, tooltip = "text") |>
     layout(
       showlegend = FALSE,
       paper_bgcolor = "white",
       plot_bgcolor = "white"
-    ) %>%
+    ) |>
     # Reduce the modebar to only essential tools
     config(
       displaylogo = FALSE,
@@ -152,7 +152,7 @@ createVennDiagram <- function(df, selected_palette) {
   ymax <- max(p$x$data[[1]]$y, na.rm = TRUE) * 1.05
   ymin <- min(p$x$data[[1]]$y, na.rm = TRUE)
 
-  p <- p %>%
+  p <- p |>
     # Add the region labels as annotations with the number of genes
     add_annotations(
       x = min(df$x) / 1.7,
@@ -165,7 +165,7 @@ createVennDiagram <- function(df, selected_palette) {
       ax = -20,
       ay = -40,
       bgcolor = "white"
-    ) %>%
+    ) |>
     add_annotations(
       x = max(df$x) / 1.7,
       y = ymax,
@@ -177,7 +177,7 @@ createVennDiagram <- function(df, selected_palette) {
       ax = 20,
       ay = -40,
       bgcolor = "white"
-    ) %>%
+    ) |>
     add_annotations(
       x = 0,
       y = ymin,
@@ -189,7 +189,7 @@ createVennDiagram <- function(df, selected_palette) {
       ax = 0,
       ay = 40,
       bgcolor = "white"
-    ) %>%
+    ) |>
     # Attach the custom tooltip from JS
     onRender(
       "

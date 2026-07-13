@@ -29,20 +29,20 @@ formatTopDEGs <- function(
   # Extract the column to order the data by
   order_col <- if (fc_or_pvalue) "Log2FC" else "LogPValAdj"
 
-  df <- df %>%
-    mutate(Log2FC = abs(Log2FC)) %>%
+  df <- df |>
+    mutate(Log2FC = abs(Log2FC)) |>
     # Filter for selected direction
-    filter(Direction == ifelse(selected_direction, "up", "down")) %>%
+    filter(Direction == ifelse(selected_direction, "up", "down")) |>
     # Group by contrast, to get top genes per contrast
-    group_by(Contrast) %>%
+    group_by(Contrast) |>
     # Extract only top n genes per contrast
     slice_max(
       order_by = !!sym(order_col),
       n = selected_number_of_genes,
       with_ties = FALSE
-    ) %>%
-    ungroup() %>%
-    filter(Contrast %in% selected_contrast) %>%
+    ) |>
+    ungroup() |>
+    filter(Contrast %in% selected_contrast) |>
     mutate(
       # Sort the symbols within each group using `tidytext::reorder_within()`
       Symbol = reorder_within(
@@ -79,7 +79,7 @@ createTopDEGsPlot <- function(df, selected_palette, fc_or_pvalue) {
   }
 
   # Add the tooltip text just before plotting
-  df <- df %>%
+  df <- df |>
     mutate(
       TooltipText = paste0(
         "<b><div style='font-size:16px;'>",
@@ -145,7 +145,7 @@ createTopDEGsPlot <- function(df, selected_palette, fc_or_pvalue) {
       min_size = 500,
       per_sample_size = 500
     )
-  ) %>%
+  ) |>
     # Reduce the modebar to only essential tools
     config(
       displaylogo = FALSE,
@@ -155,7 +155,7 @@ createTopDEGsPlot <- function(df, selected_palette, fc_or_pvalue) {
         list("pan2d"),
         list("resetScale2d")
       )
-    ) %>%
+    ) |>
     # Attach the custom tooltip from JS
     onRender(
       "

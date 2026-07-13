@@ -114,7 +114,7 @@ calculateDomains <- function(
   total_samples <- sum(df$n_samples)
 
   # Calculate domain height for each group
-  df <- df %>%
+  df <- df |>
     mutate(
       domain_height = n_samples / total_samples * plotting_height / total_height
     )

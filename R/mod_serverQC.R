@@ -174,12 +174,12 @@ tabContentServer <- function(
       # Based on the selected plot different data is required
       if (input$select_plot_raw_counts == "Read count distribution") {
         # For the read count distributions the raw counts are required
-        d <- data()[["RawCounts"]] %>%
+        d <- data()[["RawCounts"]] |>
           filter(SampleNameUser %in% input$sample_select)
       } else {
         # Filter for selected samples but keep the "All samples" group
         # This contains the total number of detected genes
-        d <- data()[["QualityControl"]] %>%
+        d <- data()[["QualityControl"]] |>
           filter(SampleNameUser %in% c(input$sample_select, "All samples"))
       }
       return(d)
@@ -227,7 +227,7 @@ tabContentServer <- function(
         p,
         tooltip = "text",
         height = p_height
-      ) %>%
+      ) |>
         layout(
           # Plotly overwrites legend setting of ggplot
           # Place legend at the top of the plot
@@ -244,7 +244,7 @@ tabContentServer <- function(
           ),
           # Add margin to the top of the plot for the legend
           margin = list(t = 80)
-        ) %>%
+        ) |>
         # Reduce the modebar to only essential tools
         config(
           displaylogo = FALSE,
@@ -254,7 +254,7 @@ tabContentServer <- function(
             list("pan2d"),
             list("resetScale2d")
           )
-        ) %>%
+        ) |>
         # Attach custom tooltip
         onRender(
           "
@@ -283,17 +283,17 @@ tabContentServer <- function(
           # Identify mapped samples
           samples <- p$x$layout[[yax]]$ticktext
           # Use samples to identify group
-          group <- needed_data() %>%
-            filter(SampleNameUser %in% samples) %>%
-            pull(Group) %>%
+          group <- needed_data() |>
+            filter(SampleNameUser %in% samples) |>
+            pull(Group) |>
             unique()
 
           # Save as dataframe
           data.frame(yaxis = yax, n_samples = length(samples), group = group)
-        }) %>%
-          bind_rows() %>%
+        }) |>
+          bind_rows() |>
           # Calculate the start and end points of each domain by considering the total height
-          calculateDomains(total_height = p_height) %>%
+          calculateDomains(total_height = p_height) |>
           # For the facet labels (annotations), use the upper y-value of the domain as position
           mutate(annotation = sapply(domain, function(x) x[2]))
 

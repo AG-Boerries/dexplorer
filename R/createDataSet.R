@@ -135,8 +135,8 @@ createDataSet <- function(
   }
 
   # Add the sample names and groups to the quality control
-  QualityControl <- QualityControl %>%
-    left_join(SamplesGroups, by = "RunID") %>%
+  QualityControl <- QualityControl |>
+    left_join(SamplesGroups, by = "RunID") |>
     mutate(
       SampleNameUser = ifelse(
         RunID == "All samples",
@@ -151,7 +151,7 @@ createDataSet <- function(
     )
 
   # Add the sample names and groups to the raw counts
-  RawCounts <- RawCounts %>%
+  RawCounts <- RawCounts |>
     left_join(SamplesGroups, by = "RunID")
 
   DataSet <- new(

@@ -150,7 +150,7 @@ app_server <- function(input, output, session, config) {
       dTypes$dataSetsTable[
         input$data_sets_table_rows_selected,
         "Authors"
-      ] %>%
+      ] |>
         gsub(" ", "_", .)
     } else {
       ""
@@ -313,7 +313,7 @@ app_server <- function(input, output, session, config) {
   if (config$mode == "standard" && !is.null(dTypes$dataSetsTable)) {
     # Render the table with the data sets
     output$data_sets_table <- renderDT(
-      dTypes$dataSetsTable %>%
+      dTypes$dataSetsTable |>
         select(
           "Cell line or tissue",
           "Study target",
@@ -947,7 +947,7 @@ app_server <- function(input, output, session, config) {
   # Prepare data frame for download
   output$download_data_top_genes <- dataDownload(
     name = "Top_scoring_genes",
-    data = df_top_genes_dgea() %>%
+    data = df_top_genes_dgea() |>
       # Remove the groups added by `tidytext::reorder_within()`
       mutate(Symbol = sub("__.*$", "", Symbol)),
     authors = authors()
@@ -1002,7 +1002,7 @@ app_server <- function(input, output, session, config) {
   # Get the data for the .csv download
   output$download_data_volcano <- dataDownload(
     name = "Volcano_plot_data",
-    data = data_set_loaded()[["DGEAnalysis"]] %>%
+    data = data_set_loaded()[["DGEAnalysis"]] |>
       filter(Contrast %in% input$volcano_contrast_select),
     authors = authors()
   )
@@ -1042,7 +1042,7 @@ app_server <- function(input, output, session, config) {
   output$download_data_contrast_intersection <- dataDownload(
     name = "Contrast_intersection_DGEA",
     # Remove the list column, which cannot be saved as .csv
-    data = df_dgea_ci() %>% select(-Genes),
+    data = df_dgea_ci() |> select(-Genes),
     authors = authors()
   )
 
@@ -1067,13 +1067,13 @@ app_server <- function(input, output, session, config) {
       # Filter the data frame for the clicked set and direction and pull the data frame containing the genes
       # Use isolate the prevent data table from requesting columns from previous modal
       df <- isolate({
-        df_dgea_ci() %>%
+        df_dgea_ci() |>
           filter(
             Seta == clicked_ji[1],
             Setb == clicked_ji[2],
             Direction == clicked_ji[3]
-          ) %>%
-          pull(Genes) %>%
+          ) |>
+          pull(Genes) |>
           as.data.frame()
       })
 
@@ -1250,15 +1250,15 @@ app_server <- function(input, output, session, config) {
     updateVirtualSelect(
       inputId = "select_gene_sets",
       # Create list of named vectors for grouped choices
-      choices = data_set_loaded()[["GeneSetsGenes"]] %>%
-        distinct(GSCollectionName, GSName) %>%
-        group_by(GSCollectionName) %>%
-        summarise(values = list(GSName), .groups = "drop") %>%
+      choices = data_set_loaded()[["GeneSetsGenes"]] |>
+        distinct(GSCollectionName, GSName) |>
+        group_by(GSCollectionName) |>
+        summarise(values = list(GSName), .groups = "drop") |>
         deframe(),
       # By default select the top 40 gene sets by absolute enrichment score
-      selected = data_set_loaded()[["GeneSets"]] %>%
-        arrange(desc(abs(EnrichmentScore))) %>%
-        slice_head(n = 40L) %>%
+      selected = data_set_loaded()[["GeneSets"]] |>
+        arrange(desc(abs(EnrichmentScore))) |>
+        slice_head(n = 40L) |>
         pull(Pathway)
     )
   })
@@ -1267,12 +1267,12 @@ app_server <- function(input, output, session, config) {
   filtered_gene_sets_by_collection <- reactive({
     req(data_set_loaded(), input$gene_sets_collection_select)
 
-    data_set_loaded()[["GeneSets"]] %>%
+    data_set_loaded()[["GeneSets"]] |>
       filter(
         Pathway %in%
-          (data_set_loaded()[["GeneSetsGenes"]] %>%
-            filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
-            pull(GSName) %>%
+          (data_set_loaded()[["GeneSetsGenes"]] |>
+            filter(GSCollectionName %in% input$gene_sets_collection_select) |>
+            pull(GSName) |>
             unique())
       )
   })
@@ -1284,17 +1284,17 @@ app_server <- function(input, output, session, config) {
       req(data_set_loaded())
 
       # Compute top 40 from filtered collection
-      top_40_in_collection <- filtered_gene_sets_by_collection() %>%
-        arrange(desc(abs(EnrichmentScore))) %>%
-        slice_head(n = 40) %>%
+      top_40_in_collection <- filtered_gene_sets_by_collection() |>
+        arrange(desc(abs(EnrichmentScore))) |>
+        slice_head(n = 40) |>
         pull(Pathway)
 
       # Update choices to show all gene sets in selected collections
-      new_choices <- data_set_loaded()[["GeneSetsGenes"]] %>%
-        filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
-        distinct(GSCollectionName, GSName) %>%
-        group_by(GSCollectionName) %>%
-        summarise(values = list(GSName), .groups = "drop") %>%
+      new_choices <- data_set_loaded()[["GeneSetsGenes"]] |>
+        filter(GSCollectionName %in% input$gene_sets_collection_select) |>
+        distinct(GSCollectionName, GSName) |>
+        group_by(GSCollectionName) |>
+        summarise(values = list(GSName), .groups = "drop") |>
         deframe()
 
       # Update the selector: options = newly filtered choices, selected = top 40 from filtered
@@ -1350,7 +1350,7 @@ app_server <- function(input, output, session, config) {
   # Prepare data for download
   output$download_data_top_gene_sets <- dataDownload(
     name = "Top-scoring_gene_sets_data",
-    data = data_set_loaded()[["GeneSets"]] %>%
+    data = data_set_loaded()[["GeneSets"]] |>
       filter(Contrast == input$gene_sets_contrast_select),
     authors = authors()
   )
@@ -1387,19 +1387,19 @@ app_server <- function(input, output, session, config) {
       )
 
       # Get the genes in the gene set
-      pathway_genes <- data_set_loaded()[["GeneSetsGenes"]] %>%
-        filter(GSName == pathway) %>%
+      pathway_genes <- data_set_loaded()[["GeneSetsGenes"]] |>
+        filter(GSName == pathway) |>
         select(Symbol, GeneID)
 
       # Get the pathway description
-      pathway_info <- data_set_loaded()[["GeneSetsGenes"]] %>%
+      pathway_info <- data_set_loaded()[["GeneSetsGenes"]] |>
         filter(GSName == pathway)
       pathway_description <- pathway_info$GSDescription[1]
       pathway_url <- pathway_info$GSURL[1]
 
       volcano_modal_plot <- reactive({
         createVolcanoPlot(
-          df = data_set_loaded()[["DGEAnalysis"]] %>%
+          df = data_set_loaded()[["DGEAnalysis"]] |>
             filter(GeneID %in% pathway_genes$GeneID),
           # Allow to change the colors and the thresholds
           selected_palette = input$color_select_volcano_modal,

@@ -30,7 +30,7 @@ createPCAPlot <- function(
   SampleNameUser <- Group <- .data <- TooltipText <- NULL
 
   # Construct the tooltip text
-  df_pca <- df_pca %>%
+  df_pca <- df_pca |>
     mutate(
       TooltipText = paste0(
         "<b>Sample name: </b>",
@@ -94,8 +94,8 @@ createPCAPlot <- function(
     # https://datavizpyr.com/how-to-highlight-groups-with-convex-hull-in-ggplot2/
     p <- p +
       geom_polygon(
-        data = df_pca %>%
-          group_by(Group) %>%
+        data = df_pca |>
+          group_by(Group) |>
           slice(chull(.data[[pc_x]], .data[[pc_y]])),
         aes(
           fill = Group,
@@ -116,7 +116,7 @@ createPCAPlot <- function(
   # Add the selected color scale to the plot
   p <- add_selected_colors(p = p, selected_palette = selected_palette)
 
-  p <- ggplotly(p, tooltip = "text") %>%
+  p <- ggplotly(p, tooltip = "text") |>
     layout(
       legend = list(
         orientation = "h",
@@ -125,7 +125,7 @@ createPCAPlot <- function(
         xref = "paper",
         x = 0.5
       )
-    ) %>%
+    ) |>
     # Reduce the modebar to only essential tools
     config(
       displaylogo = FALSE,
@@ -135,7 +135,7 @@ createPCAPlot <- function(
         list("pan2d"),
         list("resetScale2d")
       )
-    ) %>%
+    ) |>
     onRender(
       "
         function(el, x, tooltipType) {

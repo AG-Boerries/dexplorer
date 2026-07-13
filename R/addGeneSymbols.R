@@ -45,14 +45,14 @@ addGeneSymbols <- function(raw_counts, species = c("mouse", "human")) {
       "ALIAS"
     ),
     keytype = "ENSEMBL"
-  ) %>%
+  ) |>
     dplyr::rename(
       GeneID = ENSEMBL,
       Symbol = SYMBOL,
       EntrezID = ENTREZID,
       Description = GENENAME,
       Alias = ALIAS
-    ) %>%
+    ) |>
     filter(
       # Remove genes with missing symbols or missing entrez IDs
       !is.na(Symbol),
@@ -61,7 +61,7 @@ addGeneSymbols <- function(raw_counts, species = c("mouse", "human")) {
       !str_detect(Description, regex("cdna", ignore_case = TRUE)),
       !str_detect(Description, regex("predicted", ignore_case = TRUE)),
       !str_detect(Description, regex("pseudogene", ignore_case = TRUE))
-    ) %>%
+    ) |>
     mutate(
       # Add the URL to NCBI for each entrez ID
       # The URLs have the format: https://www.ncbi.nlm.nih.gov/datasets/gene/ENTREZID/
@@ -73,13 +73,13 @@ addGeneSymbols <- function(raw_counts, species = c("mouse", "human")) {
       ),
       # Ensure that entrez IDs are characters, so that they are used in calculations with numeric columns
       EntrezID = as.character(EntrezID)
-    ) %>%
+    ) |>
     as.data.frame()
 
   # Create another data frame with aliases collapsed into a single string per GeneID
   # This is required for some hover information
-  GeneSymbolsCollapsed <- GeneSymbols %>%
-    group_by(GeneID) %>%
+  GeneSymbolsCollapsed <- GeneSymbols |>
+    group_by(GeneID) |>
     summarise(
       # Collapse all aliases and different symbols of the same ID into a single string
       Alias = paste(na.omit(unique(c(Alias, Symbol))), collapse = ", "),
@@ -92,37 +92,37 @@ addGeneSymbols <- function(raw_counts, species = c("mouse", "human")) {
       Description = first(Description),
       NCBIURL = first(NCBIURL),
       .groups = "drop"
-    ) %>%
+    ) |>
     # Add the counts for each gene ID
     left_join(raw_counts, by = "GeneID", relationship = "one-to-many")
 
   # Get duplicated symbols
-  DuplicatedSymbols <- GeneSymbolsCollapsed %>%
-    group_by(RunID, Symbol) %>%
-    filter(n() > 1) %>%
-    pull(Symbol) %>%
+  DuplicatedSymbols <- GeneSymbolsCollapsed |>
+    group_by(RunID, Symbol) |>
+    filter(n() > 1) |>
+    pull(Symbol) |>
     unique()
 
   # For duplicated symbols, keep only the gene ID with the highest MAD across samples
-  DuplicatedSymbolsCleaned <- GeneSymbolsCollapsed %>%
-    filter(Symbol %in% DuplicatedSymbols) %>%
-    group_by(Symbol, GeneID) %>%
-    summarise(MAD = mad(Counts)) %>%
-    ungroup() %>%
-    group_by(Symbol) %>%
+  DuplicatedSymbolsCleaned <- GeneSymbolsCollapsed |>
+    filter(Symbol %in% DuplicatedSymbols) |>
+    group_by(Symbol, GeneID) |>
+    summarise(MAD = mad(Counts)) |>
+    ungroup() |>
+    group_by(Symbol) |>
     # Avoid ties and return first row in this case
-    slice_max(order_by = MAD, n = 1, with_ties = FALSE) %>%
-    ungroup() %>%
+    slice_max(order_by = MAD, n = 1, with_ties = FALSE) |>
+    ungroup() |>
     select(-MAD)
 
   # Finally, remove the duplicated symbols
-  GeneSymbolsCollapsedDeduplicated <- GeneSymbolsCollapsed %>%
-    semi_join(DuplicatedSymbolsCleaned, by = c("Symbol", "GeneID")) %>%
+  GeneSymbolsCollapsedDeduplicated <- GeneSymbolsCollapsed |>
+    semi_join(DuplicatedSymbolsCleaned, by = c("Symbol", "GeneID")) |>
     bind_rows(
-      GeneSymbolsCollapsed %>%
+      GeneSymbolsCollapsed |>
         # Keep symbols that were never duplicated
         anti_join(DuplicatedSymbolsCleaned, by = "Symbol")
-    ) %>%
+    ) |>
     as.data.frame()
 
   return(list(

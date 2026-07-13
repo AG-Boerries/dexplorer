@@ -43,5 +43,5 @@
 | runDExploreR.R              | NA     |
 | runGAGE.R                   | NA     |
 | screePlot.R                 | updated     |
-| utils-pipe.R                | NA     |
+| utils-pipe.R                | removed     |
 | zzz.R                       | no action required     |

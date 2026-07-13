@@ -76,6 +76,7 @@ prepareDfs <- function(
   scaling <- as.logical(scaling)
 
   # Create the raw counts with added meta data
+  # TODO: this needs to be improve, no need to keep everything in one dplyr-chain
   RawCountsMeta <- raw_counts %>%
     {
       if (!is.null(meta_data_seq)) {
@@ -84,14 +85,14 @@ prepareDfs <- function(
       } else {
         .
       }
-    } %>%
+    } |>
     # Add the groups
     fuzzy_left_join(
       meta_data_lab,
       by = join_meta_data_lab,
       # Ensure partial matching of sample names
       match_fun = function(col_x, col_lab) str_detect(col_x, fixed(col_lab))
-    ) %>%
+    ) |>
     # Rename the user-specified column name for easier handling
     dplyr::rename("SampleNameUser" = sample_name_column) %>%
     # Check if fuzzy join produced multiple matches for any RunID
@@ -100,14 +101,14 @@ prepareDfs <- function(
       OriginalDf <- .
 
       # Check for multiple matches
-      CheckDf <- OriginalDf %>%
-        distinct(RunID, SampleNameUser, ) %>%
-        group_by(RunID) %>%
+      CheckDf <- OriginalDf |>
+        distinct(RunID, SampleNameUser, ) |>
+        group_by(RunID) |>
         mutate(n_matches = n())
 
       # Throw an error if any RunID matched multiple SampleNameUsers
       if (any(CheckDf$n_matches > 1)) {
-        BadIDs <- CheckDf %>% filter(n_matches > 1)
+        BadIDs <- CheckDf |> filter(n_matches > 1)
         stop(
           "Ambiguous matches detected for RunIDs:\n",
           paste(BadIDs$RunID, collapse = ", ")
@@ -116,7 +117,7 @@ prepareDfs <- function(
 
       # Return unmodified data into the pipe
       OriginalDf
-    } %>%
+    } |>
     mutate(
       # Create a grouping column by user defined combination of columns
       # It makes sense the columns you want to join as groups are present in `meta_data_lab`
@@ -124,65 +125,65 @@ prepareDfs <- function(
         paste,
         c(across(all_of(group_column)), sep = "_")
       )
-    ) %>%
+    ) |>
     # Use newly defined grouping column and `GeneID` to calculate filtering statistics
-    group_by(Group, GeneID) %>%
+    group_by(Group, GeneID) |>
     filter(
       # Remove gene IDs that have lass than `min_number_of_samples_per_group_with_gene_expressed` samples in this group with at least `min_counts_per_gene` counts
       sum(Counts >= min_counts_per_gene, na.rm = TRUE) >=
         min_number_of_samples_per_group_with_gene_expressed,
       # Remove geneIDs that have an average expression in this group below `min_average_gene_expression_per_group`
       mean(Counts, na.rm = TRUE) >= min_average_gene_expression_per_group
-    ) %>%
-    ungroup() %>%
+    ) |>
+    ungroup() |>
     as.data.frame()
 
   # This will eventually allow to translate between different sample names and groups
-  SamplesGroups <- RawCountsMeta %>%
+  SamplesGroups <- RawCountsMeta |>
     # Select run ID and all columns related to samples names and groups, that originate from `meta_data_lab`
     # Because of the way of the data frames are joined together, this is a reliable way to select the relevant columns
-    dplyr::select(RunID, SampleNameUser, Group) %>%
-    distinct() %>%
+    dplyr::select(RunID, SampleNameUser, Group) |>
+    distinct() |>
     as.data.frame()
 
-  CPMCounts <- RawCountsMeta %>%
+  CPMCounts <- RawCountsMeta |>
     # Transform data frame into wide format, required for CPM calculation
     pivot_wider(
       id_cols = GeneID,
       names_from = SampleNameUser,
       values_from = Counts,
       values_fill = 0
-    ) %>%
-    column_to_rownames("GeneID") %>%
+    ) |>
+    column_to_rownames("GeneID") |>
     cpm(
       prior.count = replace_zeros,
       log = log_transform
-    ) %>%
-    scale(scale = FALSE) %>%
-    as.data.frame() %>%
-    rownames_to_column(var = "GeneID") %>%
+    ) |>
+    scale(scale = FALSE) |>
+    as.data.frame() |>
+    rownames_to_column(var = "GeneID") |>
     # Calculate row median and variance to be able to select top n genes with highest median expression or highest variance
-    rowwise() %>%
+    rowwise() |>
     mutate(
       Rowmedian = median(c_across(-GeneID)),
       Rowvariance = var(c_across(-GeneID))
-    ) %>%
-    ungroup() %>%
+    ) |>
+    ungroup() |>
     # Re-add the symbols, entrez IDs, descriptions, aliases and URLs
     left_join(
-      raw_counts %>%
+      raw_counts |>
         # Use unique gene IDs because they multiplied by the number of samples
-        distinct(GeneID, .keep_all = TRUE) %>%
+        distinct(GeneID, .keep_all = TRUE) |>
         dplyr::select(-RunID, -Counts),
       by = "GeneID"
-    ) %>%
+    ) |>
     as.data.frame()
 
-  RawPCA <- CPMCounts %>%
+  RawPCA <- CPMCounts |>
     # Keep the GeneIDs but remove the other non-numeric columns
-    column_to_rownames("GeneID") %>%
-    dplyr::select(!(Rowmedian:NCBIURL)) %>%
-    t() %>%
+    column_to_rownames("GeneID") |>
+    dplyr::select(!(Rowmedian:NCBIURL)) |>
+    t() |>
     prcomp(center = centering, scale. = scaling)
 
   # Calculate the explained variance by each PC
@@ -190,18 +191,18 @@ prepareDfs <- function(
   VarianceExplained <- data.frame(
     PC = factor(colnames(RawPCA$x), levels = colnames(RawPCA$x)),
     Variance = round(RawPCA$sdev^2 / sum(RawPCA$sdev^2) * 100, 2)
-  ) %>%
+  ) |>
     # Remove PCs with explained variance < 1%
-    filter(Variance >= 1) %>%
+    filter(Variance >= 1) |>
     # Remove the factor levels from PC column
     mutate(PC = fct_drop(PC))
 
   # Create a data frame with PCs, sample names and groups
   # This can easily be used by `ggplot2`
-  DfPCA <- RawPCA$x %>%
-    as.data.frame() %>%
-    rownames_to_column("SampleNameUser") %>%
-    left_join(SamplesGroups, by = "SampleNameUser") %>%
+  DfPCA <- RawPCA$x |>
+    as.data.frame() |>
+    rownames_to_column("SampleNameUser") |>
+    left_join(SamplesGroups, by = "SampleNameUser") |>
     # Remove PCs that explain less than 1 % of the variance
     dplyr::select(
       all_of(

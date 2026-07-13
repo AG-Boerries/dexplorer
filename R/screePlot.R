@@ -27,9 +27,9 @@ createScreePlot <- function(
   PC <- Variance <- SelectedPC <- TooltipText <- NULL
 
   # ---- Prepare the data ----
-  explained_var <- explained_var %>%
+  explained_var <- explained_var |>
     # Remove PCs explaining less than 1 % of total variance
-    filter(Variance >= 1) %>%
+    filter(Variance >= 1) |>
     # Create a column to color the selected PCs
     # If no PC specified, all bars will receive the same color
     mutate(
@@ -70,7 +70,7 @@ createScreePlot <- function(
 
   # ---- Fine tune plot for DExploreR or standalone ----
   if (!standalone) {
-    p <- ggplotly(p, tooltip = "text") %>%
+    p <- ggplotly(p, tooltip = "text") |>
       # Reduce the modebar to only essential tools
       config(
         displaylogo = FALSE,
@@ -80,7 +80,7 @@ createScreePlot <- function(
           list("pan2d"),
           list("resetScale2d")
         )
-      ) %>%
+      ) |>
       onRender(
         "
         function(el, x, tooltipType) {

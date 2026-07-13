@@ -28,9 +28,9 @@ formatGSEAContrastIntersection <- function(
   #  Prepare data frame for ballon plot
   df_jaccard_results <- bind_rows(
     lapply(directions, function(dir) {
-      df_jaccard <- df %>%
-        filter((dir == "both" | Direction == dir)) %>%
-        group_by(Contrast) %>%
+      df_jaccard <- df |>
+        filter((dir == "both" | Direction == dir)) |>
+        group_by(Contrast) |>
         # Extract the unique list of pathways for each contrast
         summarise(paths = list(unique(Pathway)), .groups = "drop")
 
@@ -39,14 +39,14 @@ formatGSEAContrastIntersection <- function(
         df_jaccard$Contrast,
         df_jaccard$Contrast,
         stringsAsFactors = FALSE
-      ) %>%
+      ) |>
         # This removes duplicates and self-comparisons
         filter(Var1 < Var2)
 
       # Compute Jaccard index for each pair
       jaccard_results <- map_dfr(1:base::nrow(pairs), function(i) {
-        seta <- df_jaccard %>% filter(Contrast == pairs[i, 1])
-        setb <- df_jaccard %>% filter(Contrast == pairs[i, 2])
+        seta <- df_jaccard |> filter(Contrast == pairs[i, 1])
+        setb <- df_jaccard |> filter(Contrast == pairs[i, 2])
 
         inter <- length(base::intersect(seta$paths[[1]], setb$paths[[1]]))
         uni <- length(base::union(seta$paths[[1]], setb$paths[[1]]))
@@ -61,7 +61,7 @@ formatGSEAContrastIntersection <- function(
         )
       })
     })
-  ) %>%
+  ) |>
     as.data.frame()
 
   return(df_jaccard_results)
@@ -95,7 +95,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
   )
 
   # Add tooltip just before plotting to avoid this in the downloaded data
-  df <- df %>%
+  df <- df |>
     mutate(
       TooltipText1 = paste0(
         "<b><div style='font-size:16px;'>Comparison: </b>",
@@ -116,8 +116,8 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
     )
 
   p_up_and_down <- ggplot(
-    df %>%
-      filter(Direction == "both") %>%
+    df |>
+      filter(Direction == "both") |>
       mutate(Direction = "Up- and down-regulated gene sets"),
     aes(x = Seta, y = Setb)
   ) +
@@ -144,7 +144,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
     labs(x = "", y = "")
 
   p_up_or_down <- ggplot(
-    df %>% filter(Direction != "both"),
+    df |> filter(Direction != "both"),
     aes(x = Seta, y = Setb)
   ) +
     geom_point_quiet(
@@ -210,7 +210,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
     ),
     nrows = 2,
     margin = 0.2
-  ) %>%
+  ) |>
     # Reduce the modebar to only essential tools
     config(
       displaylogo = FALSE,
@@ -220,9 +220,9 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
         list("pan2d"),
         list("resetScale2d")
       )
-    ) %>%
+    ) |>
     # Register click events for this plot
-    event_register("plotly_click") %>%
+    event_register("plotly_click") |>
     # Attach the custom tooltip from JS
     onRender(
       "
@@ -251,7 +251,7 @@ createGSEAContrastIntersectionPlot <- function(df, selected_palette) {
     min_size = 500,
     per_sample_size = 50
   ) * 2
-  p <- p %>% layout(height = total_height)
+  p <- p |> layout(height = total_height)
 
   return(p)
 }

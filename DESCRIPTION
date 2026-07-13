@@ -51,7 +51,6 @@ Imports:
     htmlwidgets,
     jsonlite,
     limma,
-    magrittr,
     MASS,
     methods,
     msigdbr,

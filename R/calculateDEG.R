@@ -86,24 +86,24 @@ calculateDEG <- function(
   }
 
   # Create count matrix
-  RawCountsWide <- raw_counts %>%
+  RawCountsWide <- raw_counts |>
     # Frist, remove the irrelevant columns for this step
-    dplyr::select(all_of(c("GeneID", "Counts", "SampleNameUser"))) %>%
+    dplyr::select(all_of(c("GeneID", "Counts", "SampleNameUser"))) |>
     # Pivot to wide format
     pivot_wider(
       id_cols = GeneID,
       names_from = SampleNameUser,
       values_from = Counts,
       values_fill = 0
-    ) %>%
+    ) |>
     column_to_rownames("GeneID")
 
   # Get the gene information from the genes in the count matrix
-  GeneInfos <- raw_counts %>%
+  GeneInfos <- raw_counts |>
     # Extract the relevant information
-    dplyr::select(1:7) %>%
+    dplyr::select(1:7) |>
     # Remove duplicates, which are present because of long format
-    filter(!duplicated(GeneID)) %>%
+    filter(!duplicated(GeneID)) |>
     column_to_rownames("GeneID")
 
   # Check if the order is the same
@@ -117,8 +117,8 @@ calculateDEG <- function(
 
   if (deg_tool == "deseq2") {
     # Prepare colData for DESeq2
-    ColData <- samples_groups %>%
-      column_to_rownames(var = "SampleNameUser") %>%
+    ColData <- samples_groups |>
+      column_to_rownames(var = "SampleNameUser") |>
       mutate(across(all_of(de_vars), as.factor))
 
     stopifnot(
@@ -142,16 +142,16 @@ calculateDEG <- function(
       contrasts,
       name = "name",
       value = "contrast"
-    ) %>%
-      separate(contrast, into = c("groupA", "groupB"), sep = "-") %>%
+    ) |>
+      separate(contrast, into = c("groupA", "groupB"), sep = "-") |>
       # Ensure that the groups in the contrasts are present in the design formula
       mutate(group_var = de_vars)
 
     # Get log2 normalized counts, similar to `limma::voom()`, which is used for the GSEA with `gage()`
-    NormCounts <- log2(counts(DDS, normalized = TRUE) + 1) %>%
-      as.data.frame() %>%
-      rownames_to_column(var = "GeneID") %>%
-      left_join(GeneInfos %>% rownames_to_column(var = "GeneID"), by = "GeneID")
+    NormCounts <- log2(counts(DDS, normalized = TRUE) + 1) |>
+      as.data.frame() |>
+      rownames_to_column(var = "GeneID") |>
+      left_join(GeneInfos |> rownames_to_column(var = "GeneID"), by = "GeneID")
 
     # Run all contrasts and collect results
     Df <- pmap_dfr(
@@ -160,9 +160,9 @@ calculateDEG <- function(
         res <- results(
           DDS,
           contrast = c(group_var, groupA, groupB)
-        ) %>%
-          as.data.frame() %>%
-          rownames_to_column(var = "GeneID") %>%
+        ) |>
+          as.data.frame() |>
+          rownames_to_column(var = "GeneID") |>
           mutate(
             Contrast = name,
             Direction = case_when(
@@ -170,13 +170,13 @@ calculateDEG <- function(
               log2FoldChange < 0 ~ "down",
               TRUE ~ "zero"
             )
-          ) %>%
+          ) |>
           left_join(
-            GeneInfos %>% rownames_to_column(var = "GeneID"),
+            GeneInfos |> rownames_to_column(var = "GeneID"),
             by = "GeneID"
           )
       }
-    ) %>%
+    ) |>
       dplyr::select(
         GeneID,
         Symbol,
@@ -223,9 +223,9 @@ calculateDEG <- function(
 
     NormCountObject <- voom(DGEObject, Design)
 
-    NormCounts <- as.data.frame(NormCountObject$E) %>%
-      rownames_to_column(var = "GeneID") %>%
-      left_join(GeneInfos %>% rownames_to_column(var = "GeneID"), by = "GeneID")
+    NormCounts <- as.data.frame(NormCountObject$E) |>
+      rownames_to_column(var = "GeneID") |>
+      left_join(GeneInfos |> rownames_to_column(var = "GeneID"), by = "GeneID")
 
     DGEFitObject <- lmFit(
       NormCountObject,
@@ -246,9 +246,9 @@ calculateDEG <- function(
           DEGFitContrastsObject,
           coef = i,
           number = Inf
-        ) %>%
-          rownames_to_column(var = "GeneID") %>%
-          as.data.frame() %>%
+        ) |>
+          rownames_to_column(var = "GeneID") |>
+          as.data.frame() |>
           mutate(
             Contrast = contrast,
             Direction = case_when(
@@ -258,7 +258,7 @@ calculateDEG <- function(
             )
           )
       }
-    ) %>%
+    ) |>
       dplyr::select(
         GeneID,
         Symbol,
@@ -274,7 +274,7 @@ calculateDEG <- function(
         "PValAdj" = "adj.P.Val",
         # This column is required for the ranked geneList of `clusterProfiler::GSEA()`
         "Rank" = "t"
-      ) %>%
+      ) |>
       mutate(
         # Use the names of the contrasts provided by the user for better readability in DExploreR
         Contrast = recode(
@@ -285,7 +285,7 @@ calculateDEG <- function(
   }
 
   # Calculate -log10 of adjusted p-value for better visualization in DExploreR
-  Df <- Df %>%
+  Df <- Df |>
     mutate(LogPValAdj = -log10(PValAdj))
 
   return(

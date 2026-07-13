@@ -32,7 +32,7 @@ createVolcanoPlot <- function(
   # Define variables locally for R CMD check
   Symbol <- Log2FC <- LogPValAdj <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- PValAdj <- Significant <- Contrast <- TooltipText <- xleft <- ypos <- left_label <- xright <- right_label <- NULL
 
-  df <- df %>%
+  df <- df |>
     mutate(
       TooltipText = paste0(
         "<b><div style='font-size:16px;'>",
@@ -69,7 +69,7 @@ createVolcanoPlot <- function(
         ),
         TRUE ~ "Not significant"
       )
-    ) %>%
+    ) |>
     # Display only user-selected contrasts
     filter(Contrast %in% selected_contrast)
 
@@ -85,7 +85,7 @@ createVolcanoPlot <- function(
     geom_point(alpha = 0.5, size = dot_size) +
     # Highlight the user-selected genes with larger white points and text labels
     geom_point(
-      data = df %>% filter(Symbol %in% selected_genes),
+      data = df |> filter(Symbol %in% selected_genes),
       aes(x = Log2FC, y = LogPValAdj),
       size = 3,
       color = "white",
@@ -93,7 +93,7 @@ createVolcanoPlot <- function(
       show.legend = FALSE
     ) +
     geom_text(
-      data = df %>% filter(Symbol %in% selected_genes),
+      data = df |> filter(Symbol %in% selected_genes),
       aes(x = Log2FC, y = LogPValAdj, label = Symbol),
       color = "black",
       inherit.aes = FALSE,
@@ -129,7 +129,7 @@ createVolcanoPlot <- function(
       min_size = 800,
       per_sample_size = 800
     )
-  ) %>%
+  ) |>
     layout(
       legend = list(
         orientation = "h",
@@ -138,7 +138,7 @@ createVolcanoPlot <- function(
         xref = "paper",
         x = 0.5
       )
-    ) %>%
+    ) |>
     # Reduce the modebar to only essential tools
     config(
       displaylogo = FALSE,
@@ -148,7 +148,7 @@ createVolcanoPlot <- function(
         list("pan2d"),
         list("resetScale2d")
       )
-    ) %>%
+    ) |>
     # Add the custom tooltip
     onRender(
       "
@@ -168,7 +168,7 @@ createVolcanoPlot <- function(
 
   # Convert to WebGL for performance with many points
   # This throws some warnings about missing attributes of `gl`, which could be suppressed by `suppressWarnings()`, but this slows down the rendering significantly
-  p <- p %>% toWebGL()
+  p <- p |> toWebGL()
 
   return(p)
 }

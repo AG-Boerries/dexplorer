@@ -30,7 +30,7 @@ formatForHeatmap <- function(
   df_genes_selected <- if (
     !is.null(selected_genes) && length(selected_genes) > 0
   ) {
-    df %>% filter(Symbol %in% selected_genes)
+    df |> filter(Symbol %in% selected_genes)
   } else {
     # If selection is empty, then create an empty data frame with the same columns as `df`
     df[0, ]
@@ -38,31 +38,31 @@ formatForHeatmap <- function(
 
   # Prepare the data frame for `heatmaply::heatmaply()`
   # `df` contains the cpm values of all genes and samples
-  df <- df %>%
+  df <- df |>
     # Show only top n genes with highest median expression or highest variance
     slice_max(
       order_by = .data[[
         if (gene_selection_by) "Rowvariance" else "Rowmedian"
       ]],
       n = selected_subset_size
-    ) %>%
+    ) |>
     # Add the user selected genes
-    bind_rows(df_genes_selected) %>%
+    bind_rows(df_genes_selected) |>
     # Ensure to remove duplicates, if genes were already in top n
-    distinct(Symbol, .keep_all = TRUE) %>%
+    distinct(Symbol, .keep_all = TRUE) |>
     # Use the column as row names that the user selected
-    column_to_rownames(var = "Symbol") %>%
+    column_to_rownames(var = "Symbol") |>
     # Remove unselected samples and non-numeric columns for z-scoring
-    select(all_of(selected_samples)) %>%
+    select(all_of(selected_samples)) |>
     # Z-score cpm values for better depiction
-    base::t() %>%
-    scale() %>%
-    base::t() %>%
-    as.data.frame() %>%
-    rownames_to_column(var = "Symbol") %>%
+    base::t() |>
+    scale() |>
+    base::t() |>
+    as.data.frame() |>
+    rownames_to_column(var = "Symbol") |>
     # Re-add the further information, required for hover labels and comprehensive downloadable .csv
     left_join(
-      df %>%
+      df |>
         dplyr::select(
           Symbol,
           GeneID,
@@ -125,7 +125,7 @@ createGeneExpressionHeatmap <- function(
   )
 
   # Translate values from `input$switch_id_symbols_heatmap` to column names in `df`
-  id_translate = list(
+  id_translate <- list(
     "Ensembl ID" = "GeneID",
     "Entrez ID" = "EntrezID",
     "Gene symbol" = "Symbol",
@@ -139,13 +139,13 @@ createGeneExpressionHeatmap <- function(
   )
 
   # Create the expression matrix with the selected identifier as rownames
-  expression_mat <- df %>%
-    column_to_rownames(var = id_translate[[id_or_sym]]) %>%
-    select(where(is.numeric)) %>%
+  expression_mat <- df |>
+    column_to_rownames(var = id_translate[[id_or_sym]]) |>
+    select(where(is.numeric)) |>
     data.matrix(rownames.force = TRUE)
 
   # Create a data frame with gene information for hover labels
-  row_info <- df %>%
+  row_info <- df |>
     select(-where(is.numeric))
 
   # Create a data frame with sample and group information for hover labels
@@ -185,11 +185,11 @@ createGeneExpressionHeatmap <- function(
   )
 
   # Create a data frame with group labels for the columns
-  group_labels <- samples_groups %>%
-    dplyr::select(SampleNameUser, Group) %>%
-    column_to_rownames(var = "SampleNameUser") %>%
+  group_labels <- samples_groups |>
+    dplyr::select(SampleNameUser, Group) |>
+    column_to_rownames(var = "SampleNameUser") |>
     # Ensure the order of the samples matches the order in the heatmap
-    .[base::colnames(expression_mat), , drop = FALSE]
+    (\(x) x[base::colnames(expression_mat), , drop = FALSE])()
 
   # Build the heatmap
   p <- heatmaply(
@@ -225,7 +225,7 @@ createGeneExpressionHeatmap <- function(
   if (!base::grepl("Samples", dendrogram_type, fixed = TRUE)) {
     # When there is no dendrogram for the columns, the axis indices are shifted
     # Domains need to be added differently
-    p <- p %>%
+    p <- p |>
       layout(
         # Heatmap tiles
         yaxis2 = list(
@@ -245,7 +245,7 @@ createGeneExpressionHeatmap <- function(
         )
       )
   } else {
-    p <- p %>%
+    p <- p |>
       layout(
         # Change the color of the y-axis title and tick labels
         # Heatmap tiles
@@ -270,7 +270,7 @@ createGeneExpressionHeatmap <- function(
   }
 
   # Some further formatting, which is independent of the domains
-  p <- p %>%
+  p <- p |>
     layout(
       # Change the color of the xaxis title and tick labels
       xaxis = list(
@@ -282,7 +282,7 @@ createGeneExpressionHeatmap <- function(
         ),
         tickfont = list(color = "black")
       )
-    ) %>%
+    ) |>
     config(
       modeBarButtonsToRemove = c(
         "zoomIn2d",
@@ -352,7 +352,7 @@ createGeneExpressionHeatmap <- function(
   }
 
   # Enable custom tooltip
-  p <- p %>%
+  p <- p |>
     onRender(
       "
         function(el, x, tooltipType) {

@@ -13,10 +13,10 @@ createCountDistributionPlot <- function(df) {
   SampleNameUser <- Group <- Counts <- MedianReadCountsPerGene <- TooltipText <- NULL
 
   # Calculate median read counts per gene for tooltip
-  df <- df %>%
-    group_by(SampleNameUser) %>%
-    mutate(MedianReadCountsPerGene = median(Counts)) %>%
-    ungroup() %>%
+  df <- df |>
+    group_by(SampleNameUser) |>
+    mutate(MedianReadCountsPerGene = median(Counts)) |>
+    ungroup() |>
     mutate(
       TooltipText = paste0(
         "<b>Sample name: </b>",

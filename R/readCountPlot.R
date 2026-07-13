@@ -22,8 +22,8 @@ createReadCountPlot <- function(df, standalone = FALSE) {
   }
 
   # Tooltips are generated on the fly, allows cleaner download formats
-  df <- df %>%
-    filter(SampleNameUser != "All samples") %>%
+  df <- df |>
+    filter(SampleNameUser != "All samples") |>
     mutate(
       TooltipText = paste0(
         "<b>Sample name: </b>",
@@ -40,7 +40,7 @@ createReadCountPlot <- function(df, standalone = FALSE) {
         sprintf("%.1f", UnassignedUnmappedReads / TotalReads * 100),
         " %"
       )
-    ) %>%
+    ) |>
     pivot_longer(
       cols = c(
         AssignedReads,
@@ -49,7 +49,7 @@ createReadCountPlot <- function(df, standalone = FALSE) {
       ),
       names_to = "ReadType",
       values_to = "NumberOfReads"
-    ) %>%
+    ) |>
     mutate(
       ReadType = case_when(
         ReadType == "AssignedReads" ~ "Assigned reads",

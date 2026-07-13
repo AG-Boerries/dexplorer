@@ -14,7 +14,7 @@ createGeneCountPlot <- function(df, standalone = FALSE) {
   # Define variables locally for R CMD check
   Group <- SampleNameUser <- GenesRecorded <- ColorGroup <- TooltipText <- NULL
 
-  df <- df %>%
+  df <- df |>
     # Add the tooltip text
     mutate(
       # Ensure that "All samples" is the first level

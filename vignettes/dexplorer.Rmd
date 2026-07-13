@@ -48,13 +48,13 @@ full_join(
     header = FALSE
   ),
   by = "V1"
-) %>%
+) |>
   mutate(
     V2 = V2.x + V2.y,
     V3 = V3.x + V3.y,
     V4 = V4.x + V4.y
-  ) %>%
-  select(V1, V2, V3, V4) %>%
+  ) |>
+  select(V1, V2, V3, V4) |>
   write_tsv(
     # The maintains the correct pattern for the file names, which is required for the loading function `createRawCountsWithStats()`
     paste0(files_star_counts, "GSM8423684_combined_ReadsPerGene.out.tab"),
@@ -117,21 +117,21 @@ meta_data <- do.call(
       Characteristics = paste(g@header$characteristics_ch1, collapse = "; ")
     )
   })
-) %>%
+) |>
   # Create columns for tissue, group, sample
   separate(
     Title,
     into = c("Tissue", "Group", "Sample"),
     sep = ", ",
     fill = "right"
-  ) %>%
+  ) |>
   # Clean up
   mutate(
     Group = sub(" (.*)$", "", Group),
     Sex = sub(".*Sex: (.*)$", "\\1", Characteristics),
     Genotype = sub(".*genotype: (.*);.*", "\\1", Characteristics),
     Sample = paste0(Group, "_", sub(" ", "_", Sample))
-  ) %>%
+  ) |>
   select(-c(Characteristics))
 
 # Row names are not required because `GSM` column holds this information already
@@ -273,7 +273,7 @@ d <- createDataSet(
 When `createDataSet()` runs without errors, you can explore the output in the app, for instance like: 
 
 ```{r run-app, eval=FALSE}
-d %>% runDExploreR()
+d |> runDExploreR()
 ```
 
 Please visit [dexplorer-ibsm.uniklinik-freiburg.de](https://dexplorer-ibsm.uniklinik-freiburg.de/public/) to explore this data set and other publicly available data sets with `DExploreR`. You can find further scripts for preparing public data sets in [this GitHub repository](https://github.com/AG-Boerries/dexplorer-scripts).

@@ -52,7 +52,7 @@ createRawCountsWithStats <- function(
         # Then the first column is always a character, it contains the gene IDs
         # The second column is always numeric, it contains the counts
         col_types = list(col_character(), col_double())
-      ) %>%
+      ) |>
         # Rename counts column to a common name
         dplyr::rename(Counts = strandedness)
     }
@@ -67,26 +67,26 @@ createRawCountsWithStats <- function(
   # Calculate statistics for all samples and add the `RunID` (name of the file)
   DfStats <- imap_dfr(
     ReadTabs,
-    ~ calculateStats(.x) %>%
+    ~ calculateStats(.x) |>
       mutate(RunID = .y)
   )
 
   # Combine all data frames into one long data frame
   # This is required for the ridgeline distribution plots
-  DfRawCounts <- bind_rows(ReadTabs, .id = "RunID") %>%
-    as.data.frame() %>%
+  DfRawCounts <- bind_rows(ReadTabs, .id = "RunID") |>
+    as.data.frame() |>
     # Remove the meta information on the sequencing quality, which is typically stored in the first 4 rows
     filter(str_detect(GeneID, "^ENS"))
 
   # Filter to keep only genes with `counts > 0`
-  DfRawCountsAboveZero <- DfRawCounts %>%
+  DfRawCountsAboveZero <- DfRawCounts |>
     filter(Counts > 0)
 
   # Calculate the total number of detected genes across all samples
   TotalGenes <- length(unique(DfRawCountsAboveZero$GeneID))
 
   # Add the TotalGenes to `DfStats`
-  DfStats <- DfStats %>%
+  DfStats <- DfStats |>
     add_row(
       RunID = "All samples",
       GenesRecorded = TotalGenes
@@ -103,7 +103,7 @@ createRawCountsWithStats <- function(
     # Make sure the provided value is a function
     assert_that(is.function(fix_runid))
     Dfs <- lapply(Dfs, function(df) {
-      df %>% mutate(RunID = fix_runid(RunID))
+      df |> mutate(RunID = fix_runid(RunID))
     })
     return(Dfs)
   } else {

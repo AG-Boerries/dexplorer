@@ -29,20 +29,20 @@ createTopGeneSetsPlot <- function(
   # Define variables locally for R CMD check
   Contrast <- Pathway <- GSName <- GSCollectionName <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- Direction <- TooltipText <- NULL
 
-  df <- df %>%
+  df <- df |>
     left_join(
-      df_genes %>% distinct(GSName, GSCollectionName),
+      df_genes |> distinct(GSName, GSCollectionName),
       by = c("Pathway" = "GSName")
-    ) %>%
+    ) |>
     filter(
       Contrast %in% selected_contrast,
       Pathway %in% selected_gene_sets,
       GSCollectionName %in% selected_gene_set_collections
-    ) %>%
+    ) |>
     left_join(
-      df_genes %>% distinct(GSName, GSDescription, GSURL),
+      df_genes |> distinct(GSName, GSDescription, GSURL),
       by = c("Pathway" = "GSName")
-    ) %>%
+    ) |>
     mutate(
       # Sort the symbols within each group using `tidytext::reorder_within()`
       Pathway = reorder_within(
@@ -63,13 +63,13 @@ createTopGeneSetsPlot <- function(
         GSURL,
         "' target='_blank'> (more information)</a>."
       ),
-    ) %>%
+    ) |>
     separate(
       Contrast,
       into = c("contrast_left", "contrast_right"),
       sep = " vs ",
       remove = FALSE
-    ) %>%
+    ) |>
     mutate(
       Direction = case_when(
         Direction == "up" ~ paste("Upregulated gene sets in", contrast_left),
@@ -174,7 +174,7 @@ if (nrow(df) == 0) {
     }
   }
 
-  p <- p %>%
+  p <- p |>
     layout(
       legend = list(
         orientation = "h",
@@ -183,7 +183,7 @@ if (nrow(df) == 0) {
         xref = "paper",
         x = 0.5
       )
-    ) %>%
+    ) |>
     # Reduce the modebar to only essential tools
     config(
       displaylogo = FALSE,
@@ -193,7 +193,7 @@ if (nrow(df) == 0) {
         list("pan2d"),
         list("resetScale2d")
       )
-    ) %>%
+    ) |>
     # Attach the custom tooltip from JS
     onRender(
       "
@@ -202,7 +202,7 @@ if (nrow(df) == 0) {
         }
       ",
       data = list(tooltipType = "gene_sets")
-    ) %>%
+    ) |>
     # Register click events for modals
     event_register("plotly_click")
 
