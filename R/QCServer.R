@@ -1,146 +1,3 @@
-# This is the lookup table for the plotting functions and the info texts of this `moduleServer`
-# Wrapped in a function so function references are resolved at call time, not at parse time
-assign_format_plot_info <- function() {
-  list(
-    "Number of reads" = list(
-      plot = createReadCountPlot,
-      info = tagList(
-        tags$b("Assigned reads:"),
-        "Number of mapped reads that could be assigned unambiguously to an annotated genomic region.",
-        br(),
-        br(),
-        tags$b("Unassigned / mapped reads:"),
-        "Number of reads that could be mapped to the reference but without unique assignement, for instance, because of overlapping annotated genomic regions or no available annotation.",
-        br(),
-        br(),
-        tags$b("Unassigned / unmapped reads:"),
-        "Number of reads that did not map to the reference or that mapped to many locations.",
-        br(),
-        br(),
-        "In the case of paired-end sequencing, read pairs are counted instead of single reads."
-      )
-    ),
-    "Number of genes" = list(
-      plot = createGeneCountPlot,
-      info = HTML(
-        "To be considered as detected, a gene must have at least one read assigned, i.e. at least one count. The bar <i>All samples</i> depicts the overall number of distinct detected genes across all samples."
-      )
-    ),
-    "Read count distribution" = list(
-      plot = createCountDistributionPlot,
-      info = "The read count distribution shows how the reads are distributed across all recorded genes in a sample. The vertical lines indicate the quartiles separating the distribution into equal proportions with 25 % of the data. Then central line indicates the median read counts per gene."
-    )
-  )
-}
-
-
-#' @title Quality Control Tab UI
-#'
-#' @description
-#' Generates the user interface for the Quality Control tab in the DExploreR app. Provides controls for selecting plot type, color palette, and samples, as well as buttons for further information, data download, and plot download. Displays the selected plot using `plotly`. This has the same layout as \code{\link{makeSubTabContent}()}.
-#'
-#' @param id Character. The module namespace ID.
-#'
-#' @return A Shiny UI element (HTML tag list) for inclusion in the app UI.
-#
-tabContentUI <- function(id) {
-  ns <- NS(id)
-  div(
-    fluidRow(
-      column(
-        width = 9,
-        prettyRadioButtons(
-          inputId = ns("select_plot_raw_counts"),
-          label = "Select plot",
-          status = "success",
-          choices = c(
-            "Number of reads",
-            "Number of genes",
-            "Read count distribution"
-          ),
-          shape = "round",
-          bigger = TRUE,
-          animation = "smooth",
-          fill = TRUE,
-          thick = TRUE
-        )
-      ),
-      # This is the same as plotControls
-      # I could not find a solution with the namespacing issues
-      # Thus, this is repeated here
-      column(
-        width = 3,
-        div(
-          dropdownButton(
-            inputId = ns("plot_settings"),
-            right = FALSE,
-            circle = FALSE,
-            size = "lg",
-            icon = icon("sliders"),
-            div(
-              # Color selection
-              virtualSelectInput(
-                inputId = ns("color_select"),
-                label = "Select color palette:",
-                # The color choices are defined in `controls_colors.R`
-                choices = color_choices,
-                selected = "App colors",
-                search = TRUE,
-                showSelectedOptionsFirst = TRUE,
-                # Add custom renderers for the colors, which include images of the color scales
-                labelRenderer = "colorsWithIconChoice",
-                selectedLabelRenderer = "colorsWithIconSelected"
-              ),
-              virtualSelectInput(
-                inputId = ns("sample_select"),
-                label = "Select samples:",
-                choices = c(),
-                multiple = TRUE,
-                search = TRUE,
-                showSelectedOptionsFirst = TRUE
-              )
-            )
-          ),
-          style = "display: flex; justify-content: flex-end; width: 100%;"
-        ),
-        actionButton(
-          ns("further_info"),
-          label = "Further information",
-          class = ns("custom-button")
-        ),
-        div(
-          downloadButton(
-            ns("download_data"),
-            label = "Download data",
-            class = ns("custom-button")
-          ),
-          style = "width: 155px; margin-left: auto;"
-        ),
-        actionButton(
-          ns("download_plot"),
-          label = "Download plot",
-          icon = icon("download"),
-          width = "155px",
-          class = ns("custom-button")
-        ),
-        div(style = "margin-bottom: 10px;"),
-      ),
-      style = "display: flex; align-items: center; margin-top: 30px; margin-bottom: 10px; margin-right: 10px; height: 220px"
-    ),
-    fluidRow(
-      column(
-        width = 12,
-        div(
-          # Using auto height allows to
-          plotlyOutput(ns("plot"), height = "auto", width = "98%"),
-          class = "plot-loader-wrap plot-loader-wrap-dynamic panel_plot_box"
-        )
-      )
-    )
-  )
-}
-
-
 #' @title Quality Control Tab Server Logic
 #'
 #' @description
@@ -164,34 +21,33 @@ tabContentServer <- function(
   SampleNameUser <- Group <- domain <- NULL
 
   moduleServer(id, function(input, output, session) {
-    # Get the namespace for inputs generated on the server site, like the ones in the download dialog
+    # Get the namespace
     ns <- session$ns
 
-    # Identify the data needed based on the selected plot
+    # ---- Get the data for the requested plot ----
     needed_data <- reactive({
       req(data())
 
       # Based on the selected plot different data is required
       if (input$select_plot_raw_counts == "Read count distribution") {
         # For the read count distributions the raw counts are required
-        d <- data()[["RawCounts"]] |>
+        data()[["RawCounts"]] |>
           filter(SampleNameUser %in% input$sample_select)
       } else {
         # Filter for selected samples but keep the "All samples" group
         # This contains the total number of detected genes
-        d <- data()[["QualityControl"]] |>
+        data()[["QualityControl"]] |>
           filter(SampleNameUser %in% c(input$sample_select, "All samples"))
       }
-      return(d)
     })
 
-    # Create the plot
-    bar_plot <- reactive({
+    # ---- Create the plot ----
+    qc_plot <- reactive({
       req(needed_data())
 
-      # Extract function for plotting form lookup table
+      # Extract function for plotting from lookup table
       plotter <- assign_format_plot_info()[[input$select_plot_raw_counts]]$plot
-      # Based on the selected plot different data is required
+
       if (input$select_plot_raw_counts == "Read count distribution") {
         p <- plotter(needed_data())
 
@@ -338,10 +194,10 @@ tabContentServer <- function(
       return(p)
     })
 
-    # Set plot status to TRUE when done
+    # ---- Observe when the plot is ready and update the plot status ----
     observe({
-      req(bar_plot())
-      plot_status$bar_plot <- TRUE
+      req(qc_plot())
+      plot_status$qc_plot <- TRUE
       message(
         "[Raw data][Quality Control] Plot ",
         input$select_plot_raw_counts,
@@ -349,10 +205,12 @@ tabContentServer <- function(
       )
     })
 
+    # ---- Render the plot ----
     output$plot <- renderPlotly({
-      bar_plot()
+      qc_plot()
     })
 
+    # ---- Download data ----
     observeEvent(
       input$select_plot_raw_counts,
       {
@@ -364,9 +222,10 @@ tabContentServer <- function(
       }
     )
 
-    # Also the info text come from the lookup and are displayed as modals
+    # ---- Display the further information as modal if requested ----
     observeEvent(input$further_info, {
       req(input$select_plot_raw_counts)
+
       showModal(modalDialog(
         title = "Further information",
         easyClose = TRUE,
@@ -374,20 +233,27 @@ tabContentServer <- function(
         assign_format_plot_info()[[input$select_plot_raw_counts]]$info
       ))
     })
+
+    # ---- Download plot ----
     # Show modal with download option upon clicking the corresponding `actionButton()`
+    # This is the part that requires the python environment
     observeEvent(input$download_plot, {
       req(input$select_plot_raw_counts)
+
       showModal(modalDialog(
         title = "Download plot",
         easyClose = TRUE,
         footer = NULL,
+
+        # ---- Selectplot format ----
         virtualSelectInput(
           inputId = ns("plot_format"),
           label = "Select file format:",
           choices = c("png", "jpeg", "svg", "webp", "pdf"),
           selected = "png"
         ),
-        # Adjust downloaded plot size and format
+
+        # ---- Select plot height and width ----
         numericInput(
           inputId = ns("plot_height"),
           label = "Height (in px):",
@@ -402,6 +268,8 @@ tabContentServer <- function(
           min = 1,
           max = 100000
         ),
+
+        # ---- Download button ----
         downloadButton(
           outputId = ns("download_plot_modal"),
           label = "Download plot",
@@ -410,7 +278,7 @@ tabContentServer <- function(
       ))
     })
 
-    # Download handler for plot downloads from the modal
+    # ---- Download handler for plot downloads from the modal ----
     output$download_plot_modal <- downloadHandler(
       filename = function() {
         # Create the name of the downloaded file similar to the data downloads
@@ -428,7 +296,7 @@ tabContentServer <- function(
         # Use `save_image()` from plotly to save the plot in the desired format
         # This depends on python, thus, usage of `reticulate` and `kaleido`
         save_image(
-          p = bar_plot(),
+          p = qc_plot(),
           file = file,
           width = input$plot_width,
           height = input$plot_height

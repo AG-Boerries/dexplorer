@@ -40,7 +40,7 @@ app_server <- function(input, output, session, config) {
 
   # Reactive values to track plotting status
   plots_ready <- reactiveValues(
-    bar_plot = FALSE,
+    qc_plot = FALSE,
     scree = FALSE,
     pca = FALSE,
     heatmap = FALSE,

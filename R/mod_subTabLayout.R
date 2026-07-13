@@ -59,6 +59,7 @@ makeSubTabContent <- function(
             icon = icon("download"),
             width = "155px"
           ),
+          # replace with class and mb-2
           div(additional_button_right, style = "margin-bottom: 10px;"),
         )
       ),

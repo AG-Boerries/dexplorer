@@ -576,7 +576,7 @@ h4 {
 .plot-loader-wrap:has(.recalculating)::after {
   content: "";
   position: absolute;
-  left: 43%;
+  left: 38%;
   top: 10%;
   width: 300px;
   height: 300px;
@@ -584,4 +584,24 @@ h4 {
   animation: logoPulse 1.4s ease-in-out infinite;
   pointer-events: none;
   z-index: 10;
+}
+
+.head-row-qc-server {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  height: 220px
+}
+
+.plot-controls-qc-server {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.data-download-btn {
+  width: 155px;
+  margin-left: auto;
 }

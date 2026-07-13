@@ -32,7 +32,7 @@
 | mod_processUploadedGenes.R  | NA     |
 | readCountDistribution.R | updated     |
 | readCountPlot.R            | updated    |
-| mod_serverQC.R              | in progress     |
+| mod_serverQC.R              | split into three files     |
 | mod_subTabLayout.R          | NA     |
 | mod_tabHeaders.R            | NA     |
 | mod_topDEGs.R               | NA     |
