@@ -10,6 +10,18 @@ Here are some adjustments to this skill that I want you to implement:
   - PCs explaining less than 1 % of total variance can be removed.
 - Number of genes plot:
   - This plot contains one bar, which displays the number of unique genes across all samples. This will always be the largest number because it is the union of all genes across all samples. Sanity check that this is true, if not tell the user and ask for help and provide the necessary information for the user to help you.
+- Heatmap:
+  - The heatmap uses the `NormalizedCounts`, which is a data frame with the samples names as column names and the genes as rows.
+  - Apart from the sample columns, this data frame should also contain the following columns, some of them are needed in other data frames as well, so you may reuse them:
+    - `GeneID`: EnsemblID
+    - `Alias`: all aliases for a gene as character vector, separated by `,`
+    - `OtherEntrezIDs`: all other Entrez IDs for a gene as character vector, separated by `,`, if there are any
+    - `Symbol`: the gene symbol
+    - `EntrezID`: the Entrez ID
+    - `Description`: the gene description/spelled out name
+    - `NCBIURL`: the NCBI URL for the gene, which is created like this: `paste0("https://www.ncbi.nlm.nih.gov/datasets/gene/", EntrezID)`
+    - `Rowmedian`: the median of the normalized counts across all samples for this gene
+    - `Rowvariance`: the variance of the normalized counts across all samples for this gene
 
 
 # Create DataSet Prep
