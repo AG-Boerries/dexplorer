@@ -92,7 +92,7 @@ tabContentUI <- function(id) {
           class = ns("custom-button")
         )
       ),
-      class = "head-row-qc-server mb-2"
+      class = "tab-head-row mb-2"
     ),
     # ---- Plot panel ----
     fluidRow(

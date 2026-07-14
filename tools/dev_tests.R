@@ -43,3 +43,14 @@ createCountDistributionPlot(
   df = df2$RawCounts,
   standalone = TRUE
 )
+
+# ---- PCA plot ----
+createPCAPlot(
+  df_pca = df2$PCA,
+  explained_var = df2$VarianceExplained,
+  pc_x = "PC1",
+  pc_y = "PC2",
+  selected_palette = "Set1",
+  group_overlay = "Ellipse",
+  standalone = TRUE
+)

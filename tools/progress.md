@@ -24,7 +24,7 @@
 | mod_emptyPlot.R             | NA     |
 | mod_furtherInfo.R           | NA     |
 | mod_heatmap.R               | NA     |
-| mod_PCA.R                   | NA     |
+| PCAPlot.R                   | updated     |
 | mod_plotControls.R          | NA     |
 | mod_plotHeights.R           | NA     |
 | mod_plotJaccardIndexDGEA.R  | NA     |

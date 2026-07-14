@@ -586,12 +586,10 @@ h4 {
   z-index: 10;
 }
 
-.head-row-qc-server {
+.tab-head-row {
   display: flex;
   align-items: center;
-  margin-top: 30px;
-  margin-bottom: 10px;
-  margin-right: 10px;
+  margin: 30px 10px 10px 10px !important;
   height: 220px
 }
 

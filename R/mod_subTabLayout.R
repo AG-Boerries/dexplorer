@@ -26,6 +26,7 @@ makeSubTabContent <- function(
   additional_button_right = div()
 ) {
   div(
+    class = "container",
     fluidRow(
       column(
         width = 9,
@@ -59,11 +60,10 @@ makeSubTabContent <- function(
             icon = icon("download"),
             width = "155px"
           ),
-          # replace with class and mb-2
-          div(additional_button_right, style = "margin-bottom: 10px;"),
+          div(additional_button_right),
         )
       ),
-      style = "display: flex; align-items: center; margin-top: 30px; margin-bottom: 10px; margin-right: 10px; height: 220px"
+      class = "tab-head-row mb-2"
     ),
     fluidRow(
       column(

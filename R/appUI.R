@@ -185,10 +185,23 @@ app_ui <- function(config) {
             makeSubTabContent(
               id = "pca",
               top_left_wide = div(
-                plotlyOutput(
-                  "scree_plot",
-                  height = "180px",
-                  width = "95%"
+                fluidRow(
+                  column(
+                    width = 11,
+                    plotlyOutput(
+                      "scree_plot",
+                      height = "180px",
+                      width = "98%"
+                    ),
+                  ),
+                  column(
+                    width = 1,
+                    p(
+                      "This plot only contains PCs that explain at least 1 % of the total variance.",
+                      class = "text-muted",
+                      style = "font-size: 9.5px;"
+                    )
+                  )
                 ),
                 class = "panel_plot_box"
               ),
@@ -214,7 +227,7 @@ app_ui <- function(config) {
               ),
               main_content = plotlyOutput(
                 "pca_plot",
-                height = "500px",
+                height = "700px",
                 width = "98%"
               ),
               # Samples cannot be excluded in the PCA

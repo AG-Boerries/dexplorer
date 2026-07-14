@@ -164,6 +164,7 @@
 #' @importFrom shiny numericInput
 #' @importFrom shiny observe
 #' @importFrom shiny observeEvent
+#' @importFrom shiny p
 #' @importFrom shiny reactive
 #' @importFrom shiny reactiveVal
 #' @importFrom shiny reactiveValues
