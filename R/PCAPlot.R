@@ -13,7 +13,7 @@
 #'
 #' @param selected_palette Character. The name of the color palette to use for group coloring.
 #'
-#' @param group_overlay Character. Overlay type for group visualization: "Ellipse" for ellipses with 95 % confidence interval, "Convex hull" for convex hulls, or any of  "none", "no overlay", "remove overlay" or "w/o" to hide the group overlay. Default is "Convex hull".
+#' @param group_overlay Character. Overlay type for group visualization: "Ellipse" for ellipses with 95 % confidence interval, "Convex hull" for convex hulls, or any of  "none", "no overlay", "remove overlay", "Don't overlay" or "w/o" to hide the group overlay. Default is "Convex hull".
 #'
 #' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
@@ -41,7 +41,8 @@ createPCAPlot <- function(
       "none",
       "no overlay",
       "remove overlay",
-      "w/o"
+      "w/o",
+      "Don't overlay"
     )
   )
 
@@ -153,7 +154,9 @@ createPCAPlot <- function(
           y = 1.0,
           xanchor = "center",
           xref = "paper",
-          x = 0.5
+          x = 0.5,
+          itemclick = FALSE,
+          itemdoubleclick = FALSE
         )
       ) |>
       # Reduce the modebar to only essential tools

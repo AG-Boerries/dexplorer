@@ -719,6 +719,7 @@ app_server <- function(input, output, session, config) {
       )
 
       output$tab_multi_genes <- renderUI({
+        req(userGenes())
         if (nrow(userGenes()$genesFoundMulti) == 0) {
           return()
         } else {
@@ -739,7 +740,7 @@ app_server <- function(input, output, session, config) {
       output$go_to_volcano <- renderUI({
         actionButton(
           inputId = "check_genes_in_volcano",
-          label = "Check your uploaded genes in the volcano plot!",
+          label = "Mark uploaded genes in volcano plot.",
           class = "custom-button"
         )
       })

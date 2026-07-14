@@ -54,3 +54,18 @@ createPCAPlot(
   group_overlay = "Ellipse",
   standalone = TRUE
 )
+
+# ---- Heatmap ----
+df_heatmap <- formatForHeatmap(
+  df = df2$NormalizedCounts
+)
+
+createGeneExpressionHeatmap(
+  df = df_heatmap,
+  heatmap_colors = "RdBu",
+  samples_groups = df2$SamplesGroups,
+  heatmap_heights = heatmapHeights(
+    n_genes = nrow(df_heatmap),
+    dendro_type = "Samples and genes"
+  )
+)

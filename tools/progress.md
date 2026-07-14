@@ -23,7 +23,7 @@
 | mod_downloadUIElements.R    | NA     |
 | mod_emptyPlot.R             | NA     |
 | mod_furtherInfo.R           | NA     |
-| mod_heatmap.R               | NA     |
+| mod_heatmap.R               | split into two files     |
 | PCAPlot.R                   | updated     |
 | mod_plotControls.R          | NA     |
 | mod_plotHeights.R           | NA     |

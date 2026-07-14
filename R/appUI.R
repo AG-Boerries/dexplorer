@@ -251,7 +251,7 @@ app_ui <- function(config) {
                   div(
                     uiOutput("user_gene_list_ui"),
                     uiOutput("go_to_volcano"),
-                    style = "align-items: flex-start; display: flex; flex-direction: column;"
+                    class = "gene-list-upload"
                   )
                 ),
                 column(
@@ -261,7 +261,8 @@ app_ui <- function(config) {
                 column(
                   width = 2,
                   uiOutput("genes_not_found")
-                )
+                ),
+                style = "margin-left: -15px;"
               ),
               additional_button_right = actionButton(
                 "clear_user_genes_button_heatmap",

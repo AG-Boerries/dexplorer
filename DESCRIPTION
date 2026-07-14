@@ -47,7 +47,6 @@ Imports:
     grDevices,
     heatmaply,
     here,
-    htmltools,
     htmlwidgets,
     jsonlite,
     limma,

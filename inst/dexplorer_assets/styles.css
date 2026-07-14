@@ -603,3 +603,9 @@ h4 {
   width: 155px;
   margin-left: auto;
 }
+
+.gene-list-upload {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+}
