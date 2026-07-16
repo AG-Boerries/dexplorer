@@ -382,15 +382,13 @@ app_ui <- function(config) {
                   offLabel = "p\u2011value",
                   value = TRUE
                 ),
-                # The labels of the `switchInput()`s are created manually to adjust the style of the other labels
-                HTML(
-                  "<span style='display:block; margin-bottom:5px; font-size:14px; font-weight: 700;'>Toggle up- or downregulated genes:</span>"
-                ),
-                switchInput(
+                sliderTextInput(
                   inputId = "top_genes_up_or_down",
-                  onLabel = "Up",
-                  offLabel = "Down",
-                  value = TRUE
+                  label = "Toggle direction",
+                  choices = c("Down", "Both", "Up"),
+                  selected = "Both",
+                  grid = TRUE,
+                  hide_min_max = TRUE
                 ),
                 sliderInput(
                   inputId = "top_genes_number_select",

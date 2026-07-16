@@ -916,7 +916,7 @@ app_server <- function(input, output, session, config) {
       df = data_set_loaded()[["DGEAnalysis"]],
       selected_contrast = input$top_genes_contrast_select,
       selected_number_of_genes = input$top_genes_number_select,
-      selected_direction = input$top_genes_up_or_down,
+      selected_direction = tolower(input$top_genes_up_or_down),
       fc_or_pvalue = input$top_genes_fc_or_pvalue
     )
   })
@@ -926,8 +926,7 @@ app_server <- function(input, output, session, config) {
     req(df_top_genes_dgea())
     createTopDEGsPlot(
       df = df_top_genes_dgea(),
-      selected_palette = input$color_select_top_genes,
-      fc_or_pvalue = input$top_genes_fc_or_pvalue
+      selected_palette = input$color_select_top_genes
     )
   })
 

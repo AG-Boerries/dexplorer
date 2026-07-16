@@ -248,6 +248,11 @@ table.dataTable tbody tr:hover td {
   z-index: 1 !important;
 }
 
+.irs-grid-pol.small {
+  height: 0 !important;
+  border: none !important;
+}
+
 /* Adjust color of the bar and the tooltip to theme */
 .irs-bar,
 .irs-single {

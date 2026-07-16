@@ -69,3 +69,14 @@ createGeneExpressionHeatmap(
     dendro_type = "Samples and genes"
   )
 )
+
+# ---- Top DEGs bar plot ----
+createTopDEGsPlot(
+  df = formatTopDEGs(
+    df = df2$DGEAnalysis,
+    selected_direction = "down",
+    selected_number_of_genes = 20,
+    fc_or_pvalue = FALSE
+  ),
+  standalone = FALSE
+)

@@ -35,7 +35,7 @@
 | mod_serverQC.R              | split into three files     |
 | mod_subTabLayout.R          | NA     |
 | mod_tabHeaders.R            | NA     |
-| mod_topDEGs.R               | NA     |
+| mod_topDEGs.R               | split into two files     |
 | mod_topGeneSets.R           | NA     |
 | mod_vennDiagramDEGs.R       | NA     |
 | mod_volcanoPlot.R           | NA     |

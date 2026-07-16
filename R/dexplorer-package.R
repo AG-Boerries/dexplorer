@@ -41,6 +41,7 @@
 #' @importFrom dplyr slice
 #' @importFrom dplyr slice_head
 #' @importFrom dplyr slice_max
+#' @importFrom dplyr slice_min
 #' @importFrom dplyr slice_sample
 #' @importFrom dplyr summarise
 #' @importFrom dplyr ungroup
