@@ -11,6 +11,7 @@
 #'
 #' @return Numeric. The calculated plot height in pixels.
 #'
+#' @export
 calculatePlotHeight <- function(
   n_samples,
   min_size = 500,

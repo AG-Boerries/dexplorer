@@ -5,19 +5,19 @@
 | 1DEXClass.R                 | will be removed    |
 | addGeneSymbols.R            | NA     |
 | appServer.R                 | NA     |
-| appStartUp.R                | NA     |
+| appStartUp.R                | no action required     |
 | appUI.R                     | NA     |
 | calculateDEG.R              | NA     |
 | calculateGSEA.R             | NA     |
 | calculateStats.R            | NA     |
-| configurePyEnv.R            | NA     |
+| configurePyEnv.R            | no action required     |
 | createDataSet.R             | NA     |
 | createRawCountsWithStats.R  | NA     |
-| dexDataSetConversions.R     | NA     |
-| dexplorer-package.R         | NA     |
-| geom_point_quiet.R          | NA     |
+| dexDataSetConversions.R     | will be removed     |
+| dexplorer-package.R         | no action required     |
+| geom_point_quiet.R          | check after Jaccard Index update, if this is still necessary     |
 | mod_colors.R                | NA     |
-| mod_dataTypeSelector.R      | NA     |
+| dataTypeSelector.R      | no action required     |
 | plotDetectedGenes.R         | updated     |
 | mod_downloadHandler.R       | NA     |
 | mod_downloadUIElements.R    | NA     |
@@ -25,22 +25,22 @@
 | mod_furtherInfo.R           | NA     |
 | mod_heatmap.R               | split into two files     |
 | PCAPlot.R                   | updated     |
-| mod_plotControls.R          | NA     |
-| mod_plotHeights.R           | NA     |
-| mod_plotJaccardIndexDGEA.R  | NA     |
+| plotControls.R          | no action required     |
+| calculatePlotHeights.R           | no action required     |
+| mod_plotJaccardIndexDGEA.R  | split into two files     |
 | mod_plotJaccardIndexGSEA.R  | NA     |
-| mod_processUploadedGenes.R  | NA     |
+| processUploadedGenes.R  | updated     |
 | readCountDistribution.R | updated     |
 | readCountPlot.R            | updated    |
 | mod_serverQC.R              | split into three files     |
 | mod_subTabLayout.R          | NA     |
-| mod_tabHeaders.R            | NA     |
+| mod_tabHeaders.R            | merged with subTabLayout     |
 | mod_topDEGs.R               | split into two files     |
 | mod_topGeneSets.R           | NA     |
 | mod_vennDiagramDEGs.R       | NA     |
 | volcanoPlot.R           | updated     |
 | prepareDfs.R                | NA     |
-| runDExploreR.R              | NA     |
+| runDExploreR.R              | no action required     |
 | runGAGE.R                   | NA     |
 | screePlot.R                 | updated     |
 | utils-pipe.R                | removed     |

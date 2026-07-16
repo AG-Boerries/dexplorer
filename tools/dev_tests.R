@@ -87,3 +87,11 @@ createVolcanoPlot(
   highlight_top = TRUE,
   selected_genes = c("Ccl2", "Ccl5", "Cxcl10", "Cxcl11", "Cxcl13"),
 )
+
+# ---- Jaccard index DGEA ----
+formatDGEAContrastIntersection(
+  df = df2$DGEAnalysis,
+  p_threshold = 0.05,
+  l2fc_threshold = 1
+) |>
+  View()

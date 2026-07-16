@@ -20,6 +20,7 @@ processUserGenes <- function(available_genes, user_genes) {
   # Define variables locally for R CMD check
   UserGenes <- Alias <- Symbol <- NULL
 
+  # ---- Read file ----
   # Try most generic read function to capture user's mistakes
   user_genes <- read.table(
     file = user_genes$datapath,
@@ -31,6 +32,7 @@ processUserGenes <- function(available_genes, user_genes) {
     mutate(UserGenes = base::tolower(UserGenes)) |>
     as.data.frame()
 
+  # ---- Compare genes from user input to available genes ----
   df_genes <- available_genes |>
     # Avoid case-sensitive filtering
     mutate(Alias = base::tolower(Alias)) |>
