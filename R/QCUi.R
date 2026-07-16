@@ -101,7 +101,7 @@ tabContentUI <- function(id) {
         div(
           # Using auto height allows to
           plotlyOutput(ns("plot"), height = "auto", width = "98%"),
-          class = "plot-loader-wrap plot-loader-wrap-dynamic panel_plot_box"
+          class = "plot-loader-wrap plot-loader-min-height panel_plot_box",
         )
       )
     )

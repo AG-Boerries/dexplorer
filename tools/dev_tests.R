@@ -81,3 +81,9 @@ createTopDEGsPlot(
 )
 
 # ---- Volcano plot ----
+createVolcanoPlot(
+  df = df2$DGEAnalysis,
+  standalone = TRUE,
+  highlight_top = TRUE,
+  selected_genes = c("Ccl2", "Ccl5", "Cxcl10", "Cxcl11", "Cxcl13"),
+)

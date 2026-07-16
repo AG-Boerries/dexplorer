@@ -12,8 +12,8 @@ app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
   . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- EnrichmentScore <- Pathway <- NULL
 
-  # Increase the maximum file upload size to 30 MB
-  # This is necessary for user-prepared RDS files,
+  # Increase the maximum file upload size to 50 MB
+  # This is necessary for user-prepared RDS files
   options(shiny.maxRequestSize = 50 * 1024^2)
 
   ###################################################################################################
@@ -727,7 +727,7 @@ app_server <- function(input, output, session, config) {
             tags$b("Genes with multiple symbols:"),
             div(
               tableOutput("genes_multiple"),
-              style = "border-color: var(--alt-border-color); border-style: solid; border-width: 2px; border-radius: var(--box-border-radius); margin: 0px; padding: 0px; overflow-x: auto; overflow-y: auto; height: 120px;"
+              class = "gene-list-upload-multi-hits-table"
             ),
             tags$i(
               "You can unselect unwanted genes in the plot settings on the right.",
@@ -781,6 +781,12 @@ app_server <- function(input, output, session, config) {
     show("clear_user_genes_button_volcano")
     hide("gene_list_to_volcano")
 
+    # Remove the labels of the top genes, when user upload list of genes
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = FALSE
+    )
+
     # Update the selected genes in the volcano plot, if there are genes uploaded
     updateVirtualSelect(
       "gene_select_volcano",
@@ -832,6 +838,12 @@ app_server <- function(input, output, session, config) {
     show("clear_user_genes_button_volcano")
     hide("gene_list_to_volcano")
 
+    # Remove the labels of the top genes, when user upload list of genes
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = FALSE
+    )
+
     # Update the selected genes in the volcano plot, if there are genes uploaded
     updateVirtualSelect(
       "gene_select_volcano",
@@ -848,6 +860,12 @@ app_server <- function(input, output, session, config) {
     updateVirtualSelect(
       "gene_select_volcano",
       selected = character(0)
+    )
+
+    # Label the top genes again, when the gene list is removed
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = TRUE
     )
 
     # Hide the button to transfer gene list to the volcano plot
@@ -877,6 +895,12 @@ app_server <- function(input, output, session, config) {
     updateVirtualSelect(
       "gene_select_volcano",
       selected = character(0)
+    )
+
+    # Label the top genes again, when the gene list is removed
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = TRUE
     )
 
     # Remove information about the uploaded genes
@@ -977,11 +1001,13 @@ app_server <- function(input, output, session, config) {
     req(input$volcano_contrast_select)
     createVolcanoPlot(
       df = data_set_loaded()[["DGEAnalysis"]],
-      selected_palette = input$color_select_volcano,
       p_threshold = input$volcano_p_threshold,
       l2fc_threshold = input$volcano_l2fc_threshold,
       selected_genes = input$gene_select_volcano,
-      selected_contrast = input$volcano_contrast_select
+      selected_contrast = input$volcano_contrast_select,
+      color_up = input$volcano_color_up,
+      color_down = input$volcano_color_down,
+      highlight_top = input$label_top_genes
     )
   })
 
@@ -1401,10 +1427,10 @@ app_server <- function(input, output, session, config) {
         createVolcanoPlot(
           df = data_set_loaded()[["DGEAnalysis"]] |>
             filter(GeneID %in% pathway_genes$GeneID),
-          # Allow to change the colors and the thresholds
-          selected_palette = input$color_select_volcano_modal,
           p_threshold = input$p_threshold_volcano_modal,
           l2fc_threshold = input$l2fc_threshold_volcano_modal,
+          color_up = input$volcano_color_up_modal,
+          color_down = input$volcano_color_down_modal,
           # No need to further select any genes
           selected_genes = c(),
           selected_contrast = contrast,
@@ -1483,18 +1509,33 @@ app_server <- function(input, output, session, config) {
           tabPanel(
             "Volcano plot",
             div(
-              virtualSelectInput(
-                inputId = "color_select_volcano_modal",
-                label = "Select color palette:",
-                # The color choices are defined in `controls_colors.R`
-                choices = color_choices,
-                selected = "App colors",
-                search = TRUE,
-                showSelectedOptionsFirst = TRUE,
-                # Add custom renderers for the colors, which include images of the color scales
-                labelRenderer = "colorsWithIconChoice",
-                selectedLabelRenderer = "colorsWithIconSelected"
+              div(
+                style = "display: flex; gap: 5rem; width: 300px;",
+                colourInput(
+                  inputId = "volcano_color_up_modal",
+                  label = "Select color for upregulated genes:",
+                  value = get_theme_colors(color = "pink"),
+                  showColour = "both",
+                ),
+                colourInput(
+                  inputId = "volcano_color_down_modal",
+                  label = "Select color for downregulated genes:",
+                  value = get_theme_colors(color = "blue"),
+                  showColour = "both",
+                )
               ),
+              # virtualSelectInput(
+              #   inputId = "color_select_volcano_modal",
+              #   label = "Select color palette:",
+              #   # The color choices are defined in `controls_colors.R`
+              #   choices = color_choices,
+              #   selected = "App colors",
+              #   search = TRUE,
+              #   showSelectedOptionsFirst = TRUE,
+              #   # Add custom renderers for the colors, which include images of the color scales
+              #   labelRenderer = "colorsWithIconChoice",
+              #   selectedLabelRenderer = "colorsWithIconSelected"
+              # ),
               sliderTextInput(
                 inputId = "p_threshold_volcano_modal",
                 label = "Set p-value threshold:",
@@ -1701,6 +1742,7 @@ app_server <- function(input, output, session, config) {
   ###################################################################################################
 
   # Observe if a drop down menu is selected, then fade background
+  # TODO: when the update of the plot takes longer, then the overlay is still applied, which gives the feeling the app crashed but it is just preparing the plot
   observe({
     if (
       isTRUE(input$`raw_counts_content-plot_settings_state`) |

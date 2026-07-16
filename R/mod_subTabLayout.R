@@ -13,6 +13,8 @@
 #'
 #' @param remove_sample_selection Logical. If TRUE, removes the sample selection control from \code{\link{plotControls}()}. Default is FALSE.
 #'
+#' @param remove_color_selection Logical. If TRUE, removes the color selection control from \code{\link{plotControls}()}. Default is FALSE.
+#'
 #' @param additional_button_right UI element for an additional button to be placed on the right. Default is `div()`.
 #'
 #' @return A Shiny UI element (HTML tag list) representing the sub-tab layout.
@@ -23,6 +25,7 @@ makeSubTabContent <- function(
   top_left_wide = div(),
   main_content = div(),
   remove_sample_selection = FALSE,
+  remove_color_selection = FALSE,
   additional_button_right = div()
 ) {
   div(
@@ -38,6 +41,7 @@ makeSubTabContent <- function(
           plotControls(
             id,
             remove_sample_selection,
+            remove_color_selection,
             further_controls
           ),
           actionButton(
@@ -70,7 +74,7 @@ makeSubTabContent <- function(
         width = 12,
         div(
           main_content,
-          class = "panel_plot_box"
+          class = "plot-loader-wrap panel_plot_box"
         )
       )
     )

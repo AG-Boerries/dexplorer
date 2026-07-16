@@ -9,9 +9,16 @@
 #'
 #' @param remove_sample_selection Logical. If TRUE, removes the sample selection control from the plot controls. Default is FALSE.
 #'
+#' @param remove_color_selection Logical. If TRUE, removes the color selection control from the plot controls. Default is FALSE.
+#'
 #' @return A Shiny UI element (HTML tag list) representing the plot controls.
 #'
-plotControls <- function(id, remove_sample_selection = FALSE, ...) {
+plotControls <- function(
+  id,
+  remove_sample_selection = FALSE,
+  remove_color_selection = FALSE,
+  ...
+) {
   div(
     dropdownButton(
       inputId = paste0("plot_settings_", id),
@@ -20,22 +27,22 @@ plotControls <- function(id, remove_sample_selection = FALSE, ...) {
       size = "lg",
       icon = icon("sliders"),
       div(
-        # Color selection
-        virtualSelectInput(
-          inputId = paste0("color_select_", id),
-          label = "Select color palette:",
-          choices = color_choices,
-          selected = "App colors",
-          search = TRUE,
-          showSelectedOptionsFirst = TRUE,
-          # Add custom renderers for the colors, which include images of the color scales
-          labelRenderer = "colorsWithIconChoice",
-          selectedLabelRenderer = "colorsWithIconSelected"
-        ),
+        if (!remove_color_selection) {
+          # Color selection
+          virtualSelectInput(
+            inputId = paste0("color_select_", id),
+            label = "Select color palette:",
+            choices = color_choices,
+            selected = "App colors",
+            search = TRUE,
+            showSelectedOptionsFirst = TRUE,
+            # Add custom renderers for the colors, which include images of the color scales
+            labelRenderer = "colorsWithIconChoice",
+            selectedLabelRenderer = "colorsWithIconSelected"
+          )
+        },
         # In some cases we might not want to have sample selection
-        if (remove_sample_selection) {
-          div()
-        } else {
+        if (!remove_sample_selection) {
           # Sample selection
           virtualSelectInput(
             inputId = paste0("sample_select_", id),

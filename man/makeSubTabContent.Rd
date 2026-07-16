@@ -10,6 +10,7 @@ makeSubTabContent(
   top_left_wide = div(),
   main_content = div(),
   remove_sample_selection = FALSE,
+  remove_color_selection = FALSE,
   additional_button_right = div()
 )
 }
@@ -23,6 +24,8 @@ makeSubTabContent(
 \item{main_content}{UI element(s) for the main content area (e.g., plots or tables). Default is \code{div()}.}
 
 \item{remove_sample_selection}{Logical. If TRUE, removes the sample selection control from \code{\link{plotControls}()}. Default is FALSE.}
+
+\item{remove_color_selection}{Logical. If TRUE, removes the color selection control from \code{\link{plotControls}()}. Default is FALSE.}
 
 \item{additional_button_right}{UI element for an additional button to be placed on the right. Default is \code{div()}.}
 }

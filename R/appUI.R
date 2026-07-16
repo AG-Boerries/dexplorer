@@ -400,10 +400,13 @@ app_ui <- function(config) {
                   ticks = FALSE
                 ),
               ),
-              main_content = plotlyOutput(
-                "top_genes",
-                height = "auto",
-                width = "98%"
+              main_content = div(
+                plotlyOutput(
+                  "top_genes",
+                  height = "auto",
+                  width = "98%"
+                ),
+                class = "plot-loader-min-height"
               )
             ),
           ),
@@ -427,7 +430,23 @@ app_ui <- function(config) {
                 class = "custom-button"
               ),
               remove_sample_selection = TRUE,
+              remove_color_selection = TRUE,
               further_controls = div(
+                div(
+                  style = "display: flex; gap: 5rem; width: 300px;",
+                  colourInput(
+                    inputId = "volcano_color_up",
+                    label = "Select color for upregulated genes:",
+                    value = get_theme_colors(color = "pink"),
+                    showColour = "both",
+                  ),
+                  colourInput(
+                    inputId = "volcano_color_down",
+                    label = "Select color for downregulated genes:",
+                    value = get_theme_colors(color = "blue"),
+                    showColour = "both",
+                  )
+                ),
                 virtualSelectInput(
                   inputId = "volcano_contrast_select",
                   label = "Select contrast:",
@@ -458,6 +477,16 @@ app_ui <- function(config) {
                   step = 0.25,
                   ticks = FALSE
                 ),
+                # The labels of the `switchInput()`s are created manually to adjust the style of the other labels
+                HTML(
+                  "<span style='display:block; margin-bottom:5px; font-size:14px; font-weight: 700;'>Highlight top differentially expressed genes:</span>"
+                ),
+                switchInput(
+                  inputId = "label_top_genes",
+                  onLabel = "Yes",
+                  offLabel = "No",
+                  value = TRUE
+                ),
                 virtualSelectInput(
                   inputId = "gene_select_volcano",
                   label = "Highlight genes of interest:",
@@ -468,10 +497,13 @@ app_ui <- function(config) {
                   disableSelectAll = TRUE
                 ),
               ),
-              main_content = plotlyOutput(
-                "volcano_plot",
-                height = "auto",
-                width = "98%"
+              main_content = div(
+                plotlyOutput(
+                  "volcano_plot",
+                  height = "auto",
+                  width = "98%"
+                ),
+                class = "plot-loader-min-height"
               )
             ),
           ),

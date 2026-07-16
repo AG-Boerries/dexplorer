@@ -4,12 +4,19 @@
 \alias{plotControls}
 \title{Generate Plot Controls UI}
 \usage{
-plotControls(id, remove_sample_selection = FALSE, ...)
+plotControls(
+  id,
+  remove_sample_selection = FALSE,
+  remove_color_selection = FALSE,
+  ...
+)
 }
 \arguments{
 \item{id}{Character. The namespace ID, used for namespacing UI elements.}
 
 \item{remove_sample_selection}{Logical. If TRUE, removes the sample selection control from the plot controls. Default is FALSE.}
+
+\item{remove_color_selection}{Logical. If TRUE, removes the color selection control from the plot controls. Default is FALSE.}
 
 \item{...}{UI element(s) to be included as additional controls in the plot controls section.}
 }
