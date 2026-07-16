@@ -24,7 +24,7 @@ formatForHeatmap <- function(
   gene_selection_by = TRUE
 ) {
   # Define variables locally for R CMD check
-  Symbol <- .data <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- NULL
+  Symbol <- .data <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- Rowvariance <- Rowmedian <- NULL
 
   # ---- Check input parameters for validity ----
   stopifnot(

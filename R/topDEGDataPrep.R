@@ -24,7 +24,7 @@ formatTopDEGs <- function(
   fc_or_pvalue = TRUE
 ) {
   # Define variables locally for R CMD check
-  Log2FC <- Direction <- Contrast <- Symbol <- NULL
+  Log2FC <- Direction <- Contrast <- Symbol <- LogPValAdj <- NULL
 
   # Validate the direction
   match.arg(selected_direction, choices = c("up", "down", "both"))

@@ -74,9 +74,10 @@ createGeneExpressionHeatmap(
 createTopDEGsPlot(
   df = formatTopDEGs(
     df = df2$DGEAnalysis,
-    selected_direction = "down",
     selected_number_of_genes = 20,
-    fc_or_pvalue = FALSE
+    fc_or_pvalue = TRUE
   ),
-  standalone = FALSE
+  standalone = TRUE
 )
+
+# ---- Volcano plot ----
