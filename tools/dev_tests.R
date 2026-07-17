@@ -96,3 +96,27 @@ df <- formatDGEAContrastIntersection(
 )
 
 createDGEAContrastIntersectionPlot(df = df, standalone = TRUE)
+
+# ---- Top enriched gene sets ----
+# This should be done in the preprocessing
+df <- df2$GeneSets |>
+  # Add the genes as a nested column
+  left_join(
+    df2$GeneSetsGenes %>% group_by(GSName) %>% nest(),
+    by = c("Pathway" = "GSName")
+  ) |>
+  # Add information for the tooltip
+  left_join(
+    df2$GeneSetsGenes %>%
+      distinct(GSName, GSCollectionName, GSDescription, GSURL),
+    by = c("Pathway" = "GSName")
+  )
+
+df_test <- formatForGeneSetsPlot(
+  df = df,
+  selected_collections = "Hallmark",
+  # selected_gene_sets = "GOCC_MYOSIN_FILAMENT",
+  top_gene_sets = 20,
+  selected_contrast = "WT female vs WT male"
+)
+GeneSetsPlot(df = df_test)

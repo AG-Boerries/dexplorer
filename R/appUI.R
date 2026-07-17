@@ -596,6 +596,15 @@ app_ui <- function(config) {
               ),
               remove_sample_selection = TRUE,
               further_controls = div(
+                sliderInput(
+                  inputId = "n_top_gene_sets",
+                  label = "Define number of top genes sets:",
+                  min = 1,
+                  max = 100,
+                  value = 15,
+                  step = 1,
+                  ticks = FALSE
+                ),
                 virtualSelectInput(
                   inputId = "gene_sets_contrast_select",
                   label = "Select contrast:",
@@ -605,7 +614,7 @@ app_ui <- function(config) {
                 ),
                 virtualSelectInput(
                   inputId = "gene_sets_collection_select",
-                  label = "Select gene set databases:",
+                  label = "Select gene set collection(s):",
                   choices = c(),
                   search = TRUE,
                   multiple = TRUE
