@@ -46,6 +46,7 @@ app_ui <- function(config) {
     tags$script(src = "www/colorPaletteChoicesIconsChoice.js"),
     tags$script(src = "www/colorPaletteChoicesIconsSelected.js"),
     tags$script(src = "www/colorPaletteRenderer.js"),
+    tags$script(src = "www/cursorPointerPlotly.js"),
 
     # Add favicon
     tags$head(tags$link(rel = "shortcut icon", href = "www/favicon.ico")),
@@ -523,7 +524,8 @@ app_ui <- function(config) {
                 ),
                 div(
                   HTML(
-                    "<b>Note:</b> Click on a colored dot to get information on which genes are commonly differentially expressed in this contrast comparison."
+                    "<p><b>Note:</b> Click on a colored dot to get information on which genes are commonly differentially expressed in this contrast comparison.</p>",
+                    "<p><b>Note:</b> The dashed line indicates a Jaccard Index of 1, which means the two contrasts have identical sets of differentially expressed genes.</p>"
                   ),
                   style = "color: var(--theme-color-green);"
                 )
@@ -556,7 +558,7 @@ app_ui <- function(config) {
               ),
               main_content = plotlyOutput(
                 "jaccard_dgea",
-                height = "auto",
+                height = "700px",
                 width = "98%"
               )
             ),

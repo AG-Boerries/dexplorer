@@ -5,14 +5,19 @@
 #'
 #' @param df A data frame as returned by \code{\link{formatDGEAContrastIntersection}()}, summarizing Jaccard index results for each pair of contrasts and direction.
 #'
-#' @param selected_palette Character. The name of the color palette to use for the plot.
+#' @param selected_palette Character. The name of the color palette to use for the plot. Defaults to "App colors". See \code{print(color_choices)} for available options.
 #'
+#' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #' @return An interactive dotplot for Jaccard indicies of up- and downregulated genes as a `plotly` object.
 #'
 #' @export
-createDGEAContrastIntersectionPlot <- function(df, selected_palette) {
+createDGEAContrastIntersectionPlot <- function(
+  df,
+  selected_palette = "App colors",
+  standalone = FALSE
+) {
   # Define variables locally for R CMD check
-  Seta <- Setb <- JI <- DEG_both_sets <- DEG_total <- Direction <- TooltipText1 <- CustomData <- JIMax <- TooltipText2 <- NULL
+  Seta <- Setb <- JI <- DEG_both_sets <- DEG_total <- Direction <- TooltipText <- CustomData <- NULL
 
   # If data frame is empty, then return an empty plot with a message
   if (all(dim(df) == 0)) {
@@ -22,16 +27,18 @@ createDGEAContrastIntersectionPlot <- function(df, selected_palette) {
   # Create new labels for the facets
   facet_labels <- c(
     up = "Upregulated\ngenes",
-    down = "Downregulated\ngenes"
+    down = "Downregulated\ngenes",
+    both = "Up- and downregulated\ngenes"
   )
 
-  # Add tooltipp text just before plotting to avoid them being contained in the data download
+  # ---- Data preparation ----
   df <- df |>
+    # Add tooltipp text just before plotting to avoid them being contained in the data download
     mutate(
-      TooltipText1 = paste0(
-        "<b><div style='font-size:16px;'>Comparison: </b>",
+      TooltipText = paste0(
+        "<b><div style='font-size:16px; line-height:1.3;'>Comparison: </b><br>",
         Seta,
-        " and ",
+        "<br> &nbsp;&nbsp;&nbsp;<i>and</i> <br>",
         Setb,
         "</div><hr><b>Jaccard index: </b>",
         sprintf("%.3f", JI),
@@ -40,156 +47,80 @@ createDGEAContrastIntersectionPlot <- function(df, selected_palette) {
         "<br><b>Total DEGs: </b>",
         DEG_total
       ),
-      TooltipText2 = paste0(
-        "<b>Maximum Jaccard index:</b><br><i>All genes would be similarly expressed.</i>"
-      ),
-      JIMax = 1,
-      # Create one column with the unique information to extract the genes for this JI
+      # Add genes and direction to custom data for modal
       CustomData = paste0(Seta, "|", Setb, "|", Direction)
     )
 
-  p_up_and_down <- ggplot(
-    df |>
-      filter(Direction == "both") |>
-      mutate(Direction = "Up- and down-regulated genes"),
-    aes(x = Seta, y = Setb)
+  # ---- Create the ggplot ----
+  p <- ggplot(
+    data = df,
+    aes(
+      x = DEG_total,
+      y = DEG_both_sets,
+      color = JI,
+      size = JI,
+      text = TooltipText,
+      customdata = CustomData
+    )
   ) +
-    geom_point_quiet(
-      aes(
-        size = JI,
-        fill = JI,
-        text = TooltipText1,
-        customdata = CustomData
-      ),
-      shape = 21,
-      color = "black",
-      show.legend = FALSE
-    ) +
-    # Plot the maximum Jaccard index as reference
-    geom_point_quiet(
-      aes(size = JIMax, text = TooltipText2),
-      show.legend = FALSE,
-      shape = 1,
-      color = "black"
-    ) +
-    facet_wrap(~Direction) +
-    # Resize the dots, so that they are not too small when the Jaccard index is low
-    scale_size(range = c(2, 12)) +
-    labs(x = "", y = "")
-
-  p_up_or_down <- ggplot(
-    df |> filter(Direction != "both"),
-    aes(x = Seta, y = Setb)
-  ) +
-    geom_point_quiet(
-      aes(
-        size = JI,
-        fill = JI,
-        text = TooltipText1,
-        customdata = CustomData
-      ),
-      shape = 21,
-      color = "black",
-      show.legend = FALSE
-    ) +
-    # Plot the maximum Jaccard index as reference
-    geom_point_quiet(
-      aes(size = JIMax, text = TooltipText2),
-      show.legend = FALSE,
-      shape = 1,
+    geom_point() +
+    geom_abline(
+      slope = 1,
+      intercept = 0,
+      linetype = "dashed",
       color = "black"
     ) +
     facet_wrap(~Direction, labeller = as_labeller(facet_labels)) +
-    # Resize the dots, so that they are not too small when the Jaccard index is low
-    scale_size(range = c(2, 8)) +
-    labs(x = "", y = "")
-
-  # Define the components to color by because they cannot be inferred from this plot
-  plot_components <- data.frame(
-    aes = "fill",
-    aes_name = "JI",
-    aes_cont = TRUE,
-    aes_n = NA_integer_
-  )
-
-  # Add the selected color scale
-  p_up_and_down <- add_selected_colors(
-    p = p_up_and_down,
-    selected_palette = selected_palette,
-    color_by = plot_components
-  )
-  p_up_or_down <- add_selected_colors(
-    p = p_up_or_down,
-    selected_palette = selected_palette,
-    color_by = plot_components
-  )
-
-  p <- subplot(
-    ggplotly(
-      p_up_and_down,
-      tooltip = "text",
-      # height = plot_height(
-      #   n_samples = nrow(df) / 3,
-      #   min_size = 800,
-      #   per_sample_size = 15
-      # ),
-      source = "dgea_jaccard"
-    ),
-    ggplotly(
-      p_up_or_down,
-      tooltip = "text",
-      # height = plot_height(
-      #   n_samples = nrow(df) / 3,
-      #   min_size = 800,
-      #   per_sample_size = 15
-      # ),
-      source = "dgea_jaccard"
-    ),
-    nrows = 2,
-    margin = 0.2
-  ) |>
-    # Reduce the modebar to only essential tools
-    config(
-      displaylogo = FALSE,
-      modeBarButtons = list(
-        list("toImage"),
-        list("zoom2d"),
-        list("pan2d"),
-        list("resetScale2d")
-      )
-    ) |>
-    # Register click events for this plot
-    event_register("plotly_click") |>
-    # Attach the custom tooltip from JS
-    onRender(
-      "
-        function(el, x, tooltipType) {
-          enableCustomTooltip(el, tooltipType);
-        }
-      ",
-      data = list(tooltipType = "jaccard")
+    labs(
+      x = "Total DEGs in both contrasts (union)",
+      y = "DEGs contained in both contrasts (intersection)",
+      size = "Jaccard index",
+      color = "Jaccard index"
     )
 
-  # Remove default tooltip
-  for (i in seq_along(p$x$data)) {
-    p$x$data[[i]]$hoverinfo <- "none"
-  }
+  # Add the selected color scale
+  p <- add_selected_colors(p = p, selected_palette = selected_palette)
 
-  # Always tilt x-axis labels to avoid overlap for long contrast names
-  for (axis_name in names(p$x$layout)[grepl("^xaxis", names(p$x$layout))]) {
-    p$x$layout[[axis_name]]$tickangle <- 45
-    p$x$layout[[axis_name]]$automargin <- TRUE
-  }
+  # ---- Convert to plotly ----
+  if (!standalone) {
+    p <- ggplotly(p, tooltip = "TooltipText", source = "dgea_jaccard") |>
+      # Reduce the modebar to only essential tools
+      config(
+        displaylogo = FALSE,
+        modeBarButtons = list(
+          list("toImage"),
+          list("zoom2d"),
+          list("pan2d"),
+          list("resetScale2d")
+        )
+      ) |>
+      layout(
+        # Add some space for the titles
+        yaxis = list(
+          title = list(
+            standoff = 20
+          )
+        ),
+        margin = list(t = 50)
+      ) |>
+      # Register click events for this plot
+      event_register("plotly_click") |>
+      # Attach the custom tooltip from JS
+      onRender(
+        "
+        function(el, x, tooltipType) {
+          enableCustomTooltip(el, tooltipType);
+          enablePointerCursorOnHover(el);
+        }
+      ",
+        data = list(tooltipType = "jaccard")
+      )
 
-  # Scale total plot height with the number of unique contrasts so all rows are visible
-  n_contrasts <- length(unique(c(df$Seta, df$Setb)))
-  total_height <- calculatePlotHeight(
-    n_samples = n_contrasts,
-    min_size = 500,
-    per_sample_size = 50
-  ) *
-    2
-  p <- p |> layout(height = total_height)
+    # Remove default tooltip
+    for (i in seq_along(p$x$data)) {
+      p$x$data[[i]]$hoverinfo <- "none"
+    }
+  }
 
   return(p)
 }

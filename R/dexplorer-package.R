@@ -66,6 +66,7 @@
 #' @importFrom ggplot2 element_rect
 #' @importFrom ggplot2 element_text
 #' @importFrom ggplot2 facet_wrap
+#' @importFrom ggplot2 geom_abline
 #' @importFrom ggplot2 geom_bar
 #' @importFrom ggplot2 geom_col
 #' @importFrom ggplot2 geom_hline

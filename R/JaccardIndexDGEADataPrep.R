@@ -5,9 +5,9 @@
 #'
 #' @param df A data frame containing DEG information, including columns for gene IDs, contrasts, direction, adjusted p-values, and log2 fold changes.
 #'
-#' @param p_threshold Numeric. The adjusted p-value threshold for filtering DEGs.
+#' @param p_threshold Numeric. The adjusted p-value threshold for filtering DEGs. Defaults to 0.05.
 #'
-#' @param l2fc_threshold Numeric. The log2 fold-change threshold for filtering DEGs.
+#' @param l2fc_threshold Numeric. The log2 fold-change threshold for filtering DEGs. Defaults to 1.
 #'
 #' @return A data frame summarizing Jaccard index results for each pair of contrasts and direction, including gene lists and statistics.
 #'
@@ -28,14 +28,15 @@ formatDGEAContrastIntersection <- function(
     return(data.frame())
   }
 
-  # Prepare data frame for ballon plot
+  # ---- Prepare data ----
   df_jaccard_results <- bind_rows(
     lapply(directions, function(dir) {
+      # ---- Filter for thresholds, direction and extract unique gene lists for each contrast ----
       df_jaccard <- df |>
         filter(
           # Filter by direction
           (dir == "both" | Direction == dir),
-          # Get the user-defined thresholds
+          # Filter by p-value and log2 fold-change thresholds to define significant genes
           PValAdj < as.numeric(p_threshold),
           abs(Log2FC) > l2fc_threshold
         ) |>
@@ -43,7 +44,7 @@ formatDGEAContrastIntersection <- function(
         # Extract the unique list of genes for each contrast
         summarise(GeneID = list(unique(GeneID)), .groups = "drop")
 
-      # Calculate the possible combinations of contrasts
+      # ---- Calculate the possible combinations of contrasts ----
       pairs <- base::expand.grid(
         df_jaccard$Contrast,
         df_jaccard$Contrast,
@@ -52,14 +53,16 @@ formatDGEAContrastIntersection <- function(
         # This removes duplicates and self-comparisons
         filter(Var1 < Var2)
 
-      # Compute Jaccard index for each pair
+      # ---- Compute Jaccard index for each pair ----
       jaccard_results <- map_dfr(1:base::nrow(pairs), function(i) {
         seta <- df_jaccard |> filter(Contrast == pairs[i, 1])
         setb <- df_jaccard |> filter(Contrast == pairs[i, 2])
 
+        # Get the metrics to calculate the Jaccard index
         inter <- length(base::intersect(seta$GeneID[[1]], setb$GeneID[[1]]))
         uni <- length(base::union(seta$GeneID[[1]], setb$GeneID[[1]]))
 
+        # Create a data frame with the results for this pair of contrasts
         df_genes <- full_join(
           # Combine the gene ids from both sets
           unnest(seta, cols = "GeneID"),
@@ -104,6 +107,7 @@ formatDGEAContrastIntersection <- function(
         # Rearrange column order using indices because column names are user-defined contrast names
         df_genes <- df_genes[, c(2, 3, 1, 4, 5, 6, 7, 8)]
 
+        # Return this pair's results as a tibble
         tibble(
           Seta = seta$Contrast,
           Setb = setb$Contrast,

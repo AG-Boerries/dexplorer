@@ -27,7 +27,7 @@
 | PCAPlot.R                   | updated     |
 | plotControls.R          | no action required     |
 | calculatePlotHeights.R           | no action required     |
-| mod_plotJaccardIndexDGEA.R  | split into two files     |
+| mod_plotJaccardIndexDGEA.R  | split into two files and updated    |
 | mod_plotJaccardIndexGSEA.R  | NA     |
 | processUploadedGenes.R  | updated     |
 | readCountDistribution.R | updated     |

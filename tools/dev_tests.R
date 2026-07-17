@@ -1,6 +1,6 @@
 # Load package functions
-# library(devtools)
-# load_all()
+library(devtools)
+load_all()
 
 # ---- Test DExploreR after modifications ----
 # Using two "bigger" datasets
@@ -89,9 +89,10 @@ createVolcanoPlot(
 )
 
 # ---- Jaccard index DGEA ----
-formatDGEAContrastIntersection(
-  df = df2$DGEAnalysis,
+df <- formatDGEAContrastIntersection(
+  df = df3$DGEAnalysis,
   p_threshold = 0.05,
   l2fc_threshold = 1
-) |>
-  View()
+)
+
+createDGEAContrastIntersectionPlot(df = df, standalone = TRUE)

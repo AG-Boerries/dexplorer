@@ -14,6 +14,7 @@ createVennDiagram <- function(df, selected_palette) {
   # Define variables locally for R CMD check
   Symbol <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- region <- x <- y <- TooltipText <- NULL
 
+  # TODO: check what the minimum number of genes is, if too little, render the empty plot with a warning
   # The columns with the contrast names 1 and 2
   groups <- colnames(df[, 1:2])
 
@@ -69,26 +70,26 @@ createVennDiagram <- function(df, selected_palette) {
     )
 
   # Construct the region labels
-  left_region = df |> filter(x == min(x)) |> pull(region) |> unique()
-  right_region = df |> filter(x == max(x)) |> pull(region) |> unique()
-  middle_region = df |>
+  left_region <- df |> filter(x == min(x)) |> pull(region) |> unique()
+  right_region <- df |> filter(x == max(x)) |> pull(region) |> unique()
+  middle_region <- df |>
     filter(pick(1) == pick(2)) |>
     pull(region) |>
     unique()
 
-  left_region_label = paste0(
+  left_region_label <- paste0(
     left_region,
     " (",
     round(sum(df$region == left_region) / fraction_displayed),
     " DEGs)"
   )
-  right_region_label = paste0(
+  right_region_label <- paste0(
     right_region,
     " (",
     round(sum(df$region == right_region) / fraction_displayed),
     " DEGs)"
   )
-  middle_region_label = paste0(
+  middle_region_label <- paste0(
     middle_region,
     " (",
     round(sum(df |> pull(1) == df |> pull(2)) / fraction_displayed),
