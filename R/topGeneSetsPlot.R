@@ -69,7 +69,19 @@ GeneSetsPlot <- function(
       size = SetSize,
       color = PVal,
       text = TooltipText,
-      customData = data
+      customdata = paste0(
+        # Get the genes for the modal
+        sapply(data, function(x) paste(x$Symbol, collapse = ",")),
+        "|",
+        # As reorder_within() was used on this column, it contains the pathway and the contrast separated by `___`
+        Pathway,
+        "|",
+        SetSize,
+        "|",
+        GSDescription,
+        "|",
+        GSURL
+      )
     )
   ) +
     geom_point() +

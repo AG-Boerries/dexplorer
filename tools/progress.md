@@ -36,7 +36,7 @@
 | mod_subTabLayout.R          | NA     |
 | mod_tabHeaders.R            | merged with subTabLayout     |
 | mod_topDEGs.R               | split into two files     |
-| mod_topGeneSets.R           | NA     |
+| mod_topGeneSets.R           | split into two files     |
 | mod_vennDiagramDEGs.R       | NA     |
 | volcanoPlot.R           | updated     |
 | prepareDfs.R                | NA     |

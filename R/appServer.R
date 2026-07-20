@@ -1365,48 +1365,40 @@ app_server <- function(input, output, session, config) {
     event_data(event = "plotly_click", source = "gene_sets_plot"),
     {
       req(top_gene_sets_plot())
-
       # Get the information from the clicked point
       click_info_gene_sets_plot <- event_data(
         event = "plotly_click",
         source = "gene_sets_plot"
       )
 
+      # Split the string into its pieces
+      click_info_gene_sets_plot <- str_split_1(
+        click_info_gene_sets_plot$customdata,
+        "\\|"
+      )
+
       # Extract set size for heatmap height
-      initial_set_size <- as.numeric(
-        sub(
-          ".*<b>Set size: </b>([0-9]+).*",
-          "\\1",
-          click_info_gene_sets_plot$customdata[1]
-        )
-      )
+      initial_set_size <- as.numeric(click_info_gene_sets_plot[3])
 
-      # Extract the contrast form the event data and adjust format to DGEA constast format
-      contrast <- click_info_gene_sets_plot$customdata[[1]][2]
+      # Extract the contrast
+      contrast <- str_split_1(click_info_gene_sets_plot[2], "___")[2]
 
-      # Extract the gene set name from the customdata
-      # This is the tooltip text defined in `plot_gsea_top_gene_sets()`
-      pathway <- sub(
-        ".*16px;'>(.*)</div>.*",
-        "\\1",
-        click_info_gene_sets_plot$customdata[1]
-      )
+      # Extract the gene set name/pathway
+      pathway <- str_split_1(click_info_gene_sets_plot[2], "___")[1]
 
-      # Get the genes in the gene set
-      pathway_genes <- data_set_loaded()[["GeneSetsGenes"]] |>
-        filter(GSName == pathway) |>
-        select(Symbol, GeneID)
+      # Extract the url
+      pathway_url <- click_info_gene_sets_plot[5]
 
-      # Get the pathway description
-      pathway_info <- data_set_loaded()[["GeneSetsGenes"]] |>
-        filter(GSName == pathway)
-      pathway_description <- pathway_info$GSDescription[1]
-      pathway_url <- pathway_info$GSURL[1]
+      # Extract the description
+      pathway_description <- click_info_gene_sets_plot[4]
+
+      # Extract the genes
+      pathway_genes <- str_split_1(click_info_gene_sets_plot[1], ",")
 
       volcano_modal_plot <- reactive({
         createVolcanoPlot(
           df = data_set_loaded()[["DGEAnalysis"]] |>
-            filter(GeneID %in% pathway_genes$GeneID),
+            filter(Symbol %in% pathway_genes),
           p_threshold = input$p_threshold_volcano_modal,
           l2fc_threshold = input$l2fc_threshold_volcano_modal,
           color_up = input$volcano_color_up_modal,
@@ -1472,7 +1464,7 @@ app_server <- function(input, output, session, config) {
 
       # The pathway modal, with some information on the pathway and the volcano plot and the heatmap
       showModal(modalDialog(
-        title = paste0("Enriched genes in ", pathway),
+        title = paste0("Enriched genes in ", gsub("<br />", " ", pathway)),
         easyClose = TRUE,
         footer = NULL,
         class = "enlarged-modal",
@@ -1557,8 +1549,8 @@ app_server <- function(input, output, session, config) {
               virtualSelectInput(
                 inputId = "gene_select_heatmap_modal",
                 label = "Include genes of interest from this gene set:",
-                choices = pathway_genes$Symbol,
-                selected = pathway_genes$Symbol,
+                choices = pathway_genes,
+                selected = pathway_genes,
                 multiple = TRUE,
                 search = TRUE,
                 showSelectedOptionsFirst = TRUE,

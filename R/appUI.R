@@ -632,10 +632,13 @@ app_ui <- function(config) {
                   popupDropboxBreakpoint = "3000px"
                 )
               ),
-              main_content = plotlyOutput(
-                "top_gene_sets",
-                height = "auto",
-                width = "98%"
+              main_content = div(
+                plotlyOutput(
+                  "top_gene_sets",
+                  height = "auto",
+                  width = "98%"
+                ),
+                class = "plot-loader-min-height"
               )
             ),
           ),
