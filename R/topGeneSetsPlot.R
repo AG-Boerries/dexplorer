@@ -1,21 +1,15 @@
-#' @title Create Interactive Top Gene Sets Plot
+#' @title Create Top Gene Sets Dotplot
 #'
 #' @description
-#' Generates an interactive dotplot of top gene sets for selected contrasts in gene set enrichment analysis (GSEA) using `plotly`. The plot displays enrichment scores, set sizes, and direction of regulation, with custom tooltips, facetting by contrast, and links to gene set descriptions. This plot is registered for click events, which open a modal showing a volcano plot (\code{\link{createVolcanoPlot}()}) and a heatmap (\code{\link{createGeneExpressionHeatmap}()}) of the selected gene set.
+#' Generates a dotplot of top gene sets for selected contrasts in gene set enrichment analysis (GSEA) using `ggplot2` or, if `standalone = FALSE`, using `plotly` for interactivity. The plot displays enrichment scores, set sizes, and direction of regulation, with custom tooltips, facetting by contrast, and links to gene set descriptions. This plot is registered for click events, which open a modal showing a volcano plot (\code{\link{createVolcanoPlot}()}) and a heatmap (\code{\link{createGeneExpressionHeatmap}()}) of the selected gene set.
 #'
-#' @param df A data frame containing gene set enrichment results, including enrichment scores, set sizes, direction, and contrast labels.
-#'
-#' @param df_genes A data frame with gene set annotation columns: GSName, GSDescription, and GSURL.
+#' @param df A data frame containing gene set enrichment results, including enrichment scores, set sizes, direction,contrast labels and a column with the genes of the gene set as a nested tibble.
 #'
 #' @param selected_palette Character. The name of the color palette to use for coloring gene sets.
 #'
-#' @param selected_contrast Character vector. Contrast names to include in the plot.
+#' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
-#' @param selected_gene_sets Character vector. Gene set names to include in the plot.
-#'
-#' @param selected_gene_set_collections Character vector. Gene set collection names to include in the plot.
-#'
-#' @return The interactive dotplot as a `plotly` object.
+#' @return The dot plot, either as a `ggplot2` object (if `standalone = TRUE`) or a `plotly` object (if `standalone = FALSE`).
 #'
 #' @export
 GeneSetsPlot <- function(
@@ -24,22 +18,33 @@ GeneSetsPlot <- function(
   standalone = FALSE
 ) {
   # Define variables locally for R CMD check
-  Contrast <- Pathway <- GSName <- GSCollectionName <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- Direction <- TooltipText <- NULL
+  Contrast <- Pathway <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- TooltipText <- PVal <- data <- NULL
 
   if (nrow(df) == 0) {
     return(empty_plot("No gene sets available for the selected pathway class."))
   }
 
+  # ---- Prepare data ----
   df <- df |>
     mutate(
       PVal = -log10(PVal),
-      # TODO: This needs to be adjusted differently
-      Pathway = str_sub(Pathway, 1, 40),
+      # Format the pathway names for display and tooltips
+      Pathway = (\(x) {
+        x <- str_split_fixed(x, "_", 2)
+        pathway_name <- x[, 2] |>
+          gsub("_", " ", x = _) |>
+          tolower() |>
+          str_to_title()
+
+        str_wrap(paste0(x[, 1], ": ", pathway_name), width = 40)
+      })(Pathway),
+      # Reorder the pathways within each contrast for plotting
       Pathway = reorder_within(
         x = Pathway,
         by = EnrichmentScore,
         within = Contrast
       ),
+      # Create the tooltip text
       TooltipText = paste0(
         "<b><div style='font-size:16px;'>",
         str_split_i(Pathway, "___", i = 1),
@@ -55,6 +60,7 @@ GeneSetsPlot <- function(
       )
     )
 
+  # ---- Create the ggplot ----
   p <- ggplot(
     data = df,
     aes(
@@ -68,10 +74,10 @@ GeneSetsPlot <- function(
   ) +
     geom_point() +
     labs(
-      x = "Gene set enrichment",
+      x = "Enrichment score",
       y = "",
       size = "",
-      color = "-log10(PVal)"
+      color = "-log10 p-value"
     ) +
     facet_wrap(
       ~Contrast,
@@ -81,91 +87,23 @@ GeneSetsPlot <- function(
     # This is needed in combination with `tidytext::reorder_within()`
     scale_y_reordered()
 
-  # Add the selected colors
+  # ---- Add the selected colors ----
   p <- add_selected_colors(p = p, selected_palette = selected_palette)
 
-  # TODO: Height also needs to be adjusted by the number of genesets per facet
-  # per_samples_size, this should scale with the number of gene sets
-  # TODO: maybe adjust facet size dynamically, when selecting specific gene sets, because then the number can vary between the facets
-  # TODO: Add space to the strip text, large dots are cropped at the borders
-  # TODO: Point to cursor
-  # TODO: why can I select some pathways that are not enriched in the contrasts? and the plot is just empty, but not even showing a message
+  # ---- Convert to ploltly ----
   if (!standalone) {
     p <- ggplotly(
       p,
       height = calculatePlotHeight(
         n_samples = length(unique(df$Contrast)),
-        min_size = 10 * length(unique(df$Pathway)),
-        per_sample_size = 10 * length(unique(df$Pathway))
+        min_size = 75 * length(unique(df$Contrast)),
+        per_sample_size = 50 *
+          length(unique(df$Pathway)) /
+          length(unique(df$Contrast))
       ),
       source = "gene_sets_plot",
       tooltip = "text"
-    )
-
-    # # Get the y-axis tick labels for each facet
-    # y_tick_labels <- list()
-    # for (i in seq_along(p$x$layout)) {
-    #   layout_name <- paste0("yaxis", ifelse(i == 1, "", i))
-    #   if (!is.null(p$x$layout[[layout_name]]$ticktext)) {
-    #     y_tick_labels[[layout_name]] <- p$x$layout[[layout_name]]$ticktext
-    #   }
-    # }
-
-    # Iterate over each trace and assign the custom tooltip text
-    for (i in seq_along(p$x$data)) {
-      tr <- p$x$data[[i]]
-      # if (!is.null(tr$y) && !is.null(tr$x)) {
-      #   yaxis_name <- if (!is.null(tr$yaxis)) {
-      #     sub("^y", "yaxis", tr$yaxis)
-      #   } else {
-      #     "yaxis"
-      #   }
-      #   tick_labels <- y_tick_labels[[yaxis_name]]
-      #   y_labels <- if (!is.null(tick_labels)) {
-      #     tick_labels[tr$y]
-      #   } else {
-      #     as.character(tr$y)
-      #   }
-      #   # Remove the suffix added by `tidytext::reorder_within()`
-      #   df$Pathway_base <- str_split_i(as.character(df$Pathway), "___", 1)
-      #   tooltip_contrast_mat <- base::mapply(
-      #     function(yval, xval) {
-      #       match_idx <- base::which(
-      #         as.character(df$Direction) == as.character(tr$name) &
-      #           as.character(df$Pathway_base) == as.character(yval)
-      #       )
-      #       if (length(match_idx) > 0) {
-      #         # Add the actual hover and the contrast to the customdata
-      #         c(
-      #           df$TooltipText[match_idx[1]],
-      #           as.character(df$Contrast[match_idx[1]])
-      #         )
-      #       } else {
-      #         c("", "")
-      #       }
-      #     },
-      #     y_labels,
-      #     tr$x
-      #   )
-      #   p$x$data[[i]]$customdata <- t(tooltip_contrast_mat)
-      # }
-
-      # Remove default tooltip
-      if (identical(tr$type, "scatter")) {
-        p$x$data[[i]]$hoverinfo <- "none"
-      }
-    }
-
-    p <- p |>
-      # layout(
-      #   legend = list(
-      #     orientation = "h",
-      #     y = 1.1,
-      #     xanchor = "center",
-      #     xref = "paper",
-      #     x = 0.5
-      #   )
-      # ) |>
+    ) |>
       # Reduce the modebar to only essential tools
       config(
         displaylogo = FALSE,
@@ -177,16 +115,49 @@ GeneSetsPlot <- function(
         )
       ) |>
       # Attach the custom tooltip from JS
+      # And change the cursor to pointer on hover
       onRender(
         "
         function(el, x, tooltipType) {
           enableCustomTooltip(el, tooltipType);
+          enablePointerCursorOnHover(el);
         }
       ",
         data = list(tooltipType = "jaccard")
       ) |>
       # Register click events for modals
       event_register("plotly_click")
+
+    # ---- Fine tuning of the plotly object ----
+    for (i in seq_along(p$x$data)) {
+      tr <- p$x$data[[i]]
+      # Remove default tooltip
+      if (identical(tr$type, "scatter")) {
+        p$x$data[[i]]$hoverinfo <- "none"
+      }
+
+      # Adjust the colorbar length and position
+      if (!is.null(tr$marker$colorbar)) {
+        p$x$data[[i]]$marker$colorbar$lenmode <- "pixels"
+        p$x$data[[i]]$marker$colorbar$len <- 300
+        p$x$data[[i]]$marker$colorbar$y <- 1
+        p$x$data[[i]]$marker$colorbar$yanchor <- "top"
+      }
+    }
+    # ---- Some styling for the ggplot outside of the app ----
+  } else {
+    # Add a white background and grey grid lines for the standalone plot
+    p <- p +
+      theme(
+        panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey80"),
+        strip.background = element_rect(fill = "white"),
+      ) +
+      labs(size = "Gene set size")
+
+    message(
+      "Y-axis labels may overlap, when plot height is too small. You may need to adjust this manually."
+    )
   }
 
   return(p)

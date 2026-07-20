@@ -40,6 +40,7 @@ Here are some adjustments to this skill that I want you to implement:
   )
   ```
   - However, providing the genes in a separate data frame is still supported for backward compatibility.
+  - To get the gs_description, you can use the msigdbr R package. This information is required for the tooltip in the dotplot. If you cannot retrieve additional information, then put a correspdonding placeholder and don't just paste the pathway name.
 
 # Create DataSet Prep
 

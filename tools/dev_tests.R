@@ -112,11 +112,10 @@ df <- df2$GeneSets |>
     by = c("Pathway" = "GSName")
   )
 
-df_test <- formatForGeneSetsPlot(
-  df = df,
-  selected_collections = "Hallmark",
-  # selected_gene_sets = "GOCC_MYOSIN_FILAMENT",
-  top_gene_sets = 20,
-  selected_contrast = "WT female vs WT male"
+GeneSetsPlot(
+  df = formatForGeneSetsPlot(
+    df = df,
+    top_gene_sets = 10
+  ),
+  standalone = TRUE
 )
-GeneSetsPlot(df = df_test)

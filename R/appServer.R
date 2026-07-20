@@ -10,7 +10,7 @@
 #'
 app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
-  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- EnrichmentScore <- Pathway <- NULL
+  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSDescription <- GSURL <- GSName <- GeneID <- EnrichmentScore <- Pathway <- NULL
 
   # Increase the maximum file upload size to 50 MB
   # This is necessary for user-prepared RDS files
@@ -1260,7 +1260,9 @@ app_server <- function(input, output, session, config) {
   ###################################################################################################
 
   # Update control elements after data upload
-  observeEvent(data_set_loaded(), {
+  observe({
+    req(data_set_loaded())
+
     # Update contrast selection and select all
     updateVirtualSelect(
       inputId = "gene_sets_contrast_select",
@@ -1287,68 +1289,27 @@ app_server <- function(input, output, session, config) {
     )
   })
 
-  # Reactive: filtered gene sets by selected collections
-  # filtered_gene_sets_by_collection <- reactive({
-  #   req(data_set_loaded(), input$gene_sets_collection_select)
-
-  #   data_set_loaded()[["GeneSets"]] |>
-  #     filter(
-  #       Pathway %in%
-  #         (data_set_loaded()[["GeneSetsGenes"]] |>
-  #           filter(GSCollectionName %in% input$gene_sets_collection_select) |>
-  #           pull(GSName) |>
-  #           unique())
-  #     )
-  # })
-
-  # Observer: when collection selection changes, update gene sets selector
-  # observeEvent(
-  #   input$gene_sets_collection_select,
-  #   {
-  #     req(data_set_loaded())
-
-  #     # Compute top 40 from filtered collection
-  #     top_40_in_collection <- filtered_gene_sets_by_collection() |>
-  #       arrange(desc(abs(EnrichmentScore))) |>
-  #       slice_head(n = 40) |>
-  #       pull(Pathway)
-
-  #     # Update choices to show all gene sets in selected collections
-  #     new_choices <- data_set_loaded()[["GeneSetsGenes"]] |>
-  #       filter(GSCollectionName %in% input$gene_sets_collection_select) |>
-  #       distinct(GSCollectionName, GSName) |>
-  #       group_by(GSCollectionName) |>
-  #       summarise(values = list(GSName), .groups = "drop") |>
-  #       deframe()
-
-  #     # Update the selector: options = newly filtered choices, selected = top 40 from filtered
-  #     updateVirtualSelect(
-  #       inputId = "select_gene_sets",
-  #       choices = new_choices,
-  #       selected = top_40_in_collection
-  #     )
-  #   },
-  #   ignoreInit = TRUE
-  # ) # Don't trigger on app load (already handled above)
-
   gene_sets_data <- reactive({
     req(data_set_loaded())
 
-    # TODO: This will also moved to outside of the app
-    # but also kept for backward compatibility
-    # thus when now GeneSetsGenes detected, then assume they are contained in the GeneSets already
-    df <- data_set_loaded()[["GeneSets"]] |>
-      # Add the genes as a nested column
-      left_join(
-        data_set_loaded()[["GeneSetsGenes"]] %>% group_by(GSName) %>% nest(),
-        by = c("Pathway" = "GSName")
-      ) |>
-      # Add information for the tooltip
-      left_join(
-        data_set_loaded()[["GeneSetsGenes"]] %>%
-          distinct(GSName, GSCollectionName, GSDescription, GSURL),
-        by = c("Pathway" = "GSName")
-      )
+    if (!is.null(data_set_loaded()[["GeneSetsGenes"]])) {
+      # This is kept for backward compatiblity
+      # Ideally, in preprocessing this is already contained in the same data frame
+      df <- data_set_loaded()[["GeneSets"]] |>
+        # Add the genes as a nested column
+        left_join(
+          data_set_loaded()[["GeneSetsGenes"]] %>% group_by(GSName) %>% nest(),
+          by = c("Pathway" = "GSName")
+        ) |>
+        # Add information for the tooltip
+        left_join(
+          data_set_loaded()[["GeneSetsGenes"]] %>%
+            distinct(GSName, GSCollectionName, GSDescription, GSURL),
+          by = c("Pathway" = "GSName")
+        )
+    } else {
+      df <- data_set_loaded[["GeneSets"]]
+    }
 
     formatForGeneSetsPlot(
       df = df,
@@ -1364,24 +1325,15 @@ app_server <- function(input, output, session, config) {
     req(data_set_loaded())
     if (
       length(input$gene_sets_contrast_select) == 0 ||
-        # is.null(input$gene_sets_collection_select) ||
-        # is.null(input$select_gene_sets) ||
-        # length(input$select_gene_sets) == 0 ||
         length(input$gene_sets_collection_select) == 0
     ) {
       p <- empty_plot(
-        "Select a contrast, at least one gene set database and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
+        "Select a contrast, at least one gene set database\nand at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
       )
     } else {
-      # p <- empty_plot()
-
       p <- GeneSetsPlot(
         df = gene_sets_data(),
-        # df_genes = data_set_loaded()[["GeneSetsGenes"]],
         selected_palette = input$color_select_top_gene_sets
-        # selected_contrast = input$gene_sets_contrast_select,
-        # selected_gene_sets = input$select_gene_sets,
-        # selected_gene_set_collections = input$gene_sets_collection_select
       )
     }
     p

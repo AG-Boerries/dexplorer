@@ -24,7 +24,7 @@ formatForGeneSetsPlot <- function(
   selected_collections = "all"
 ) {
   # Define variables locally for R CMD check
-  # Contrast <- NULL
+  Contrast <- GSCollectionName <- EnrichmentScore <- Pathway <- NULL
 
   # ---- Prepare data ----
   if (length(selected_gene_sets) == 0) {

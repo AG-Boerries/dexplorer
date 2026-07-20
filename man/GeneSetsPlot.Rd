@@ -2,26 +2,20 @@
 % Please edit documentation in R/topGeneSetsPlot.R
 \name{GeneSetsPlot}
 \alias{GeneSetsPlot}
-\title{Create Interactive Top Gene Sets Plot}
+\title{Create Top Gene Sets Dotplot}
 \usage{
 GeneSetsPlot(df, selected_palette = "App colors", standalone = FALSE)
 }
 \arguments{
-\item{df}{A data frame containing gene set enrichment results, including enrichment scores, set sizes, direction, and contrast labels.}
+\item{df}{A data frame containing gene set enrichment results, including enrichment scores, set sizes, direction,contrast labels and a column with the genes of the gene set as a nested tibble.}
 
 \item{selected_palette}{Character. The name of the color palette to use for coloring gene sets.}
 
-\item{df_genes}{A data frame with gene set annotation columns: GSName, GSDescription, and GSURL.}
-
-\item{selected_contrast}{Character vector. Contrast names to include in the plot.}
-
-\item{selected_gene_sets}{Character vector. Gene set names to include in the plot.}
-
-\item{selected_gene_set_collections}{Character vector. Gene set collection names to include in the plot.}
+\item{standalone}{Logical. If \code{TRUE}, the PCA plot is generated as a standalone plot, which is not interactive. If \code{FALSE} (required inside DExploreR), the plot is interactive via \code{plotly}. Defaults to \code{FALSE}.}
 }
 \value{
-The interactive dotplot as a \code{plotly} object.
+The dot plot, either as a \code{ggplot2} object (if \code{standalone = TRUE}) or a \code{plotly} object (if \code{standalone = FALSE}).
 }
 \description{
-Generates an interactive dotplot of top gene sets for selected contrasts in gene set enrichment analysis (GSEA) using \code{plotly}. The plot displays enrichment scores, set sizes, and direction of regulation, with custom tooltips, facetting by contrast, and links to gene set descriptions. This plot is registered for click events, which open a modal showing a volcano plot (\code{\link{createVolcanoPlot}()}) and a heatmap (\code{\link{createGeneExpressionHeatmap}()}) of the selected gene set.
+Generates a dotplot of top gene sets for selected contrasts in gene set enrichment analysis (GSEA) using \code{ggplot2} or, if \code{standalone = FALSE}, using \code{plotly} for interactivity. The plot displays enrichment scores, set sizes, and direction of regulation, with custom tooltips, facetting by contrast, and links to gene set descriptions. This plot is registered for click events, which open a modal showing a volcano plot (\code{\link{createVolcanoPlot}()}) and a heatmap (\code{\link{createGeneExpressionHeatmap}()}) of the selected gene set.
 }

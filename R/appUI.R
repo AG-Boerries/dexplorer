@@ -601,7 +601,7 @@ app_ui <- function(config) {
                   label = "Define number of top genes sets:",
                   min = 1,
                   max = 100,
-                  value = 15,
+                  value = 10,
                   step = 1,
                   ticks = FALSE
                 ),
