@@ -13,6 +13,8 @@
 #'
 #' @param remove_sample_selection Logical. If TRUE, removes the sample selection control from \code{\link{plotControls}()}. Default is FALSE.
 #'
+#' @param remove_color_selection Logical. If TRUE, removes the color selection control from \code{\link{plotControls}()}. Default is FALSE.
+#'
 #' @param additional_button_right UI element for an additional button to be placed on the right. Default is `div()`.
 #'
 #' @return A Shiny UI element (HTML tag list) representing the sub-tab layout.
@@ -23,9 +25,11 @@ makeSubTabContent <- function(
   top_left_wide = div(),
   main_content = div(),
   remove_sample_selection = FALSE,
+  remove_color_selection = FALSE,
   additional_button_right = div()
 ) {
   div(
+    class = "container",
     fluidRow(
       column(
         width = 9,
@@ -37,6 +41,7 @@ makeSubTabContent <- function(
           plotControls(
             id,
             remove_sample_selection,
+            remove_color_selection,
             further_controls
           ),
           actionButton(
@@ -59,19 +64,40 @@ makeSubTabContent <- function(
             icon = icon("download"),
             width = "155px"
           ),
-          div(additional_button_right, style = "margin-bottom: 10px;"),
+          div(additional_button_right),
         )
       ),
-      style = "display: flex; align-items: center; margin-top: 30px; margin-bottom: 10px; margin-right: 10px; height: 220px"
+      class = "tab-head-row mb-2"
     ),
     fluidRow(
       column(
         width = 12,
         div(
           main_content,
-          class = "panel_plot_box"
+          class = "plot-loader-wrap panel_plot_box"
         )
       )
+    )
+  )
+}
+
+#' @title Generate Tab Headers
+#'
+#' @description
+#' Creates a header layout for a tab in the DExploreR app, including a title panel and a text output area. Used to provide a consistent header with a title and descriptive text for each tab.
+#'
+#' @param title Character. The title to display in the tab header and browser window.
+#'
+#' @param text_id Character. The output ID for the descriptive text to be rendered below the title.
+#'
+#' @return A Shiny UI element (HTML tag list) representing the tab header.
+#'
+tabHeaders <- function(title, text_id) {
+  fluidPage(
+    div(
+      titlePanel(title = title, windowTitle = title),
+      textOutput(text_id),
+      class = "tab-header"
     )
   )
 }

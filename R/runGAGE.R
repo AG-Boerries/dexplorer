@@ -50,18 +50,18 @@ runGAGE <- function(
 
   # Combine up and down regulated genes sets
   df <- bind_rows(
-    res$greater %>%
-      as.data.frame() %>%
-      rownames_to_column("pathway") %>%
+    res$greater |>
+      as.data.frame() |>
+      rownames_to_column("pathway") |>
       mutate(Direction = "up"),
-    res$less %>%
-      as.data.frame() %>%
-      rownames_to_column("pathway") %>%
+    res$less |>
+      as.data.frame() |>
+      rownames_to_column("pathway") |>
       mutate(Direction = "down")
-  ) %>%
+  ) |>
     mutate(
       Contrast = paste0(condition, "_vs_", control)
-    ) %>%
+    ) |>
     # Select and rename relevant columns
     dplyr::select(
       "Pathway" = "pathway",

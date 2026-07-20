@@ -76,8 +76,8 @@ calculateGSEA <- function(
   )
 
   # Create named list of gene sets with GeneIDs as values
-  GeneSetsList <- GeneSets %>%
-    split(.$gs_name) %>%
+  GeneSetsList <- GeneSets |>
+    split(.$gs_name) |>
     lapply(function(x) unique(x$ensembl_gene))
 
   # Run GSEA with `gage()` if normalized count data is provided
@@ -85,23 +85,23 @@ calculateGSEA <- function(
     message("Running GSEA with `gage()` from the `gage` package.")
 
     # Extract gene information from the normalized count data
-    WellAnnotatedGenes <- normalized_count_data %>%
+    WellAnnotatedGenes <- normalized_count_data |>
       dplyr::select(GeneID, Alias:NCBIURL)
 
     # Extract only the normalized counts for GSEA
-    NormCountData <- normalized_count_data %>%
-      dplyr::select(-Alias:-NCBIURL) %>%
+    NormCountData <- normalized_count_data |>
+      dplyr::select(-Alias:-NCBIURL) |>
       column_to_rownames(var = "GeneID")
 
     # Use the same vector for the contrast as for DGEA
     # Transform it so that `gage()` can use it
-    Contrasts <- data.frame(contrast = contrasts) %>%
+    Contrasts <- data.frame(contrast = contrasts) |>
       separate(contrast, into = c("condition", "control"), sep = "-")
 
     # Turn data frame into list of lists, each containing sample names for a group
-    SamplesGroups <- samples_groups %>%
-      group_by(Group) %>%
-      summarise(samples = list(SampleNameUser)) %>%
+    SamplesGroups <- samples_groups |>
+      group_by(Group) |>
+      summarise(samples = list(SampleNameUser)) |>
       deframe()
 
     # Run `gage()` for each set of contrast provided by the user
@@ -121,7 +121,7 @@ calculateGSEA <- function(
     contrasts <- gsub("-", "_vs_", contrasts)
 
     # Create tidy data frame
-    ResultsGAGEDf <- bind_rows(ResultsGAGE) %>%
+    ResultsGAGEDf <- bind_rows(ResultsGAGE) |>
       mutate(
         # Use the names of the contrasts provided by the user for better readability in DExploreR
         Contrast = recode(
@@ -131,7 +131,7 @@ calculateGSEA <- function(
       )
 
     # Data frame containing the gene symbols and ID contained in the gene sets
-    GeneSetsSig <- GeneSets %>%
+    GeneSetsSig <- GeneSets |>
       # Select and rename only relevant columns
       dplyr::select(
         "Symbol" = "gene_symbol",
@@ -142,15 +142,15 @@ calculateGSEA <- function(
         "GSCollectionName" = "gs_collection_name",
         "GSDescription" = "gs_description",
         "GSURL" = "gs_url"
-      ) %>%
+      ) |>
       # Subset to significantly enriched gene sets only
-      filter(GSName %in% unique(ResultsGAGEDf$Pathway)) %>%
+      filter(GSName %in% unique(ResultsGAGEDf$Pathway)) |>
       # Also add the information for each individual gene, if available
       left_join(
-        WellAnnotatedGenes %>% dplyr::select(-Symbol),
+        WellAnnotatedGenes |> dplyr::select(-Symbol),
         by = "GeneID"
-      ) %>%
-      select(-OtherEntrezIDs) %>%
+      ) |>
+      select(-OtherEntrezIDs) |>
       as.data.frame()
 
     return(
@@ -166,8 +166,8 @@ calculateGSEA <- function(
     message("Running GSEA with `GSEA()` from the `clusterProfiler` package.")
 
     # Extract gene information from the DGE table
-    WellAnnotatedGenes <- dge_table %>%
-      dplyr::select(GeneID:NCBIURL) %>%
+    WellAnnotatedGenes <- dge_table |>
+      dplyr::select(GeneID:NCBIURL) |>
       # Unlike above, this has gene IDs duplicated when multiple contrasts are used
       distinct(GeneID, .keep_all = TRUE)
 
@@ -176,29 +176,29 @@ calculateGSEA <- function(
       function(contrast) {
         # Sort gene list by Rank statistic from DGE table for the contrast of interest
         # Rank is `t` or `stat` from `limma` and `DESeq2`, respectively
-        geneList <- dge_table %>%
-          filter(Contrast == contrast) %>%
-          select(EntrezID, Rank) %>%
-          arrange(desc(Rank)) %>%
+        geneList <- dge_table |>
+          filter(Contrast == contrast) |>
+          select(EntrezID, Rank) |>
+          arrange(desc(Rank)) |>
           deframe()
 
         # `GSEA()` almost runs with default parameters
         res <- GSEA(
           geneList = geneList,
-          TERM2GENE = GeneSets %>%
+          TERM2GENE = GeneSets |>
             select(gs_name, ncbi_gene),
           eps = 0
-        ) %>%
+        ) |>
           as.data.frame()
       },
       simplify = FALSE,
       USE.NAMES = TRUE
-    ) %>%
+    ) |>
       # Collapse the list of data frames into a single data frame with an additional column for the contrast
-      bind_rows(.id = "Contrast") %>%
+      bind_rows(.id = "Contrast") |>
       # Add direction of regulation
-      mutate(Direction = ifelse(NES > 0, "up", "down")) %>%
-      remove_rownames() %>%
+      mutate(Direction = ifelse(NES > 0, "up", "down")) |>
+      remove_rownames() |>
       dplyr::select(
         "Pathway" = "ID",
         "EnrichmentScore" = "enrichmentScore",
@@ -207,11 +207,11 @@ calculateGSEA <- function(
         Direction,
         Contrast,
         "SetSize" = "setSize"
-      ) %>%
+      ) |>
       as.data.frame()
 
     # Data frame containing the gene symbols and ID contained in the gene sets
-    GeneSetsSig <- GeneSets %>%
+    GeneSetsSig <- GeneSets |>
       # Select and rename only relevant columns
       dplyr::select(
         "Symbol" = "gene_symbol",
@@ -222,14 +222,14 @@ calculateGSEA <- function(
         "GSCollectionName" = "gs_collection_name",
         "GSDescription" = "gs_description",
         "GSURL" = "gs_url"
-      ) %>%
+      ) |>
       # Subset to significantly enriched gene sets only
-      filter(GSName %in% unique(ResultsGSEADf$Pathway)) %>%
+      filter(GSName %in% unique(ResultsGSEADf$Pathway)) |>
       # Also add the information for each individual gene, if available
       left_join(
-        WellAnnotatedGenes %>% dplyr::select(-Symbol),
+        WellAnnotatedGenes |> dplyr::select(-Symbol),
         by = "GeneID"
-      ) %>%
+      ) |>
       as.data.frame()
 
     return(

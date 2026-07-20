@@ -1,6 +1,6 @@
 Package: dexplorer
 Title: Visualize and interactively explore bulk RNA-seq data
-Version: 0.8.1.6
+Version: 0.8.2.0
 Authors@R: c(
     person(
         given = "Tobias",
@@ -12,7 +12,13 @@ Authors@R: c(
         given = "Maximilian",
         family = "von der Linde",
         email = "maximilian.linde@uniklinik-freiburg.de",
-        role = c("aut")
+        role = c("ctb")
+    ),
+    person(
+        given = "Katharina",
+        family = "Moos",
+        email = "katharina.moos@uniklinik-freiburg.de",
+        role = c("ctb")
     ),
     person(
         given = "IBSM - Institute of Medical Bioinformatics and Systems Medicine",
@@ -28,6 +34,7 @@ Imports:
     AnnotationDbi,
     assertthat,
     clusterProfiler,
+    colourpicker,
     ComplexUpset,
     DESeq2,
     dplyr,
@@ -37,15 +44,14 @@ Imports:
     fuzzyjoin,
     gage,
     ggplot2,
+    ggrepel,
     ggridges,
     grDevices,
     heatmaply,
     here,
-    htmltools,
     htmlwidgets,
     jsonlite,
     limma,
-    magrittr,
     MASS,
     methods,
     msigdbr,

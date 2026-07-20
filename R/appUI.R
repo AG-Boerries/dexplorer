@@ -46,6 +46,7 @@ app_ui <- function(config) {
     tags$script(src = "www/colorPaletteChoicesIconsChoice.js"),
     tags$script(src = "www/colorPaletteChoicesIconsSelected.js"),
     tags$script(src = "www/colorPaletteRenderer.js"),
+    tags$script(src = "www/cursorPointerPlotly.js"),
 
     # Add favicon
     tags$head(tags$link(rel = "shortcut icon", href = "www/favicon.ico")),
@@ -88,7 +89,7 @@ app_ui <- function(config) {
           )
         ),
         div(
-          "DExploreR v0.8.1.6",
+          "DExploreR v0.8.2.0",
           class = "app-version-fixed"
         )
       ),
@@ -185,10 +186,23 @@ app_ui <- function(config) {
             makeSubTabContent(
               id = "pca",
               top_left_wide = div(
-                plotlyOutput(
-                  "scree_plot",
-                  height = "180px",
-                  width = "95%"
+                fluidRow(
+                  column(
+                    width = 11,
+                    plotlyOutput(
+                      "scree_plot",
+                      height = "180px",
+                      width = "98%"
+                    ),
+                  ),
+                  column(
+                    width = 1,
+                    p(
+                      "This plot only contains PCs that explain at least 1 % of the total variance.",
+                      class = "text-muted",
+                      style = "font-size: 9.5px;"
+                    )
+                  )
                 ),
                 class = "panel_plot_box"
               ),
@@ -214,7 +228,7 @@ app_ui <- function(config) {
               ),
               main_content = plotlyOutput(
                 "pca_plot",
-                height = "500px",
+                height = "700px",
                 width = "98%"
               ),
               # Samples cannot be excluded in the PCA
@@ -238,7 +252,7 @@ app_ui <- function(config) {
                   div(
                     uiOutput("user_gene_list_ui"),
                     uiOutput("go_to_volcano"),
-                    style = "align-items: flex-start; display: flex; flex-direction: column;"
+                    class = "gene-list-upload"
                   )
                 ),
                 column(
@@ -248,7 +262,8 @@ app_ui <- function(config) {
                 column(
                   width = 2,
                   uiOutput("genes_not_found")
-                )
+                ),
+                style = "margin-left: -15px;"
               ),
               additional_button_right = actionButton(
                 "clear_user_genes_button_heatmap",
@@ -368,15 +383,13 @@ app_ui <- function(config) {
                   offLabel = "p\u2011value",
                   value = TRUE
                 ),
-                # The labels of the `switchInput()`s are created manually to adjust the style of the other labels
-                HTML(
-                  "<span style='display:block; margin-bottom:5px; font-size:14px; font-weight: 700;'>Toggle up- or downregulated genes:</span>"
-                ),
-                switchInput(
+                sliderTextInput(
                   inputId = "top_genes_up_or_down",
-                  onLabel = "Up",
-                  offLabel = "Down",
-                  value = TRUE
+                  label = "Toggle direction",
+                  choices = c("Down", "Both", "Up"),
+                  selected = "Both",
+                  grid = TRUE,
+                  hide_min_max = TRUE
                 ),
                 sliderInput(
                   inputId = "top_genes_number_select",
@@ -388,10 +401,13 @@ app_ui <- function(config) {
                   ticks = FALSE
                 ),
               ),
-              main_content = plotlyOutput(
-                "top_genes",
-                height = "auto",
-                width = "98%"
+              main_content = div(
+                plotlyOutput(
+                  "top_genes",
+                  height = "auto",
+                  width = "98%"
+                ),
+                class = "plot-loader-min-height"
               )
             ),
           ),
@@ -415,7 +431,23 @@ app_ui <- function(config) {
                 class = "custom-button"
               ),
               remove_sample_selection = TRUE,
+              remove_color_selection = TRUE,
               further_controls = div(
+                div(
+                  style = "display: flex; gap: 5rem; width: 300px;",
+                  colourInput(
+                    inputId = "volcano_color_up",
+                    label = "Select color for upregulated genes:",
+                    value = get_theme_colors(color = "pink"),
+                    showColour = "both",
+                  ),
+                  colourInput(
+                    inputId = "volcano_color_down",
+                    label = "Select color for downregulated genes:",
+                    value = get_theme_colors(color = "blue"),
+                    showColour = "both",
+                  )
+                ),
                 virtualSelectInput(
                   inputId = "volcano_contrast_select",
                   label = "Select contrast:",
@@ -446,6 +478,16 @@ app_ui <- function(config) {
                   step = 0.25,
                   ticks = FALSE
                 ),
+                # The labels of the `switchInput()`s are created manually to adjust the style of the other labels
+                HTML(
+                  "<span style='display:block; margin-bottom:5px; font-size:14px; font-weight: 700;'>Highlight top differentially expressed genes:</span>"
+                ),
+                switchInput(
+                  inputId = "label_top_genes",
+                  onLabel = "Yes",
+                  offLabel = "No",
+                  value = TRUE
+                ),
                 virtualSelectInput(
                   inputId = "gene_select_volcano",
                   label = "Highlight genes of interest:",
@@ -456,10 +498,13 @@ app_ui <- function(config) {
                   disableSelectAll = TRUE
                 ),
               ),
-              main_content = plotlyOutput(
-                "volcano_plot",
-                height = "auto",
-                width = "98%"
+              main_content = div(
+                plotlyOutput(
+                  "volcano_plot",
+                  height = "auto",
+                  width = "98%"
+                ),
+                class = "plot-loader-min-height"
               )
             ),
           ),
@@ -479,7 +524,8 @@ app_ui <- function(config) {
                 ),
                 div(
                   HTML(
-                    "<b>Note:</b> Click on a colored dot to get information on which genes are commonly differentially expressed in this contrast comparison."
+                    "<p><b>Note:</b> Click on a colored dot to get information on which genes are commonly differentially expressed in this contrast comparison.</p>",
+                    "<p><b>Note:</b> The dashed line indicates a Jaccard Index of 1, which means the two contrasts have identical sets of differentially expressed genes.</p>"
                   ),
                   style = "color: var(--theme-color-green);"
                 )
@@ -512,7 +558,7 @@ app_ui <- function(config) {
               ),
               main_content = plotlyOutput(
                 "jaccard_dgea",
-                height = "auto",
+                height = "700px",
                 width = "98%"
               )
             ),
@@ -550,6 +596,15 @@ app_ui <- function(config) {
               ),
               remove_sample_selection = TRUE,
               further_controls = div(
+                sliderInput(
+                  inputId = "n_top_gene_sets",
+                  label = "Define number of top genes sets:",
+                  min = 1,
+                  max = 100,
+                  value = 10,
+                  step = 1,
+                  ticks = FALSE
+                ),
                 virtualSelectInput(
                   inputId = "gene_sets_contrast_select",
                   label = "Select contrast:",
@@ -559,7 +614,7 @@ app_ui <- function(config) {
                 ),
                 virtualSelectInput(
                   inputId = "gene_sets_collection_select",
-                  label = "Select gene set databases:",
+                  label = "Select gene set collection(s):",
                   choices = c(),
                   search = TRUE,
                   multiple = TRUE
@@ -577,10 +632,13 @@ app_ui <- function(config) {
                   popupDropboxBreakpoint = "3000px"
                 )
               ),
-              main_content = plotlyOutput(
-                "top_gene_sets",
-                height = "auto",
-                width = "98%"
+              main_content = div(
+                plotlyOutput(
+                  "top_gene_sets",
+                  height = "auto",
+                  width = "98%"
+                ),
+                class = "plot-loader-min-height"
               )
             ),
           ),
@@ -597,12 +655,19 @@ app_ui <- function(config) {
                 h4("Contrast intersection using Jaccard index"),
                 h5(
                   "Identify gene sets that are commonly differentially expressed across multiple contrasts"
+                ),
+                div(
+                  HTML(
+                    "<p><b>Note:</b> Click on a colored dot to get information on which genes are commonly differentially expressed in this contrast comparison.</p>",
+                    "<p><b>Note:</b> The dashed line indicates a Jaccard Index of 1, which means the two contrasts have identical sets of differentially expressed genes.</p>"
+                  ),
+                  style = "color: var(--theme-color-green);"
                 )
               ),
               remove_sample_selection = TRUE,
               main_content = plotlyOutput(
                 "jaccard_gsea",
-                height = "auto",
+                height = "700px",
                 width = "98%"
               )
             )

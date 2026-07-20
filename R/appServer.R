@@ -10,10 +10,10 @@
 #'
 app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
-  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSName <- GeneID <- EnrichmentScore <- Pathway <- NULL
+  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSDescription <- GSURL <- GSName <- GeneID <- EnrichmentScore <- Pathway <- Pathways <- NULL
 
-  # Increase the maximum file upload size to 30 MB
-  # This is necessary for user-prepared RDS files,
+  # Increase the maximum file upload size to 50 MB
+  # This is necessary for user-prepared RDS files
   options(shiny.maxRequestSize = 50 * 1024^2)
 
   ###################################################################################################
@@ -40,7 +40,7 @@ app_server <- function(input, output, session, config) {
 
   # Reactive values to track plotting status
   plots_ready <- reactiveValues(
-    bar_plot = FALSE,
+    qc_plot = FALSE,
     scree = FALSE,
     pca = FALSE,
     heatmap = FALSE,
@@ -150,7 +150,7 @@ app_server <- function(input, output, session, config) {
       dTypes$dataSetsTable[
         input$data_sets_table_rows_selected,
         "Authors"
-      ] %>%
+      ] |>
         gsub(" ", "_", .)
     } else {
       ""
@@ -313,7 +313,7 @@ app_server <- function(input, output, session, config) {
   if (config$mode == "standard" && !is.null(dTypes$dataSetsTable)) {
     # Render the table with the data sets
     output$data_sets_table <- renderDT(
-      dTypes$dataSetsTable %>%
+      dTypes$dataSetsTable |>
         select(
           "Cell line or tissue",
           "Study target",
@@ -506,7 +506,8 @@ app_server <- function(input, output, session, config) {
       explained_var = data_set_loaded()[["VarianceExplained"]],
       pc_x = input$select_PC_x,
       pc_y = input$select_PC_y,
-      selected_palette = input$color_select_pca
+      selected_palette = input$color_select_pca,
+      standalone = FALSE
     )
   })
 
@@ -718,6 +719,7 @@ app_server <- function(input, output, session, config) {
       )
 
       output$tab_multi_genes <- renderUI({
+        req(userGenes())
         if (nrow(userGenes()$genesFoundMulti) == 0) {
           return()
         } else {
@@ -725,7 +727,7 @@ app_server <- function(input, output, session, config) {
             tags$b("Genes with multiple symbols:"),
             div(
               tableOutput("genes_multiple"),
-              style = "border-color: var(--alt-border-color); border-style: solid; border-width: 2px; border-radius: var(--box-border-radius); margin: 0px; padding: 0px; overflow-x: auto; overflow-y: auto; height: 120px;"
+              class = "gene-list-upload-multi-hits-table"
             ),
             tags$i(
               "You can unselect unwanted genes in the plot settings on the right.",
@@ -738,7 +740,7 @@ app_server <- function(input, output, session, config) {
       output$go_to_volcano <- renderUI({
         actionButton(
           inputId = "check_genes_in_volcano",
-          label = "Check your uploaded genes in the volcano plot!",
+          label = "Mark uploaded genes in volcano plot.",
           class = "custom-button"
         )
       })
@@ -778,6 +780,12 @@ app_server <- function(input, output, session, config) {
     # When gene list is used in volcano, change the buttons in the volcano tab
     show("clear_user_genes_button_volcano")
     hide("gene_list_to_volcano")
+
+    # Remove the labels of the top genes, when user upload list of genes
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = FALSE
+    )
 
     # Update the selected genes in the volcano plot, if there are genes uploaded
     updateVirtualSelect(
@@ -830,6 +838,12 @@ app_server <- function(input, output, session, config) {
     show("clear_user_genes_button_volcano")
     hide("gene_list_to_volcano")
 
+    # Remove the labels of the top genes, when user upload list of genes
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = FALSE
+    )
+
     # Update the selected genes in the volcano plot, if there are genes uploaded
     updateVirtualSelect(
       "gene_select_volcano",
@@ -846,6 +860,12 @@ app_server <- function(input, output, session, config) {
     updateVirtualSelect(
       "gene_select_volcano",
       selected = character(0)
+    )
+
+    # Label the top genes again, when the gene list is removed
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = TRUE
     )
 
     # Hide the button to transfer gene list to the volcano plot
@@ -875,6 +895,12 @@ app_server <- function(input, output, session, config) {
     updateVirtualSelect(
       "gene_select_volcano",
       selected = character(0)
+    )
+
+    # Label the top genes again, when the gene list is removed
+    updateSwitchInput(
+      inputId = "label_top_genes",
+      value = TRUE
     )
 
     # Remove information about the uploaded genes
@@ -914,7 +940,7 @@ app_server <- function(input, output, session, config) {
       df = data_set_loaded()[["DGEAnalysis"]],
       selected_contrast = input$top_genes_contrast_select,
       selected_number_of_genes = input$top_genes_number_select,
-      selected_direction = input$top_genes_up_or_down,
+      selected_direction = tolower(input$top_genes_up_or_down),
       fc_or_pvalue = input$top_genes_fc_or_pvalue
     )
   })
@@ -924,8 +950,7 @@ app_server <- function(input, output, session, config) {
     req(df_top_genes_dgea())
     createTopDEGsPlot(
       df = df_top_genes_dgea(),
-      selected_palette = input$color_select_top_genes,
-      fc_or_pvalue = input$top_genes_fc_or_pvalue
+      selected_palette = input$color_select_top_genes
     )
   })
 
@@ -946,7 +971,7 @@ app_server <- function(input, output, session, config) {
   # Prepare data frame for download
   output$download_data_top_genes <- dataDownload(
     name = "Top_scoring_genes",
-    data = df_top_genes_dgea() %>%
+    data = df_top_genes_dgea() |>
       # Remove the groups added by `tidytext::reorder_within()`
       mutate(Symbol = sub("__.*$", "", Symbol)),
     authors = authors()
@@ -976,11 +1001,13 @@ app_server <- function(input, output, session, config) {
     req(input$volcano_contrast_select)
     createVolcanoPlot(
       df = data_set_loaded()[["DGEAnalysis"]],
-      selected_palette = input$color_select_volcano,
       p_threshold = input$volcano_p_threshold,
       l2fc_threshold = input$volcano_l2fc_threshold,
       selected_genes = input$gene_select_volcano,
-      selected_contrast = input$volcano_contrast_select
+      selected_contrast = input$volcano_contrast_select,
+      color_up = input$volcano_color_up,
+      color_down = input$volcano_color_down,
+      highlight_top = input$label_top_genes
     )
   })
 
@@ -1001,7 +1028,7 @@ app_server <- function(input, output, session, config) {
   # Get the data for the .csv download
   output$download_data_volcano <- dataDownload(
     name = "Volcano_plot_data",
-    data = data_set_loaded()[["DGEAnalysis"]] %>%
+    data = data_set_loaded()[["DGEAnalysis"]] |>
       filter(Contrast %in% input$volcano_contrast_select),
     authors = authors()
   )
@@ -1041,7 +1068,7 @@ app_server <- function(input, output, session, config) {
   output$download_data_contrast_intersection <- dataDownload(
     name = "Contrast_intersection_DGEA",
     # Remove the list column, which cannot be saved as .csv
-    data = df_dgea_ci() %>% select(-Genes),
+    data = df_dgea_ci() |> select(-Genes),
     authors = authors()
   )
 
@@ -1066,13 +1093,13 @@ app_server <- function(input, output, session, config) {
       # Filter the data frame for the clicked set and direction and pull the data frame containing the genes
       # Use isolate the prevent data table from requesting columns from previous modal
       df <- isolate({
-        df_dgea_ci() %>%
+        df_dgea_ci() |>
           filter(
             Seta == clicked_ji[1],
             Setb == clicked_ji[2],
             Direction == clicked_ji[3]
-          ) %>%
-          pull(Genes) %>%
+          ) |>
+          pull(Genes) |>
           as.data.frame()
       })
 
@@ -1089,7 +1116,8 @@ app_server <- function(input, output, session, config) {
       venn_plot <- reactive({
         createVennDiagram(
           df = df,
-          selected_palette = input$color_select_venn_modal
+          selected_palette = input$color_select_venn_modal,
+          type = "DGEA"
         )
       })
 
@@ -1233,100 +1261,80 @@ app_server <- function(input, output, session, config) {
   ###################################################################################################
 
   # Update control elements after data upload
-  observeEvent(data_set_loaded(), {
+  observe({
+    req(data_set_loaded())
+
+    # Update contrast selection and select all
     updateVirtualSelect(
       inputId = "gene_sets_contrast_select",
       choices = unique(data_set_loaded()[["GeneSets"]]$Contrast),
       selected = unique(data_set_loaded()[["GeneSets"]]$Contrast)
     )
 
+    # Update available gene sets and select all
     updateVirtualSelect(
       inputId = "gene_sets_collection_select",
       choices = unique(data_set_loaded()[["GeneSetsGenes"]]$GSCollectionName),
       selected = unique(data_set_loaded()[["GeneSetsGenes"]]$GSCollectionName)
     )
 
+    # Update the selectable gene sets
     updateVirtualSelect(
       inputId = "select_gene_sets",
       # Create list of named vectors for grouped choices
-      choices = data_set_loaded()[["GeneSetsGenes"]] %>%
-        distinct(GSCollectionName, GSName) %>%
-        group_by(GSCollectionName) %>%
-        summarise(values = list(GSName), .groups = "drop") %>%
-        deframe(),
-      # By default select the top 40 gene sets by absolute enrichment score
-      selected = data_set_loaded()[["GeneSets"]] %>%
-        arrange(desc(abs(EnrichmentScore))) %>%
-        slice_head(n = 40L) %>%
-        pull(Pathway)
+      choices = data_set_loaded()[["GeneSetsGenes"]] |>
+        distinct(GSCollectionName, GSName) |>
+        group_by(GSCollectionName) |>
+        summarise(values = list(GSName), .groups = "drop") |>
+        deframe()
     )
   })
 
-  # Reactive: filtered gene sets by selected collections
-  filtered_gene_sets_by_collection <- reactive({
-    req(data_set_loaded(), input$gene_sets_collection_select)
+  gene_sets_data <- reactive({
+    req(data_set_loaded())
 
-    data_set_loaded()[["GeneSets"]] %>%
-      filter(
-        Pathway %in%
-          (data_set_loaded()[["GeneSetsGenes"]] %>%
-            filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
-            pull(GSName) %>%
-            unique())
-      )
+    if (!is.null(data_set_loaded()[["GeneSetsGenes"]])) {
+      # This is kept for backward compatiblity
+      # Ideally, in preprocessing this is already contained in the same data frame
+      df <- data_set_loaded()[["GeneSets"]] |>
+        # Add the genes as a nested column
+        left_join(
+          data_set_loaded()[["GeneSetsGenes"]] %>% group_by(GSName) %>% nest(),
+          by = c("Pathway" = "GSName")
+        ) |>
+        # Add information for the tooltip
+        left_join(
+          data_set_loaded()[["GeneSetsGenes"]] %>%
+            distinct(GSName, GSCollectionName, GSDescription, GSURL),
+          by = c("Pathway" = "GSName")
+        )
+    } else {
+      df <- data_set_loaded[["GeneSets"]]
+    }
+
+    formatForGeneSetsPlot(
+      df = df,
+      selected_contrast = input$gene_sets_contrast_select,
+      selected_gene_sets = input$select_gene_sets,
+      top_gene_sets = input$n_top_gene_sets,
+      selected_collections = input$gene_sets_collection_select
+    )
   })
-
-  # Observer: when collection selection changes, update gene sets selector
-  observeEvent(
-    input$gene_sets_collection_select,
-    {
-      req(data_set_loaded())
-
-      # Compute top 40 from filtered collection
-      top_40_in_collection <- filtered_gene_sets_by_collection() %>%
-        arrange(desc(abs(EnrichmentScore))) %>%
-        slice_head(n = 40) %>%
-        pull(Pathway)
-
-      # Update choices to show all gene sets in selected collections
-      new_choices <- data_set_loaded()[["GeneSetsGenes"]] %>%
-        filter(GSCollectionName %in% input$gene_sets_collection_select) %>%
-        distinct(GSCollectionName, GSName) %>%
-        group_by(GSCollectionName) %>%
-        summarise(values = list(GSName), .groups = "drop") %>%
-        deframe()
-
-      # Update the selector: options = newly filtered choices, selected = top 40 from filtered
-      updateVirtualSelect(
-        inputId = "select_gene_sets",
-        choices = new_choices,
-        selected = top_40_in_collection
-      )
-    },
-    ignoreInit = TRUE
-  ) # Don't trigger on app load (already handled above)
 
   # Create the top-scoring gene sets plot
   top_gene_sets_plot <- reactive({
     req(data_set_loaded())
     if (
-      is.null(input$gene_sets_contrast_select) ||
-        is.null(input$gene_sets_collection_select) ||
-        is.null(input$select_gene_sets) ||
-        length(input$select_gene_sets) == 0 ||
+      length(input$gene_sets_contrast_select) == 0 ||
         length(input$gene_sets_collection_select) == 0
     ) {
       p <- empty_plot(
-        "Select a contrast, at least one gene set database and at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
+        "Select a contrast, at least one gene set database\nand at least one gene set.\nCave: Not all gene sets are enriched in all contrasts."
       )
     } else {
-      p <- createTopGeneSetsPlot(
-        df = data_set_loaded()[["GeneSets"]],
-        df_genes = data_set_loaded()[["GeneSetsGenes"]],
-        selected_palette = input$color_select_top_gene_sets,
-        selected_contrast = input$gene_sets_contrast_select,
-        selected_gene_sets = input$select_gene_sets,
-        selected_gene_set_collections = input$gene_sets_collection_select
+      p <- GeneSetsPlot(
+        df = gene_sets_data(),
+        selected_palette = input$color_select_top_gene_sets
       )
     }
     p
@@ -1349,7 +1357,7 @@ app_server <- function(input, output, session, config) {
   # Prepare data for download
   output$download_data_top_gene_sets <- dataDownload(
     name = "Top-scoring_gene_sets_data",
-    data = data_set_loaded()[["GeneSets"]] %>%
+    data = data_set_loaded()[["GeneSets"]] |>
       filter(Contrast == input$gene_sets_contrast_select),
     authors = authors()
   )
@@ -1358,52 +1366,44 @@ app_server <- function(input, output, session, config) {
     event_data(event = "plotly_click", source = "gene_sets_plot"),
     {
       req(top_gene_sets_plot())
-
       # Get the information from the clicked point
       click_info_gene_sets_plot <- event_data(
         event = "plotly_click",
         source = "gene_sets_plot"
       )
 
+      # Split the string into its pieces
+      click_info_gene_sets_plot <- str_split_1(
+        click_info_gene_sets_plot$customdata,
+        "\\|"
+      )
+
       # Extract set size for heatmap height
-      initial_set_size <- as.numeric(
-        sub(
-          ".*<b>Set size: </b>([0-9]+).*",
-          "\\1",
-          click_info_gene_sets_plot$customdata[1]
-        )
-      )
+      initial_set_size <- as.numeric(click_info_gene_sets_plot[3])
 
-      # Extract the contrast form the event data and adjust format to DGEA constast format
-      contrast <- click_info_gene_sets_plot$customdata[[1]][2]
+      # Extract the contrast
+      contrast <- str_split_1(click_info_gene_sets_plot[2], "___")[2]
 
-      # Extract the gene set name from the customdata
-      # This is the tooltip text defined in `plot_gsea_top_gene_sets()`
-      pathway <- sub(
-        ".*16px;'>(.*)</div>.*",
-        "\\1",
-        click_info_gene_sets_plot$customdata[1]
-      )
+      # Extract the gene set name/pathway
+      pathway <- str_split_1(click_info_gene_sets_plot[2], "___")[1]
 
-      # Get the genes in the gene set
-      pathway_genes <- data_set_loaded()[["GeneSetsGenes"]] %>%
-        filter(GSName == pathway) %>%
-        select(Symbol, GeneID)
+      # Extract the url
+      pathway_url <- click_info_gene_sets_plot[5]
 
-      # Get the pathway description
-      pathway_info <- data_set_loaded()[["GeneSetsGenes"]] %>%
-        filter(GSName == pathway)
-      pathway_description <- pathway_info$GSDescription[1]
-      pathway_url <- pathway_info$GSURL[1]
+      # Extract the description
+      pathway_description <- click_info_gene_sets_plot[4]
+
+      # Extract the genes
+      pathway_genes <- str_split_1(click_info_gene_sets_plot[1], ",")
 
       volcano_modal_plot <- reactive({
         createVolcanoPlot(
-          df = data_set_loaded()[["DGEAnalysis"]] %>%
-            filter(GeneID %in% pathway_genes$GeneID),
-          # Allow to change the colors and the thresholds
-          selected_palette = input$color_select_volcano_modal,
+          df = data_set_loaded()[["DGEAnalysis"]] |>
+            filter(Symbol %in% pathway_genes),
           p_threshold = input$p_threshold_volcano_modal,
           l2fc_threshold = input$l2fc_threshold_volcano_modal,
+          color_up = input$volcano_color_up_modal,
+          color_down = input$volcano_color_down_modal,
           # No need to further select any genes
           selected_genes = c(),
           selected_contrast = contrast,
@@ -1465,7 +1465,7 @@ app_server <- function(input, output, session, config) {
 
       # The pathway modal, with some information on the pathway and the volcano plot and the heatmap
       showModal(modalDialog(
-        title = paste0("Enriched genes in ", pathway),
+        title = paste0("Enriched genes in ", gsub("<br />", " ", pathway)),
         easyClose = TRUE,
         footer = NULL,
         class = "enlarged-modal",
@@ -1482,18 +1482,33 @@ app_server <- function(input, output, session, config) {
           tabPanel(
             "Volcano plot",
             div(
-              virtualSelectInput(
-                inputId = "color_select_volcano_modal",
-                label = "Select color palette:",
-                # The color choices are defined in `controls_colors.R`
-                choices = color_choices,
-                selected = "App colors",
-                search = TRUE,
-                showSelectedOptionsFirst = TRUE,
-                # Add custom renderers for the colors, which include images of the color scales
-                labelRenderer = "colorsWithIconChoice",
-                selectedLabelRenderer = "colorsWithIconSelected"
+              div(
+                style = "display: flex; gap: 5rem; width: 300px;",
+                colourInput(
+                  inputId = "volcano_color_up_modal",
+                  label = "Select color for upregulated genes:",
+                  value = get_theme_colors(color = "pink"),
+                  showColour = "both",
+                ),
+                colourInput(
+                  inputId = "volcano_color_down_modal",
+                  label = "Select color for downregulated genes:",
+                  value = get_theme_colors(color = "blue"),
+                  showColour = "both",
+                )
               ),
+              # virtualSelectInput(
+              #   inputId = "color_select_volcano_modal",
+              #   label = "Select color palette:",
+              #   # The color choices are defined in `controls_colors.R`
+              #   choices = color_choices,
+              #   selected = "App colors",
+              #   search = TRUE,
+              #   showSelectedOptionsFirst = TRUE,
+              #   # Add custom renderers for the colors, which include images of the color scales
+              #   labelRenderer = "colorsWithIconChoice",
+              #   selectedLabelRenderer = "colorsWithIconSelected"
+              # ),
               sliderTextInput(
                 inputId = "p_threshold_volcano_modal",
                 label = "Set p-value threshold:",
@@ -1535,8 +1550,8 @@ app_server <- function(input, output, session, config) {
               virtualSelectInput(
                 inputId = "gene_select_heatmap_modal",
                 label = "Include genes of interest from this gene set:",
-                choices = pathway_genes$Symbol,
-                selected = pathway_genes$Symbol,
+                choices = pathway_genes,
+                selected = pathway_genes,
                 multiple = TRUE,
                 search = TRUE,
                 showSelectedOptionsFirst = TRUE,
@@ -1691,8 +1706,188 @@ app_server <- function(input, output, session, config) {
 
   output$download_data_contrast_intersection_sets <- dataDownload(
     name = "Contrast_intersection_GSEA",
-    data = df_gsea_ci(),
+    data = df_gsea_ci() |> select(-Pathways),
     authors = authors()
+  )
+
+  observeEvent(
+    event_data(event = "plotly_click", source = "gsea_jaccard"),
+    {
+      # Extract the custom data from the clicked data point
+      clicked_ji <- event_data(
+        event = "plotly_click",
+        source = "gsea_jaccard"
+      )$customdata
+
+      # The circle of the maxium JI is clickable but has no `customdata`
+      # In this case, do nothing
+      if (is.null(clicked_ji)) {
+        return()
+      }
+
+      # Separate the the string by the defined delimiter in `R/plot_dgea_jaccard.R`
+      clicked_ji <- str_split_1(clicked_ji, "\\|")
+
+      # Filter the data frame for the clicked set and direction and pull the data frame containing the genes
+      # Use isolate the prevent data table from requesting columns from previous modal
+      df <- isolate({
+        df_gsea_ci() |>
+          filter(
+            Seta == clicked_ji[1],
+            Setb == clicked_ji[2],
+            Direction == clicked_ji[3]
+          ) |>
+          pull(Pathways) |>
+          as.data.frame()
+      })
+
+      # Repair the column names, remove the dots
+      colnames(df) <- gsub("\\.", " ", colnames(df))
+
+      # Get the data for the .csv download
+      output$download_dgea_ji <- dataDownload(
+        name = "Intersecting_genes",
+        data = df,
+        authors = authors()
+      )
+
+      venn_plot <- reactive({
+        createVennDiagram(
+          df = df,
+          selected_palette = input$color_select_venn_modal,
+          type = "GSEA"
+        )
+      })
+
+      # Create the Venn diagram
+      output$venn_plot <- renderPlotly({
+        venn_plot()
+      })
+
+      # Create the list of genes as a data table
+      output$gene_table <- renderDT(
+        df,
+        rownames = FALSE,
+        # Avoid server site processing, to prevent the warning in the UI (missing columns)
+        # However, this can create warnings in the console when data is too big
+        # Maybe this can also crash
+        server = FALSE,
+        selection = "single",
+        escape = FALSE,
+        # options = list(
+        #   # Hide the NCBIURL column (index 7 in 0-based JS)
+        #   columnDefs = list(list(visible = FALSE, targets = 7)),
+        #   # Go to NCBI's gene page, when row clicked
+        #   rowCallback = JS("visitNCBI"),
+        #   # Increase default number of rows
+        #   pageLength = 100
+        # )
+      )
+
+      # After clicking and processing, show the modal with the corresponding data
+      observe({
+        req(df)
+        showModal(modalDialog(
+          title = HTML(paste0(
+            "DEGs at the intersection of <i>",
+            colnames(df)[1],
+            "</i> and <i>",
+            colnames(df)[2],
+            "</i>"
+          )),
+          easyClose = TRUE,
+          footer = NULL,
+          class = "enlarged-modal",
+          tagList(
+            tags$i(paste0(
+              "You are viewing ",
+              ifelse(
+                clicked_ji[3] == "both",
+                "up and down regulated genes.",
+                paste0(clicked_ji[3], "-regulated genes.")
+              )
+            )),
+            tags$hr()
+          ),
+          tabsetPanel(
+            tabPanel(
+              "Venn diagram",
+              div(
+                virtualSelectInput(
+                  inputId = "color_select_venn_modal",
+                  label = "Select color palette:",
+                  # The color choices are defined in `controls_colors.R`
+                  choices = color_choices,
+                  selected = "App colors",
+                  search = TRUE,
+                  showSelectedOptionsFirst = TRUE,
+                  # Add custom renderers for the colors, which include images of the color scales
+                  labelRenderer = "colorsWithIconChoice",
+                  selectedLabelRenderer = "colorsWithIconSelected"
+                ),
+                actionButton(
+                  inputId = "open_custom_download_modal_venn",
+                  label = "Download plot",
+                  class = "custom-button",
+                  icon = icon("download"),
+                  width = "155px"
+                ),
+                class = "tab-header-modal"
+              ),
+              hr(),
+              plotlyOutput("venn_plot", height = "450px")
+            ),
+            tabPanel(
+              "Gene list",
+              div(
+                downloadButton(
+                  outputId = "download_dgea_ji",
+                  label = "Download data",
+                  class = "custom-button"
+                ),
+                class = "tab-header-modal"
+              ),
+              hr(),
+              DTOutput("gene_table")
+            )
+          )
+        ))
+      })
+
+      # Open the custom modal for downloads from modals
+      # This needs special treatment as usually shiny only allows one modal to be open at a time
+      observeEvent(input$open_custom_download_modal_venn, {
+        output$custom_modal_ui_venn <- renderUI({
+          downloadSettingsModal(id = "venn")
+        })
+        session$sendCustomMessage("show-custom-modal-venn", list())
+      })
+
+      # Download handler for plot downloads from the modal
+      output$download_plot_venn_modal <- downloadHandler(
+        filename = function() {
+          # Create the name of the downloaded file similar to the data downloads
+          paste0(
+            "Venn_diagram_",
+            authors(),
+            "_",
+            Sys.Date(),
+            ".",
+            input$plot_format_venn
+          )
+        },
+        content = function(file) {
+          # Use `save_image()` from plotly to save the plot in the desired format
+          # This depends on python, thus, usage of `reticulate` and `kaleido`
+          save_image(
+            p = eval(parse(text = "venn_plot()")),
+            file = file,
+            width = input$plot_width_venn,
+            height = input$plot_height_venn
+          )
+        }
+      )
+    }
   )
 
   ###################################################################################################
@@ -1700,6 +1895,7 @@ app_server <- function(input, output, session, config) {
   ###################################################################################################
 
   # Observe if a drop down menu is selected, then fade background
+  # TODO: when the update of the plot takes longer, then the overlay is still applied, which gives the feeling the app crashed but it is just preparing the plot
   observe({
     if (
       isTRUE(input$`raw_counts_content-plot_settings_state`) |

@@ -31,7 +31,7 @@ empty_plot <- function(message = "Nothing to display ...") {
     ylim(-1, 1) +
     theme_void()
 
-  p <- ggplotly(p) %>%
+  p <- ggplotly(p) |>
     # Remove the modebar, when the plot is empty
     config(
       displaylogo = FALSE,

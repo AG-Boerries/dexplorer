@@ -5,16 +5,25 @@
 #'
 #' @param df A data frame containing columns for sample names, group assignments, assigned reads, unassigned mapped reads, unassigned unmapped reads, and total reads.
 #'
+#' @param standalone Logical. If `TRUE`, the plot is generated as a standalone plot. If `FALSE` (required inside DExploreR). Defaults to `FALSE`.
+#'
 #' @return A `ggplot2` object, ready for interactive use with `plotly`.
 #'
 #' @export
-createReadCountPlot <- function(df) {
+createReadCountPlot <- function(df, standalone = FALSE) {
   # Define variables locally for R CMD check
   SampleNameUser <- Group <- AssignedReads <- UnassignedMappedReads <- UnassignedUnmappedReads <- TotalReads <- NumberOfReads <- ReadType <- TooltipText <- NULL
 
+  # This can be an empty dataframe, when the data was not aligned with STAR
+  if (nrow(df) == 0) {
+    return(empty_plot(
+      message = "No read statistics available. This can happen when your sequencing run was not aligned with STAR."
+    ))
+  }
+
   # Tooltips are generated on the fly, allows cleaner download formats
-  df <- df %>%
-    filter(SampleNameUser != "All samples") %>%
+  df <- df |>
+    filter(SampleNameUser != "All samples") |>
     mutate(
       TooltipText = paste0(
         "<b>Sample name: </b>",
@@ -31,7 +40,7 @@ createReadCountPlot <- function(df) {
         sprintf("%.1f", UnassignedUnmappedReads / TotalReads * 100),
         " %"
       )
-    ) %>%
+    ) |>
     pivot_longer(
       cols = c(
         AssignedReads,
@@ -40,7 +49,7 @@ createReadCountPlot <- function(df) {
       ),
       names_to = "ReadType",
       values_to = "NumberOfReads"
-    ) %>%
+    ) |>
     mutate(
       ReadType = case_when(
         ReadType == "AssignedReads" ~ "Assigned reads",
@@ -49,7 +58,7 @@ createReadCountPlot <- function(df) {
       )
     )
 
-  # Display empty plot message, if the sample selection returns an empty dataframe
+  # This can also be an empty dataframe, when the user filtered out all samples
   if (nrow(df) == 0) {
     return(empty_plot())
   }
@@ -58,20 +67,32 @@ createReadCountPlot <- function(df) {
   p <- ggplot(
     data = df,
     aes(
-      x = SampleNameUser,
-      y = NumberOfReads,
+      x = NumberOfReads,
+      y = SampleNameUser,
       fill = ReadType,
       text = TooltipText
     )
   ) +
-    geom_bar(stat = "identity") +
-    coord_flip() +
+    geom_col() +
     labs(
-      y = "Total number of reads",
-      x = "Sample name",
+      x = "Total number of reads",
+      y = "Sample name",
       fill = ""
     ) +
     facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")
+
+  # ---- Fine tune plot for usage outside of DExploreR ----
+  if (standalone) {
+    p <- p +
+      theme(
+        panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey80"),
+        legend.position = "top",
+        strip.background = element_rect(fill = "white")
+      )
+
+    p <- add_selected_colors(p = p, selected_palette = "App colors")
+  }
 
   return(p)
 }

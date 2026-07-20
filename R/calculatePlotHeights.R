@@ -11,6 +11,7 @@
 #'
 #' @return Numeric. The calculated plot height in pixels.
 #'
+#' @export
 calculatePlotHeight <- function(
   n_samples,
   min_size = 500,
@@ -114,7 +115,7 @@ calculateDomains <- function(
   total_samples <- sum(df$n_samples)
 
   # Calculate domain height for each group
-  df <- df %>%
+  df <- df |>
     mutate(
       domain_height = n_samples / total_samples * plotting_height / total_height
     )

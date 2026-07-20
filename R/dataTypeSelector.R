@@ -20,7 +20,7 @@ dataTypeSelector <- function(config) {
       read.csv,
       check.names = FALSE,
       colClasses = "character"
-    ) %>%
+    ) |>
       bind_rows()
 
     # When mode is "internal", there is only one data set, thus, we can directly load the data set and skip the data set selection step

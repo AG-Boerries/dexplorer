@@ -1,82 +1,3 @@
-#' @title Format Data for Gene Expression Heatmap
-#'
-#' @description
-#' Prepares and formats a gene expression data frame for a heatmap. Selects top genes by median or variance, ensures user-selected genes are included, removes duplicates, z-scores expression values, and adds gene annotation columns for tooltips and downloads.
-#'
-#' @param df A data frame containing gene expression values (CPMs) and gene annotation columns.
-#'
-#' @param selected_samples Character vector of sample names to include in the heatmap.
-#'
-#' @param selected_subset_size Integer. Number of top genes to select based on median or variance.
-#'
-#' @param selected_genes Character vector of gene symbols to always include in the heatmap.
-#'
-#' @param gene_selection_by Logical. If TRUE, select top genes by variance; if FALSE, by median expression.
-#'
-#' @return A data frame formatted for \code{\link[heatmaply]{heatmaply}()}, including z-scored expression values and gene annotation columns.
-#'
-#' @export
-formatForHeatmap <- function(
-  df,
-  selected_samples,
-  selected_subset_size,
-  selected_genes,
-  gene_selection_by
-) {
-  # Define variables locally for R CMD check
-  Symbol <- .data <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- NULL
-
-  # Get the user selected genes to always include them in the heatmap
-  df_genes_selected <- if (
-    !is.null(selected_genes) && length(selected_genes) > 0
-  ) {
-    df %>% filter(Symbol %in% selected_genes)
-  } else {
-    # If selection is empty, then create an empty data frame with the same columns as `df`
-    df[0, ]
-  }
-
-  # Prepare the data frame for `heatmaply::heatmaply()`
-  # `df` contains the cpm values of all genes and samples
-  df <- df %>%
-    # Show only top n genes with highest median expression or highest variance
-    slice_max(
-      order_by = .data[[
-        if (gene_selection_by) "Rowvariance" else "Rowmedian"
-      ]],
-      n = selected_subset_size
-    ) %>%
-    # Add the user selected genes
-    bind_rows(df_genes_selected) %>%
-    # Ensure to remove duplicates, if genes were already in top n
-    distinct(Symbol, .keep_all = TRUE) %>%
-    # Use the column as row names that the user selected
-    column_to_rownames(var = "Symbol") %>%
-    # Remove unselected samples and non-numeric columns for z-scoring
-    select(all_of(selected_samples)) %>%
-    # Z-score cpm values for better depiction
-    base::t() %>%
-    scale() %>%
-    base::t() %>%
-    as.data.frame() %>%
-    rownames_to_column(var = "Symbol") %>%
-    # Re-add the further information, required for hover labels and comprehensive downloadable .csv
-    left_join(
-      df %>%
-        dplyr::select(
-          Symbol,
-          GeneID,
-          EntrezID,
-          Description,
-          Alias,
-          NCBIURL
-        ),
-      by = "Symbol"
-    )
-
-  return(df)
-}
-
 #' @title Create Interactive Gene Expression Heatmap
 #'
 #' @description
@@ -84,15 +5,15 @@ formatForHeatmap <- function(
 #'
 #' @param df A data frame formatted by \code{\link{formatForHeatmap}()}.
 #'
-#' @param id_or_sym Character. The gene identifier or symbol to use as row names in the heatmap (e.g., "GeneID", "Symbol").
+#' @param id_or_sym Character. The gene identifier (EntrezID, Ensembl ID, or even the "long" gene name) or the gene symbol to use as row names in the heatmap. Options are "Ensembl ID", "Entrez ID", "Gene symbol", and "Gene name". Defaults to "Gene symbol".
 #'
 #' @param samples_groups A data frame mapping sample names to group labels for column annotations.
 #'
-#' @param heatmap_colors Character. The color palette to use for the heatmap tiles.
+#' @param heatmap_colors Character. The color palette to use for the heatmap tiles. Defaults to "App colors".
 #'
-#' @param group_colors Character. The color palette to use for group labels.
+#' @param group_colors Character. The color palette to use for group labels. Defaults to "inferno".
 #'
-#' @param dendrogram_type Character. Dendrogram display option: "Samples", "Genes", "Samples and genes", or "None".
+#' @param dendrogram_type Character. Dendrogram display option: "Samples", "Genes", "Samples and genes", or "None". Defaults to "Samples and genes".
 #'
 #' @param heatmap_heights A list of height and domain settings for the heatmap and its components, created by \code{\link{heatmapHeights}()}.
 #'
@@ -101,21 +22,48 @@ formatForHeatmap <- function(
 #' @export
 createGeneExpressionHeatmap <- function(
   df,
-  id_or_sym,
   samples_groups,
-  heatmap_colors,
-  group_colors,
-  dendrogram_type,
-  heatmap_heights
+  heatmap_heights,
+  id_or_sym = "Gene symbol",
+  heatmap_colors = "App colors",
+  group_colors = "inferno",
+  dendrogram_type = "Samples and genes"
 ) {
   # Define variables locally for R CMD check
   SampleNameUser <- Group <- . <- NULL
 
-  # Check if the data frame fulfills the minimum requirements for a heatmap
+  # ---- Check input parameters for validity ----
+  match.arg(
+    id_or_sym,
+    choices = c("Ensembl ID", "Entrez ID", "Gene symbol", "Gene name")
+  )
+  match.arg(
+    dendrogram_type,
+    choices = c("Samples", "Genes", "Samples and genes", "None")
+  )
+  match.arg(heatmap_colors, choices = color_choices_flat)
+  match.arg(group_colors, choices = color_choices_flat)
+  stopifnot(
+    "df must be a data frame" = is.data.frame(df),
+    "samples_groups must be a data frame with columns 'SampleNameUser' and 'Group'" = is.data.frame(
+      samples_groups
+    ) &&
+      all(c("SampleNameUser", "Group") %in% colnames(samples_groups)),
+    "heatmap_heights must be a list with the names 'total_height', 'dendro_domain', 'group_domain', and 'tiles_domain'" = is.list(
+      heatmap_heights
+    ) &&
+      all(
+        c("total_height", "dendro_domain", "group_domain", "tiles_domain") %in%
+          names(heatmap_heights)
+      )
+  )
+
+  # ---- Check if the data frame fulfills the minimum requirements for a heatmap ----
   if (nrow(df) < 2 || ncol(df) < 2) {
     return(empty_plot("Please select at least\ntwo genes and two samples."))
   }
 
+  # ---- Tranlations from UI inputs to function parameters ----
   # Translate values from `input$heatmap_dendrogram` to parameters of heatmaply
   dend_translate <- c(
     "Samples" = "column",
@@ -125,27 +73,28 @@ createGeneExpressionHeatmap <- function(
   )
 
   # Translate values from `input$switch_id_symbols_heatmap` to column names in `df`
-  id_translate = list(
+  id_translate <- list(
     "Ensembl ID" = "GeneID",
     "Entrez ID" = "EntrezID",
     "Gene symbol" = "Symbol",
     "Gene name" = "Description"
   )
 
-  # Create custom color functions for heatmap and groups
+  # ---- Create custom color functions for heatmap and groups ----
   color_funs <- lapply(
     c(heatmap_colors, group_colors),
     create_heatmap_color_function
   )
 
-  # Create the expression matrix with the selected identifier as rownames
-  expression_mat <- df %>%
-    column_to_rownames(var = id_translate[[id_or_sym]]) %>%
-    select(where(is.numeric)) %>%
+  # ---- Create the expression matrix with the selected identifier as rownames ----
+  expression_mat <- df |>
+    column_to_rownames(var = id_translate[[id_or_sym]]) |>
+    select(where(is.numeric)) |>
     data.matrix(rownames.force = TRUE)
 
+  # ---- Create the hover labels ----
   # Create a data frame with gene information for hover labels
-  row_info <- df %>%
+  row_info <- df |>
     select(-where(is.numeric))
 
   # Create a data frame with sample and group information for hover labels
@@ -184,14 +133,14 @@ createGeneExpressionHeatmap <- function(
     dimnames = base::dimnames(expression_mat)
   )
 
-  # Create a data frame with group labels for the columns
-  group_labels <- samples_groups %>%
-    dplyr::select(SampleNameUser, Group) %>%
-    column_to_rownames(var = "SampleNameUser") %>%
+  # ---- Create group labels ----
+  group_labels <- samples_groups |>
+    dplyr::select(SampleNameUser, Group) |>
+    column_to_rownames(var = "SampleNameUser") |>
     # Ensure the order of the samples matches the order in the heatmap
-    .[base::colnames(expression_mat), , drop = FALSE]
+    (\(x) x[base::colnames(expression_mat), , drop = FALSE])()
 
-  # Build the heatmap
+  # ---- Build the heatmap ----
   p <- heatmaply(
     expression_mat,
     # Color of the heatmap tiles
@@ -211,7 +160,7 @@ createGeneExpressionHeatmap <- function(
     dend_hoverinfo = FALSE,
     colorbar_yanchor = "top",
     # Fix at a specific position rather towards the top of the heatmap, otherwise this floats in nirwana
-    colorbar_ypos = 1 - (350 / heatmap_heights$total_height),
+    colorbar_ypos = 1 - (400 / heatmap_heights$total_height),
     margins = c(50, 50, 20, 0),
     # Add row do heatmap containing the group labels
     ColSideColors = group_labels,
@@ -222,10 +171,11 @@ createGeneExpressionHeatmap <- function(
     Rowv = TRUE
   )
 
+  # ---- Adjust the domains of the heatmap ----
   if (!base::grepl("Samples", dendrogram_type, fixed = TRUE)) {
     # When there is no dendrogram for the columns, the axis indices are shifted
     # Domains need to be added differently
-    p <- p %>%
+    p <- p |>
       layout(
         # Heatmap tiles
         yaxis2 = list(
@@ -245,7 +195,7 @@ createGeneExpressionHeatmap <- function(
         )
       )
   } else {
-    p <- p %>%
+    p <- p |>
       layout(
         # Change the color of the y-axis title and tick labels
         # Heatmap tiles
@@ -269,30 +219,7 @@ createGeneExpressionHeatmap <- function(
       )
   }
 
-  # Some further formatting, which is independent of the domains
-  p <- p %>%
-    layout(
-      # Change the color of the xaxis title and tick labels
-      xaxis = list(
-        title = list(
-          text = "Samples",
-          font = list(color = "black", size = 16),
-          # Add some space between axis title and tick labels
-          standoff = 20
-        ),
-        tickfont = list(color = "black")
-      )
-    ) %>%
-    config(
-      modeBarButtonsToRemove = c(
-        "zoomIn2d",
-        "zoomOut2d",
-        "autoScale2d",
-        "hoverClosestCartesian",
-        "hoverCompareCartesian"
-      )
-    )
-
+  # ---- Group hover labels ----
   # Extract the index of the heatmap trace
   main_heatmap_idx <- base::which(
     vapply(
@@ -324,7 +251,41 @@ createGeneExpressionHeatmap <- function(
     samples_groups_reordered$Group
   )
 
-  # Further custom formatting of the heatmap
+  # ---- Plot fine tuning ----
+  # Via layout and config
+  p <- p |>
+    layout(
+      # Change the color of the xaxis title and tick labels
+      xaxis = list(
+        title = list(
+          text = "Samples",
+          font = list(color = "black", size = 16),
+          # Add some space between axis title and tick labels
+          standoff = 20
+        ),
+        tickfont = list(color = "black")
+      )
+    ) |>
+    config(
+      modeBarButtonsToRemove = c(
+        "zoomIn2d",
+        "zoomOut2d",
+        "autoScale2d",
+        "hoverClosestCartesian",
+        "hoverCompareCartesian"
+      )
+    ) |>
+    # Enable custom tooltip for the heatmap
+    onRender(
+      "
+        function(el, x, tooltipType) {
+          enableCustomTooltip(el, tooltipType);
+        }
+      ",
+      data = list(tooltipType = "heatmap")
+    )
+
+  # Via direct manipulation of the `plotly` object
   for (i in seq_along(p$x$data)) {
     tr <- p$x$data[[i]]
     if (identical(tr$type, "heatmap") && !is.null(tr$colorbar)) {
@@ -340,9 +301,9 @@ createGeneExpressionHeatmap <- function(
       p$x$data[[i]]$colorbar$len <- 300
     }
 
+    # Add the custom tooltip for the group row
     if (identical(tr$type, "heatmap")) {
       if (base::nrow(tr$z) == 1) {
-        # This is the custom tooltip for the group row, which is added by `heatmaply()` when using `ColSideColors`
         p$x$data[[i]]$text <- group_row_tooltips
         p$x$data[[i]]$name <- "group_row"
       }
@@ -350,17 +311,6 @@ createGeneExpressionHeatmap <- function(
     # Remove default tooltip
     p$x$data[[i]]$hoverinfo <- "none"
   }
-
-  # Enable custom tooltip
-  p <- p %>%
-    onRender(
-      "
-        function(el, x, tooltipType) {
-          enableCustomTooltip(el, tooltipType);
-        }
-      ",
-      data = list(tooltipType = "heatmap")
-    )
 
   return(p)
 }

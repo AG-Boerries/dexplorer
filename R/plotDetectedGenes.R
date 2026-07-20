@@ -5,14 +5,16 @@
 #'
 #' @param df A data frame containing columns for sample names, group assignments, and the number of recorded genes.
 #'
+#' @param standalone Logical. If `TRUE`, the plot is generated as a standalone plot. If `FALSE` (required inside DExploreR). Defaults to `FALSE`.
+#'
 #' @return A `ggplot2` object, ready for interactive use with `plotly`.
 #'
 #' @export
-createGeneCountPlot <- function(df) {
+createGeneCountPlot <- function(df, standalone = FALSE) {
   # Define variables locally for R CMD check
   Group <- SampleNameUser <- GenesRecorded <- ColorGroup <- TooltipText <- NULL
 
-  df <- df %>%
+  df <- df |>
     # Add the tooltip text
     mutate(
       # Ensure that "All samples" is the first level
@@ -43,7 +45,7 @@ createGeneCountPlot <- function(df) {
       text = TooltipText
     )
   ) +
-    geom_bar(stat = "identity") +
+    geom_col() +
     coord_flip() +
     labs(
       y = "Number of recorded genes",
@@ -52,6 +54,19 @@ createGeneCountPlot <- function(df) {
     ) +
     theme(legend.position = "none") +
     facet_wrap(vars(Group), ncol = 1, scales = "free_y", space = "free_y")
+
+  # ---- Fine tune plot for usage outside of DExploreR ----
+  if (standalone) {
+    p <- p +
+      theme(
+        panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey80"),
+        legend.position = "none",
+        strip.background = element_rect(fill = "white")
+      )
+
+    p <- add_selected_colors(p = p, selected_palette = "App colors")
+  }
 
   return(p)
 }

@@ -15,19 +15,16 @@ function enableCustomTooltip(el, tooltipType) {
   var tooltipHovered = false;
   var hideTimer = null;
 
-  el.on("plotly_hover", function(d) {
+  el.on("plotly_hover", function (d) {
     if (!d || !d.points || !d.points[0]) return;
     var pt = d.points[0];
     var html;
     // `tooltipType` can be either a string or an object with a `tooltipType` property
     // Thus, extract the actual type string
     var type = tooltipType && tooltipType.tooltipType ? tooltipType.tooltipType : tooltipType;
-    
+
     // Depending on the plot, the tooltip content is stored differently
     switch (type) {
-      case "gene_sets":
-        html = pt.customdata ? pt.customdata[0] : null;
-        break;
       case "heatmap":
         // `heatmaply::heatmaply()` stores the tooltip HTML in `text`
         if (pt.data && pt.data.name === "group_row") {
@@ -38,6 +35,7 @@ function enableCustomTooltip(el, tooltipType) {
           html = pt.text;
         }
         break;
+      case "gene_sets":
       case "top_genes":
       case "raw_data":
       case "jaccard":
@@ -90,15 +88,15 @@ function enableCustomTooltip(el, tooltipType) {
     }
   });
 
-  el.on("plotly_unhover", function() {
-    hideTimer = setTimeout(function() {
+  el.on("plotly_unhover", function () {
+    hideTimer = setTimeout(function () {
       if (!tooltipHovered) {
         tooltip.style.display = "none";
       }
     }, 100);
   });
 
-  tooltip.addEventListener("mouseenter", function() {
+  tooltip.addEventListener("mouseenter", function () {
     tooltipHovered = true;
     if (hideTimer) {
       clearTimeout(hideTimer);
@@ -107,7 +105,7 @@ function enableCustomTooltip(el, tooltipType) {
     tooltip.style.pointerEvents = "auto";
   });
 
-  tooltip.addEventListener("mouseleave", function() {
+  tooltip.addEventListener("mouseleave", function () {
     tooltipHovered = false;
     tooltip.style.display = "none";
   });

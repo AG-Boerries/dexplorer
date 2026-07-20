@@ -17,24 +17,24 @@ calculateStats <- function(Tab) {
 
   # Sum of all reads assigned to known genes
   AssignedReads <- sum(
-    Tab %>% filter(str_detect(GeneID, "^ENS")) %>% dplyr::select(-GeneID)
+    Tab |> filter(str_detect(GeneID, "^ENS")) |> dplyr::select(-GeneID)
   )
 
   # Sum of all reads
   TotalReads <- AssignedReads +
-    sum(Tab %>% filter(!str_detect(GeneID, "^ENS")) %>% dplyr::select(-GeneID))
+    sum(Tab |> filter(!str_detect(GeneID, "^ENS")) |> dplyr::select(-GeneID))
 
   # Sum of all mapped reads
   MappedReads <- AssignedReads +
     sum(
-      Tab %>%
-        filter(GeneID %in% c("N_noFeature", "N_ambiguous")) %>%
+      Tab |>
+        filter(GeneID %in% c("N_noFeature", "N_ambiguous")) |>
         dplyr::select(-GeneID)
     )
 
   # Number of recorded genes with at least one assigned read
   GenesRecorded <- nrow(
-    Tab %>% filter(str_detect(GeneID, "^ENS"), Counts > 0)
+    Tab |> filter(str_detect(GeneID, "^ENS"), Counts > 0)
   )
 
   return(
