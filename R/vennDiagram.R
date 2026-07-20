@@ -7,12 +7,18 @@
 #'
 #' @param selected_palette Character. The name of the color palette to use for region coloring.
 #'
+#' @param type Character. The type of analysis, either "DGEA" for differential gene expression analysis or "GSEA" for gene set enrichment analysis. This determines the tooltip content.
+#'
 #' @return The interactive venn diagram plot as a `plotly` object.
 #'
 #' @export
-createVennDiagram <- function(df, selected_palette) {
+createVennDiagram <- function(
+  df,
+  selected_palette = "App colors",
+  type = "DGEA"
+) {
   # Define variables locally for R CMD check
-  Symbol <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- region <- x <- y <- TooltipText <- NULL
+  Symbol <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- region <- x <- y <- TooltipText <- paths <- NULL
 
   # TODO: check what the minimum number of genes is, if too little, render the empty plot with a warning
   # The columns with the contrast names 1 and 2
@@ -48,26 +54,40 @@ createVennDiagram <- function(df, selected_palette) {
   # Calculate the fraction of display genes
   fraction_displayed <- prop_per_fail^(attempt_count - 1)
 
-  # Add the tooltips
-  df <- df |>
-    mutate(
-      TooltipText = paste0(
-        "<b><div style='font-size:16px;'>",
-        Symbol,
-        "</div></b><hr><b>Ensembl ID: </b>",
-        GeneID,
-        "<br><b>Entrez ID: </b>",
-        EntrezID,
-        "<br><b>Description: </b>",
-        Description,
-        "<br><b>Alias: </b>",
-        Alias,
-        "<hr>",
-        "For further information visit <a href='",
-        NCBIURL,
-        "' target='_blank'>NCBI</a>."
+  # Add the tooltips depending on the type of analysis
+  if (type == "DGEA") {
+    df <- df |>
+      mutate(
+        TooltipText = paste0(
+          "<b><div style='font-size:16px;'>",
+          Symbol,
+          "</div></b><hr><b>Ensembl ID: </b>",
+          GeneID,
+          "<br><b>Entrez ID: </b>",
+          EntrezID,
+          "<br><b>Description: </b>",
+          Description,
+          "<br><b>Alias: </b>",
+          Alias,
+          "<hr>",
+          "For further information visit <a href='",
+          NCBIURL,
+          "' target='_blank'>NCBI</a>."
+        )
       )
-    )
+
+    type_annotation <- "DEGs"
+  } else if (type == "GSEA") {
+    df <- df |>
+      mutate(
+        TooltipText = paste0(
+          "<b><div style='font-size:16px;'>",
+          paths,
+          "</div></b><hr>"
+        )
+      )
+    type_annotation <- "gene sets"
+  }
 
   # Construct the region labels
   left_region <- df |> filter(x == min(x)) |> pull(region) |> unique()
@@ -81,19 +101,25 @@ createVennDiagram <- function(df, selected_palette) {
     left_region,
     " (",
     round(sum(df$region == left_region) / fraction_displayed),
-    " DEGs)"
+    " ",
+    type_annotation,
+    ")"
   )
   right_region_label <- paste0(
     right_region,
     " (",
     round(sum(df$region == right_region) / fraction_displayed),
-    " DEGs)"
+    " ",
+    type_annotation,
+    ")"
   )
   middle_region_label <- paste0(
     middle_region,
     " (",
     round(sum(df |> pull(1) == df |> pull(2)) / fraction_displayed),
-    " DEGs)"
+    " ",
+    type_annotation,
+    ")"
   )
 
   # Extract family and get a vector of colors

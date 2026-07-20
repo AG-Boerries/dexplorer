@@ -87,7 +87,7 @@ formatDGEAContrastIntersection <- function(
           # Remove the original contrast columns
           dplyr::select(-c(Contrast.a, Contrast.b)) |>
           # Sort genes, so that differentially expressed genes appear on top
-          arrange(desc(.[2]), desc(.[3])) |>
+          arrange(across(c(2, 3), desc)) |>
           # Add further gene information for tooltip
           left_join(
             df |>

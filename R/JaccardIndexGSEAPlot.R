@@ -1,24 +1,24 @@
-#' @title Create DGEA Contrast Intersection Plot
+#' @title Create GSEA Contrast Intersection Plot
 #'
 #' @description
-#' Generates an interactive `plotly` visualization of Jaccard indices for all pairs of contrasts in a differential gene expression analysis (DGEA). The plot displays the overlap of differentially expressed genes (DEGs) between contrasts, with dot size and color representing the Jaccard index. Tooltips provide detailed comparison information, and facets show results for different regulation directions. Dots are clickable to extract gene lists and venn diagrams (as produced by \code{\link{createVennDiagram}()} for the selected comparison.
+#' Generates an interactive `plotly` visualization of Jaccard indices for all pairs of contrasts in a gene set enrichment analysis (GSEA). The plot displays the overlap of enriched gene sets between contrasts, with dot size and color representing the Jaccard index. Tooltips provide detailed comparison information, and facets show results for different regulation directions.
 #'
-#' @param df A data frame as returned by \code{\link{formatDGEAContrastIntersection}()}, summarizing Jaccard index results for each pair of contrasts and direction.
+#' @param df A data frame as returned by \code{\link{formatGSEAContrastIntersection}()}, summarizing Jaccard index results for each pair of contrasts and direction.
 #'
-#' @param selected_palette Character. The name of the color palette to use for the plot. Defaults to "App colors". See \code{print(color_choices)} for available options.
+#' @param selected_palette Character. The name of the color palette to use for the plot.
 #'
 #' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
-#' @return An interactive dotplot for Jaccard indicies of up- and downregulated genes as a `plotly` object.
+#' @return An interactive dotplot for Jaccard indicies for enriched gene sets by contrasts as a `plotly` object.
 #'
 #' @export
-createDGEAContrastIntersectionPlot <- function(
+createGSEAContrastIntersectionPlot <- function(
   df,
   selected_palette = "App colors",
   standalone = FALSE
 ) {
   # Define variables locally for R CMD check
-  Seta <- Setb <- JI <- DEG_both_sets <- DEG_total <- Direction <- TooltipText <- CustomData <- NULL
+  Seta <- Setb <- JI <- Pathways_both_sets <- Pathways_total <- Direction <- TooltipText <- CustomData <- NULL
 
   # If data frame is empty, then return an empty plot with a message
   if (all(dim(df) == 0)) {
@@ -27,15 +27,14 @@ createDGEAContrastIntersectionPlot <- function(
 
   # Create new labels for the facets
   facet_labels <- c(
-    up = "Upregulated\ngenes",
-    down = "Downregulated\ngenes",
-    both = "Up- and downregulated\ngenes"
+    up = "Upregulated\ngene sets",
+    down = "Downregulated\ngene sets",
+    both = "Up- and downregulated\ngene sets"
   )
-
   # ---- Data preparation ----
   df <- df |>
-    # Add tooltipp text just before plotting to avoid them being contained in the data download
     mutate(
+      # Add tooltip just before plotting to avoid this in the downloaded data
       TooltipText = paste0(
         "<b><div style='font-size:16px; line-height:1.3;'>Comparison: </b><br>",
         Seta,
@@ -43,12 +42,11 @@ createDGEAContrastIntersectionPlot <- function(
         Setb,
         "</div><hr><b>Jaccard index: </b>",
         sprintf("%.3f", JI),
-        "<br><b>DEGs contained in both: </b>",
-        DEG_both_sets,
-        "<br><b>Total DEGs: </b>",
-        DEG_total
+        "<br><b>Gene sets enriched in both: </b>",
+        Pathways_both_sets,
+        "<br><b>Total gene sets: </b>",
+        Pathways_total
       ),
-      # Add genes and direction to custom data for modal
       CustomData = paste0(Seta, "|", Setb, "|", Direction)
     )
 
@@ -56,8 +54,8 @@ createDGEAContrastIntersectionPlot <- function(
   p <- ggplot(
     data = df,
     aes(
-      x = DEG_total,
-      y = DEG_both_sets,
+      x = Pathways_total,
+      y = Pathways_both_sets,
       color = JI,
       size = JI,
       text = TooltipText,
@@ -73,8 +71,8 @@ createDGEAContrastIntersectionPlot <- function(
     ) +
     facet_wrap(~Direction, labeller = as_labeller(facet_labels)) +
     labs(
-      x = "Total DEGs in both contrasts (union)",
-      y = "DEGs contained in both contrasts (intersection)",
+      x = "Total gene sets in both contrasts (union)",
+      y = "Gene sets contained in both contrasts (intersection)",
       size = "Jaccard index",
       color = "Jaccard index"
     )
@@ -84,7 +82,7 @@ createDGEAContrastIntersectionPlot <- function(
 
   # ---- Convert to plotly ----
   if (!standalone) {
-    p <- ggplotly(p, tooltip = "TooltipText", source = "dgea_jaccard") |>
+    p <- ggplotly(p, tooltip = "TooltipText", source = "gsea_jaccard") |>
       # Reduce the modebar to only essential tools
       config(
         displaylogo = FALSE,

@@ -28,7 +28,7 @@
 | plotControls.R          | no action required     |
 | calculatePlotHeights.R           | no action required     |
 | mod_plotJaccardIndexDGEA.R  | split into two files and updated    |
-| mod_plotJaccardIndexGSEA.R  | NA     |
+| mod_plotJaccardIndexGSEA.R  | split into two files and updated     |
 | processUploadedGenes.R  | updated     |
 | readCountDistribution.R | updated     |
 | readCountPlot.R            | updated    |
@@ -37,7 +37,7 @@
 | mod_tabHeaders.R            | merged with subTabLayout     |
 | mod_topDEGs.R               | split into two files     |
 | mod_topGeneSets.R           | split into two files     |
-| mod_vennDiagramDEGs.R       | NA     |
+| vennDiagram.R       | updated     |
 | volcanoPlot.R           | updated     |
 | prepareDfs.R                | NA     |
 | runDExploreR.R              | no action required     |

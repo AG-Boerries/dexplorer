@@ -10,7 +10,7 @@
 #'
 app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
-  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSDescription <- GSURL <- GSName <- GeneID <- EnrichmentScore <- Pathway <- NULL
+  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSDescription <- GSURL <- GSName <- GeneID <- EnrichmentScore <- Pathway <- Pathways <- NULL
 
   # Increase the maximum file upload size to 50 MB
   # This is necessary for user-prepared RDS files
@@ -1116,7 +1116,8 @@ app_server <- function(input, output, session, config) {
       venn_plot <- reactive({
         createVennDiagram(
           df = df,
-          selected_palette = input$color_select_venn_modal
+          selected_palette = input$color_select_venn_modal,
+          type = "DGEA"
         )
       })
 
@@ -1705,8 +1706,188 @@ app_server <- function(input, output, session, config) {
 
   output$download_data_contrast_intersection_sets <- dataDownload(
     name = "Contrast_intersection_GSEA",
-    data = df_gsea_ci(),
+    data = df_gsea_ci() |> select(-Pathways),
     authors = authors()
+  )
+
+  observeEvent(
+    event_data(event = "plotly_click", source = "gsea_jaccard"),
+    {
+      # Extract the custom data from the clicked data point
+      clicked_ji <- event_data(
+        event = "plotly_click",
+        source = "gsea_jaccard"
+      )$customdata
+
+      # The circle of the maxium JI is clickable but has no `customdata`
+      # In this case, do nothing
+      if (is.null(clicked_ji)) {
+        return()
+      }
+
+      # Separate the the string by the defined delimiter in `R/plot_dgea_jaccard.R`
+      clicked_ji <- str_split_1(clicked_ji, "\\|")
+
+      # Filter the data frame for the clicked set and direction and pull the data frame containing the genes
+      # Use isolate the prevent data table from requesting columns from previous modal
+      df <- isolate({
+        df_gsea_ci() |>
+          filter(
+            Seta == clicked_ji[1],
+            Setb == clicked_ji[2],
+            Direction == clicked_ji[3]
+          ) |>
+          pull(Pathways) |>
+          as.data.frame()
+      })
+
+      # Repair the column names, remove the dots
+      colnames(df) <- gsub("\\.", " ", colnames(df))
+
+      # Get the data for the .csv download
+      output$download_dgea_ji <- dataDownload(
+        name = "Intersecting_genes",
+        data = df,
+        authors = authors()
+      )
+
+      venn_plot <- reactive({
+        createVennDiagram(
+          df = df,
+          selected_palette = input$color_select_venn_modal,
+          type = "GSEA"
+        )
+      })
+
+      # Create the Venn diagram
+      output$venn_plot <- renderPlotly({
+        venn_plot()
+      })
+
+      # Create the list of genes as a data table
+      output$gene_table <- renderDT(
+        df,
+        rownames = FALSE,
+        # Avoid server site processing, to prevent the warning in the UI (missing columns)
+        # However, this can create warnings in the console when data is too big
+        # Maybe this can also crash
+        server = FALSE,
+        selection = "single",
+        escape = FALSE,
+        # options = list(
+        #   # Hide the NCBIURL column (index 7 in 0-based JS)
+        #   columnDefs = list(list(visible = FALSE, targets = 7)),
+        #   # Go to NCBI's gene page, when row clicked
+        #   rowCallback = JS("visitNCBI"),
+        #   # Increase default number of rows
+        #   pageLength = 100
+        # )
+      )
+
+      # After clicking and processing, show the modal with the corresponding data
+      observe({
+        req(df)
+        showModal(modalDialog(
+          title = HTML(paste0(
+            "DEGs at the intersection of <i>",
+            colnames(df)[1],
+            "</i> and <i>",
+            colnames(df)[2],
+            "</i>"
+          )),
+          easyClose = TRUE,
+          footer = NULL,
+          class = "enlarged-modal",
+          tagList(
+            tags$i(paste0(
+              "You are viewing ",
+              ifelse(
+                clicked_ji[3] == "both",
+                "up and down regulated genes.",
+                paste0(clicked_ji[3], "-regulated genes.")
+              )
+            )),
+            tags$hr()
+          ),
+          tabsetPanel(
+            tabPanel(
+              "Venn diagram",
+              div(
+                virtualSelectInput(
+                  inputId = "color_select_venn_modal",
+                  label = "Select color palette:",
+                  # The color choices are defined in `controls_colors.R`
+                  choices = color_choices,
+                  selected = "App colors",
+                  search = TRUE,
+                  showSelectedOptionsFirst = TRUE,
+                  # Add custom renderers for the colors, which include images of the color scales
+                  labelRenderer = "colorsWithIconChoice",
+                  selectedLabelRenderer = "colorsWithIconSelected"
+                ),
+                actionButton(
+                  inputId = "open_custom_download_modal_venn",
+                  label = "Download plot",
+                  class = "custom-button",
+                  icon = icon("download"),
+                  width = "155px"
+                ),
+                class = "tab-header-modal"
+              ),
+              hr(),
+              plotlyOutput("venn_plot", height = "450px")
+            ),
+            tabPanel(
+              "Gene list",
+              div(
+                downloadButton(
+                  outputId = "download_dgea_ji",
+                  label = "Download data",
+                  class = "custom-button"
+                ),
+                class = "tab-header-modal"
+              ),
+              hr(),
+              DTOutput("gene_table")
+            )
+          )
+        ))
+      })
+
+      # Open the custom modal for downloads from modals
+      # This needs special treatment as usually shiny only allows one modal to be open at a time
+      observeEvent(input$open_custom_download_modal_venn, {
+        output$custom_modal_ui_venn <- renderUI({
+          downloadSettingsModal(id = "venn")
+        })
+        session$sendCustomMessage("show-custom-modal-venn", list())
+      })
+
+      # Download handler for plot downloads from the modal
+      output$download_plot_venn_modal <- downloadHandler(
+        filename = function() {
+          # Create the name of the downloaded file similar to the data downloads
+          paste0(
+            "Venn_diagram_",
+            authors(),
+            "_",
+            Sys.Date(),
+            ".",
+            input$plot_format_venn
+          )
+        },
+        content = function(file) {
+          # Use `save_image()` from plotly to save the plot in the desired format
+          # This depends on python, thus, usage of `reticulate` and `kaleido`
+          save_image(
+            p = eval(parse(text = "venn_plot()")),
+            file = file,
+            width = input$plot_width_venn,
+            height = input$plot_height_venn
+          )
+        }
+      )
+    }
   )
 
   ###################################################################################################

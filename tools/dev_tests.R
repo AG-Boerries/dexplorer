@@ -119,3 +119,8 @@ GeneSetsPlot(
   ),
   standalone = TRUE
 )
+
+# ---- Jaccard index GSEA ----
+df <- formatGSEAContrastIntersection(df = df2$GeneSets)
+
+createGSEAContrastIntersectionPlot(df = df)
