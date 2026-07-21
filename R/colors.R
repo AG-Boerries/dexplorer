@@ -140,9 +140,9 @@ get_discrete_palette <- function(family, palette, n, color_scale_order = TRUE) {
     max_n <- RColorBrewer::brewer.pal.info[palette, "maxcolors"]
     base <- brewer.pal(min(n, max_n), palette)
     if (n > max_n) {
-      colorRampPalette(reverse_order(base))(n)
+      return(colorRampPalette(reverse_order(base))(n))
     } else {
-      reverse_order(base)
+      return(reverse_order(base))
     }
   }
 
@@ -154,9 +154,9 @@ get_discrete_palette <- function(family, palette, n, color_scale_order = TRUE) {
       list(name = palette, n = min(n, max_n))
     ))
     if (n > max_n) {
-      colorRampPalette(reverse_order(base))(n)
+      return(colorRampPalette(reverse_order(base))(n))
     } else {
-      reverse_order(base)
+      return(reverse_order(base))
     }
   }
 }

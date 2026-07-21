@@ -53,6 +53,7 @@ createPCAPlot(
   selected_palette = "Set1",
   group_overlay = "Ellipse",
   standalone = TRUE
+  # color_scale_order = FALSE
 )
 
 # ---- Heatmap ----
@@ -67,7 +68,8 @@ createGeneExpressionHeatmap(
   heatmap_heights = heatmapHeights(
     n_genes = nrow(df_heatmap),
     dendro_type = "Samples and genes"
-  )
+  ),
+  color_scale_order = FALSE
 )
 
 # ---- Top DEGs bar plot ----
@@ -123,4 +125,4 @@ GeneSetsPlot(
 # ---- Jaccard index GSEA ----
 df <- formatGSEAContrastIntersection(df = df2$GeneSets)
 
-createGSEAContrastIntersectionPlot(df = df)
+createGSEAContrastIntersectionPlot(df = df, standalone = TRUE)
