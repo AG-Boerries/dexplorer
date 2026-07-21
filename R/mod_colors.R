@@ -66,7 +66,8 @@ color_choices <- list(
     "turbo"
   ),
   "Wes Anderson" = names(wesanderson::wes_palettes),
-  "RColorBrewer" = rownames(RColorBrewer::brewer.pal.info)
+  "RColorBrewer" = rownames(RColorBrewer::brewer.pal.info),
+  "LTC" = names(ltc::palettes)
 )
 
 # Flatten color choices
@@ -123,10 +124,20 @@ get_discrete_palette <- function(family, palette, n) {
   }
 
   if (family == "RColorBrewer") {
-    # Check if the chosen plalette can offer enough colors
+    # Check if the chosen palette can offer enough colors
     # If not use `colorRampPalette()` to extend it
     max_n <- RColorBrewer::brewer.pal.info[palette, "maxcolors"]
     base <- brewer.pal(min(n, max_n), palette)
+    if (n > max_n) colorRampPalette(base)(n) else base
+  }
+
+  if (family == "LTC") {
+    # Need to run do.call() because ltc::ltc() does accept color palettes in variables pass to name
+    max_n <- length(do.call(ltc::ltc, list(name = palette)))
+    base <- as.character(do.call(
+      ltc::ltc,
+      list(name = palette, n = min(n, max_n))
+    ))
     if (n > max_n) colorRampPalette(base)(n) else base
   }
 }
@@ -165,6 +176,8 @@ get_continuous_scale <- function(family, palette, aes) {
     scale_fun(palette = wesanderson::wes_palettes[[palette]])
   } else if (family == "RColorBrewer") {
     scale_fun(palette = palette)
+  } else if (family == "LTC") {
+    scale_fun(palette = as.character(do.call(ltc::ltc, list(name = palette))))
   }
 }
 
@@ -279,6 +292,8 @@ create_heatmap_color_function <- function(selected_colors) {
     cols <- wes_palette(selected_colors, 3, type = "continuous")
   } else if (ht_color_family == "RColorBrewer") {
     cols <- brewer.pal(3, selected_colors)
+  } else if (ht_color_family == "LTC") {
+    cols <- as.character(do.call(ltc::ltc, list(name = selected_colors, n = 3)))
   }
 
   colorRampPalette(cols)
