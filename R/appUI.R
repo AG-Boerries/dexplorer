@@ -272,6 +272,15 @@ app_ui <- function(config) {
               ),
               # Further controls are required for the heatmap
               further_controls = div(
+                HTML(
+                  "<span class='switch-input-label'>Order of colors:</span>"
+                ),
+                switchInput(
+                  inputId = "color_scale_order_heatmap",
+                  onLabel = "Standard",
+                  offLabel = "Reversed",
+                  value = TRUE
+                ),
                 virtualSelectInput(
                   inputId = "color_select_heatmap_groups",
                   label = "Select color palette for groups:",
@@ -366,6 +375,15 @@ app_ui <- function(config) {
               ),
               remove_sample_selection = TRUE,
               further_controls = div(
+                HTML(
+                  "<span class='switch-input-label'>Order of colors:</span>"
+                ),
+                switchInput(
+                  inputId = "color_scale_order_top_genes",
+                  onLabel = "Standard",
+                  offLabel = "Reversed",
+                  value = TRUE
+                ),
                 virtualSelectInput(
                   inputId = "top_genes_contrast_select",
                   label = "Select contrast(s):",
@@ -532,6 +550,15 @@ app_ui <- function(config) {
               ),
               remove_sample_selection = TRUE,
               further_controls = div(
+                HTML(
+                  "<span class='switch-input-label'>Order of colors:</span>"
+                ),
+                switchInput(
+                  inputId = "color_scale_order_jaccard_dgea",
+                  onLabel = "Standard",
+                  offLabel = "Reversed",
+                  value = TRUE
+                ),
                 sliderTextInput(
                   inputId = "contrast_intersection_p_threshold",
                   label = "Set p-value threshold:",
@@ -596,6 +623,15 @@ app_ui <- function(config) {
               ),
               remove_sample_selection = TRUE,
               further_controls = div(
+                HTML(
+                  "<span class='switch-input-label'>Order of colors:</span>"
+                ),
+                switchInput(
+                  inputId = "color_scale_order_top_gene_sets",
+                  onLabel = "Standard",
+                  offLabel = "Reversed",
+                  value = TRUE
+                ),
                 sliderInput(
                   inputId = "n_top_gene_sets",
                   label = "Define number of top genes sets:",
@@ -665,6 +701,17 @@ app_ui <- function(config) {
                 )
               ),
               remove_sample_selection = TRUE,
+              further_controls = div(
+                HTML(
+                  "<span class='switch-input-label'>Order of colors:</span>"
+                ),
+                switchInput(
+                  inputId = "color_scale_order_jaccard_gsea",
+                  onLabel = "Standard",
+                  offLabel = "Reversed",
+                  value = TRUE
+                )
+              ),
               main_content = plotlyOutput(
                 "jaccard_gsea",
                 height = "700px",

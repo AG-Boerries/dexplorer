@@ -9,13 +9,16 @@
 #'
 #' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return A bar plot as a `ggplot2` object if `standalone = TRUE`, or an interactive `plotly` object if `standalone = FALSE`.
 #'
 #' @export
 createTopDEGsPlot <- function(
   df,
   selected_palette = "App colors",
-  standalone = FALSE
+  standalone = FALSE,
+  color_scale_order = TRUE
 ) {
   # Define variables locally for R CMD check
   Symbol <- Log2FC <- LogPValAdj <- GeneID <- EntrezID <- Description <- Alias <- NCBIURL <- TooltipText <- NULL
@@ -92,7 +95,11 @@ createTopDEGsPlot <- function(
     scale_y_reordered()
 
   # Add the selected color scale
-  p <- add_selected_colors(p = p, selected_palette = selected_palette)
+  p <- add_selected_colors(
+    p = p,
+    selected_palette = selected_palette,
+    color_scale_order = color_scale_order
+  )
 
   if (!standalone) {
     # ---- Convert to plotly ----
@@ -137,13 +144,7 @@ createTopDEGsPlot <- function(
       }
     }
   } else {
-    # Add a white background and grey grid lines for the standalone plot
-    p <- p +
-      theme(
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(color = "grey80"),
-        strip.background = element_rect(fill = "white"),
-      )
+    p <- standalone_plot_style(p)
   }
 
   return(p)

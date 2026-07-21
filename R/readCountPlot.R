@@ -83,13 +83,7 @@ createReadCountPlot <- function(df, standalone = FALSE) {
 
   # ---- Fine tune plot for usage outside of DExploreR ----
   if (standalone) {
-    p <- p +
-      theme(
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(color = "grey80"),
-        legend.position = "top",
-        strip.background = element_rect(fill = "white")
-      )
+    p <- standalone_plot_style(p) + theme(legend.position = "top")
 
     p <- add_selected_colors(p = p, selected_palette = "App colors")
   }

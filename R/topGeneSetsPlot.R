@@ -9,13 +9,16 @@
 #'
 #' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return The dot plot, either as a `ggplot2` object (if `standalone = TRUE`) or a `plotly` object (if `standalone = FALSE`).
 #'
 #' @export
 GeneSetsPlot <- function(
   df,
   selected_palette = "App colors",
-  standalone = FALSE
+  standalone = FALSE,
+  color_scale_order = TRUE
 ) {
   # Define variables locally for R CMD check
   Contrast <- Pathway <- GSDescription <- GSURL <- EnrichmentScore <- SetSize <- TooltipText <- PVal <- data <- NULL
@@ -100,7 +103,11 @@ GeneSetsPlot <- function(
     scale_y_reordered()
 
   # ---- Add the selected colors ----
-  p <- add_selected_colors(p = p, selected_palette = selected_palette)
+  p <- add_selected_colors(
+    p = p,
+    selected_palette = selected_palette,
+    color_scale_order = color_scale_order
+  )
 
   # ---- Convert to ploltly ----
   if (!standalone) {
@@ -158,13 +165,7 @@ GeneSetsPlot <- function(
     }
     # ---- Some styling for the ggplot outside of the app ----
   } else {
-    # Add a white background and grey grid lines for the standalone plot
-    p <- p +
-      theme(
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(color = "grey80"),
-        strip.background = element_rect(fill = "white"),
-      ) +
+    p <- standalone_plot_style(p) +
       labs(size = "Gene set size")
 
     message(

@@ -11,7 +11,8 @@ createPCAPlot(
   pc_y = "PC2",
   selected_palette = "App colors",
   group_overlay = "Convex hull",
-  standalone = FALSE
+  standalone = FALSE,
+  color_scale_order = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ createPCAPlot(
 \item{group_overlay}{Character. Overlay type for group visualization: "Ellipse" for ellipses with 95 \% confidence interval, "Convex hull" for convex hulls, or any of  "none", "no overlay", "remove overlay", "Don't overlay" or "w/o" to hide the group overlay. Default is "Convex hull".}
 
 \item{standalone}{Logical. If \code{TRUE}, the PCA plot is generated as a standalone plot, which is not interactive. If \code{FALSE} (required inside DExploreR), the plot is interactive via \code{plotly}. Defaults to \code{FALSE}.}
+
+\item{color_scale_order}{Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.}
 }
 \value{
 The PCA plot as \code{ggplot2} object.

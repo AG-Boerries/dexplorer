@@ -17,6 +17,8 @@
 #'
 #' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return The PCA plot as `ggplot2` object.
 #'
 #' @export
@@ -27,7 +29,8 @@ createPCAPlot <- function(
   pc_y = "PC2",
   selected_palette = "App colors",
   group_overlay = "Convex hull",
-  standalone = FALSE
+  standalone = FALSE,
+  color_scale_order = TRUE
 ) {
   # Define variables locally for R CMD check
   SampleNameUser <- Group <- .data <- TooltipText <- NULL
@@ -135,14 +138,18 @@ createPCAPlot <- function(
   # This ensures in the interactive plot that the points are on top of the ellipses or convex hulls
   # And that the hovers work as expected
   p <- p +
-    geom_point_quiet(
+    geom_point(
       aes(text = TooltipText),
       fill = NA,
       show.legend = TRUE
     )
 
   # ---- Add the selected colors ----
-  p <- add_selected_colors(p = p, selected_palette = selected_palette)
+  p <- add_selected_colors(
+    p = p,
+    selected_palette = selected_palette,
+    color_scale_order = color_scale_order
+  )
 
   if (!standalone) {
     p <- ggplotly(p, tooltip = "text") |>
@@ -183,12 +190,7 @@ createPCAPlot <- function(
       p$x$data[[i]]$hoverinfo <- "none"
     }
   } else {
-    # Add a white background and grey grid lines for the standalone plot
-    p <- p +
-      theme(
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(color = "grey80")
-      )
+    p <- standalone_plot_style(p)
   }
 
   return(p)

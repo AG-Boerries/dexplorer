@@ -14,6 +14,15 @@ colors_for_color_picker <- function(name) {
     RColorBrewer::brewer.pal(4, name)
   } else if (name == "App colors") {
     get_theme_colors()
+  } else if (name %in% names(ltc::palettes)) {
+    # The trio color palettes obviously have only 3 values
+    # Extrapolate in these cases
+    max_n <- length(do.call(ltc::ltc, list(name = name)))
+    base <- as.character(do.call(
+      ltc::ltc,
+      list(name = name, n = min(4, max_n))
+    ))
+    if (4 > max_n) colorRampPalette(base)(4) else base
   }
 }
 
@@ -82,7 +91,7 @@ for (name in names(image_sizes_choice_selected)) {
       ),
       collapse = ","
     )
-  ) %>%
+  ) |>
     writeLines(
       con = paste0(
         "inst/dexplorer_assets/colorPaletteChoicesIcons",
