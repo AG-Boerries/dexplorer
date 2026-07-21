@@ -11,7 +11,7 @@ Ask if you need clarification. Don't assume anything, make sure you derive infor
 ### Understand
 You should read the entire code base and understand it and how the functions relate to each other.
 
-1. I want you to derive a consensus for function documentation and code comments, which we will apply together, when we go over all the files again. So you might want to turn this into a skill to be used later.
+1. I want you to derive a consensus for function documentation and code comments, which we will apply together, when we go over all the files again. So you might want to turn this into a skill to be used later. Check also the links to functions of other packages that are used and if they don't exist, add them.
 2. Flag sections that are not DRY, so that we can address them later.
 3. Flag sections, where we can change/optimize code to minimize package dependencies.
 

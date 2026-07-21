@@ -104,23 +104,34 @@ get_color_family <- function(selected_palette) {
 #'
 #' @param n Integer. Number of colors to return.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return Character vector of color hex codes.
 #'
 #' @export
-get_discrete_palette <- function(family, palette, n) {
+get_discrete_palette <- function(family, palette, n, color_scale_order = TRUE) {
+  reverse_order <- function(x) if (color_scale_order) x else rev(x)
+
   if (family == "App theme") {
-    return(get_theme_colors(n_values = n))
+    return(reverse_order(get_theme_colors(n_values = n)))
   }
 
   if (family == "Viridis") {
-    return(viridis(n, option = palette))
+    return(viridis(
+      n,
+      option = palette,
+      direction = if (color_scale_order) 1 else -1
+    ))
   }
 
   if (family == "Wes Anderson") {
     # Most of these palettes have 4 to 5 colors only
     # `wes_palette()` with `type = "continuous"` can inherently offer more values than the specified scale
     # `type = "discrete"`, which is required here, cannot, thus use workaround with `colorRampPalette()`
-    return(colorRampPalette(wes_palette(palette, type = "discrete"))(n))
+    return(colorRampPalette(reverse_order(wes_palette(
+      palette,
+      type = "discrete"
+    )))(n))
   }
 
   if (family == "RColorBrewer") {
@@ -128,7 +139,11 @@ get_discrete_palette <- function(family, palette, n) {
     # If not use `colorRampPalette()` to extend it
     max_n <- RColorBrewer::brewer.pal.info[palette, "maxcolors"]
     base <- brewer.pal(min(n, max_n), palette)
-    if (n > max_n) colorRampPalette(base)(n) else base
+    if (n > max_n) {
+      colorRampPalette(reverse_order(base))(n)
+    } else {
+      reverse_order(base)
+    }
   }
 
   if (family == "LTC") {
@@ -138,7 +153,11 @@ get_discrete_palette <- function(family, palette, n) {
       ltc::ltc,
       list(name = palette, n = min(n, max_n))
     ))
-    if (n > max_n) colorRampPalette(base)(n) else base
+    if (n > max_n) {
+      colorRampPalette(reverse_order(base))(n)
+    } else {
+      reverse_order(base)
+    }
   }
 }
 
@@ -153,9 +172,17 @@ get_discrete_palette <- function(family, palette, n) {
 #'
 #' @param aes Character. The mapped aesthetic ("fill" or "colour").
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return A `ggplot2` scale object.
+#'
 #' @export
-get_continuous_scale <- function(family, palette, aes) {
+get_continuous_scale <- function(
+  family,
+  palette,
+  aes,
+  color_scale_order = TRUE
+) {
   # Select the correct ggplot2 scale function based on the mapped aesthetic
   scale_fun <- if (aes == "fill") {
     scale_fill_continuous
@@ -163,21 +190,40 @@ get_continuous_scale <- function(family, palette, aes) {
     scale_color_continuous
   }
 
+  # Guard against NULL/empty input (e.g. uninitialised Shiny inputs)
+  if (length(color_scale_order) == 0 || is.null(color_scale_order)) {
+    color_scale_order <- TRUE
+  }
+
+  reverse_order <- function(x) if (color_scale_order) x else rev(x)
+
   if (family == "App theme") {
-    scale_fun(palette = get_theme_colors(c(4, 3, 1)))
+    scale_fun(palette = reverse_order(get_theme_colors(c(4, 3, 1))))
   } else if (family == "Viridis") {
     # Viridis has its own continuous scale functions
     if (aes == "fill") {
-      ggplot2::scale_fill_viridis_c(option = palette)
+      ggplot2::scale_fill_viridis_c(
+        option = palette,
+        direction = if (color_scale_order) 1 else -1
+      )
     } else {
-      ggplot2::scale_color_viridis_c(option = palette)
+      ggplot2::scale_color_viridis_c(
+        option = palette,
+        direction = if (color_scale_order) 1 else -1
+      )
     }
   } else if (family == "Wes Anderson") {
-    scale_fun(palette = wesanderson::wes_palettes[[palette]])
+    scale_fun(palette = reverse_order(wesanderson::wes_palettes[[palette]]))
   } else if (family == "RColorBrewer") {
-    scale_fun(palette = palette)
+    n <- RColorBrewer::brewer.pal.info[palette, "maxcolors"]
+    scale_fun(palette = reverse_order(RColorBrewer::brewer.pal(n = n, palette)))
   } else if (family == "LTC") {
-    scale_fun(palette = as.character(do.call(ltc::ltc, list(name = palette))))
+    scale_fun(
+      palette = reverse_order(as.character(do.call(
+        ltc::ltc,
+        list(name = palette)
+      )))
+    )
   }
 }
 
@@ -194,8 +240,15 @@ get_continuous_scale <- function(family, palette, aes) {
 #'
 #' @return A `ggplot` object with the selected color scales applied.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @export
-add_selected_colors <- function(p, selected_palette, color_by = NULL) {
+add_selected_colors <- function(
+  p,
+  selected_palette,
+  color_by = NULL,
+  color_scale_order = TRUE
+) {
   # When there is no mapping, return the plot as is
   # Important for app start up
   if (length(p$mapping) == 0) {
@@ -248,13 +301,15 @@ add_selected_colors <- function(p, selected_palette, color_by = NULL) {
           get_continuous_scale(
             family = selected_family,
             palette = selected_palette,
-            aes = row$aes
+            aes = row$aes,
+            color_scale_order = color_scale_order
           )
       } else {
         cols <- get_discrete_palette(
           family = selected_family,
           palette = selected_palette,
-          n = row$aes_n
+          n = row$aes_n,
+          color_scale_order = color_scale_order
         )
 
         p +
@@ -278,10 +333,15 @@ add_selected_colors <- function(p, selected_palette, color_by = NULL) {
 #'
 #' @param selected_colors Character. The name of the selected color palette.
 #'
+#' @param standard_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return A function that generates a color palette of arbitrary length.
 #'
 #' @export
-create_heatmap_color_function <- function(selected_colors) {
+create_heatmap_color_function <- function(
+  selected_colors,
+  standard_order = TRUE
+) {
   ht_color_family <- get_color_family(selected_colors)
 
   if (ht_color_family == "App theme") {
@@ -294,6 +354,11 @@ create_heatmap_color_function <- function(selected_colors) {
     cols <- brewer.pal(3, selected_colors)
   } else if (ht_color_family == "LTC") {
     cols <- as.character(do.call(ltc::ltc, list(name = selected_colors, n = 3)))
+  }
+
+  # Reverse order of colors, if desired
+  if (!standard_order) {
+    cols <- rev(cols)
   }
 
   colorRampPalette(cols)

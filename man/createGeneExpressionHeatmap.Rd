@@ -11,7 +11,8 @@ createGeneExpressionHeatmap(
   id_or_sym = "Gene symbol",
   heatmap_colors = "App colors",
   group_colors = "inferno",
-  dendrogram_type = "Samples and genes"
+  dendrogram_type = "Samples and genes",
+  color_scale_order = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ createGeneExpressionHeatmap(
 \item{group_colors}{Character. The color palette to use for group labels. Defaults to "inferno".}
 
 \item{dendrogram_type}{Character. Dendrogram display option: "Samples", "Genes", "Samples and genes", or "None". Defaults to "Samples and genes".}
+
+\item{color_scale_order}{Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.}
 }
 \value{
 The interactive heatmap as a \code{plotly} object.

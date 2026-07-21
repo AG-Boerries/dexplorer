@@ -40,3 +40,21 @@ empty_plot <- function(message = "Nothing to display ...") {
 
   return(p)
 }
+
+#' @title Adjust the plot style for standalone plots
+#'
+#' @description
+#' Some styling for standalone plots, i.e. for plots used outside of DExploreR. Add white background, grey grid lines and remove the strip text background.
+#'
+#' @param p A `ggplot` object to which the standalone style will be applied.
+#'
+#' @return A styled `ggplot` object.
+#'
+standalone_plot_style <- function(p) {
+  p +
+    theme(
+      panel.background = element_rect(fill = "white"),
+      panel.grid.major = element_line(color = "grey80"),
+      strip.background = element_rect(fill = "white"),
+    )
+}

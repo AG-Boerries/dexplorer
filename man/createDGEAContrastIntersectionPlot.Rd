@@ -7,7 +7,8 @@
 createDGEAContrastIntersectionPlot(
   df,
   selected_palette = "App colors",
-  standalone = FALSE
+  standalone = FALSE,
+  color_scale_order = TRUE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ createDGEAContrastIntersectionPlot(
 \item{selected_palette}{Character. The name of the color palette to use for the plot. Defaults to "App colors". See \code{print(color_choices)} for available options.}
 
 \item{standalone}{Logical. If \code{TRUE}, the PCA plot is generated as a standalone plot, which is not interactive. If \code{FALSE} (required inside DExploreR), the plot is interactive via \code{plotly}. Defaults to \code{FALSE}.}
+
+\item{color_scale_order}{Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.}
 }
 \value{
 An interactive dotplot for Jaccard indicies of up- and downregulated genes as a \code{plotly} object.

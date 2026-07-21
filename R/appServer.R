@@ -595,7 +595,8 @@ app_server <- function(input, output, session, config) {
       heatmap_colors = input$color_select_heatmap,
       group_colors = input$color_select_heatmap_groups,
       dendrogram_type = input$heatmap_dendrogram,
-      heatmap_heights = heatmap_heights()
+      heatmap_heights = heatmap_heights(),
+      color_scale_order = input$color_scale_order_heatmap
     )
   })
 
@@ -950,7 +951,8 @@ app_server <- function(input, output, session, config) {
     req(df_top_genes_dgea())
     createTopDEGsPlot(
       df = df_top_genes_dgea(),
-      selected_palette = input$color_select_top_genes
+      selected_palette = input$color_select_top_genes,
+      color_scale_order = input$color_scale_order_top_genes
     )
   })
 
@@ -1049,7 +1051,8 @@ app_server <- function(input, output, session, config) {
   contrast_intersection_plot <- reactive({
     createDGEAContrastIntersectionPlot(
       df = df_dgea_ci(),
-      selected_palette = input$color_select_contrast_intersection
+      selected_palette = input$color_select_contrast_intersection,
+      color_scale_order = input$color_scale_order_jaccard_dgea
     )
   })
 
@@ -1334,7 +1337,8 @@ app_server <- function(input, output, session, config) {
     } else {
       p <- GeneSetsPlot(
         df = gene_sets_data(),
-        selected_palette = input$color_select_top_gene_sets
+        selected_palette = input$color_select_top_gene_sets,
+        color_scale_order = input$color_scale_order_top_gene_sets
       )
     }
     p
@@ -1446,7 +1450,8 @@ app_server <- function(input, output, session, config) {
           heatmap_colors = input$color_select_heatmap_tiles_modal,
           group_colors = input$color_select_heatmap_groups_modal,
           dendrogram_type = input$heatmap_dendrogram_modal,
-          heatmap_heights = heatmap_heights_modal()
+          heatmap_heights = heatmap_heights_modal(),
+          color_scale_order = input$color_scale_order_gene_set_heatmap
         )
       })
 
@@ -1497,18 +1502,6 @@ app_server <- function(input, output, session, config) {
                   showColour = "both",
                 )
               ),
-              # virtualSelectInput(
-              #   inputId = "color_select_volcano_modal",
-              #   label = "Select color palette:",
-              #   # The color choices are defined in `controls_colors.R`
-              #   choices = color_choices,
-              #   selected = "App colors",
-              #   search = TRUE,
-              #   showSelectedOptionsFirst = TRUE,
-              #   # Add custom renderers for the colors, which include images of the color scales
-              #   labelRenderer = "colorsWithIconChoice",
-              #   selectedLabelRenderer = "colorsWithIconSelected"
-              # ),
               sliderTextInput(
                 inputId = "p_threshold_volcano_modal",
                 label = "Set p-value threshold:",
@@ -1588,6 +1581,17 @@ app_server <- function(input, output, session, config) {
                 # Add custom renderers for the colors, which include images of the color scales
                 labelRenderer = "colorsWithIconChoice",
                 selectedLabelRenderer = "colorsWithIconSelected"
+              ),
+              div(
+                HTML(
+                  "<span class='switch-input-label'>Order of colors:</span>"
+                ),
+                switchInput(
+                  inputId = "color_scale_order_gene_set_heatmap",
+                  onLabel = "Standard",
+                  offLabel = "Reversed",
+                  value = TRUE
+                )
               ),
               virtualSelectInput(
                 inputId = "color_select_heatmap_groups_modal",
@@ -1688,7 +1692,8 @@ app_server <- function(input, output, session, config) {
   contrast_intersection_sets_plot <- reactive({
     createGSEAContrastIntersectionPlot(
       df = df_gsea_ci(),
-      selected_palette = input$color_select_contrast_intersection_sets
+      selected_palette = input$color_select_contrast_intersection_sets,
+      color_scale_order = input$color_scale_order_jaccard_gsea
     )
   })
 

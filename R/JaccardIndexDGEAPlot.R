@@ -9,13 +9,16 @@
 #'
 #' @param standalone Logical. If `TRUE`, the PCA plot is generated as a standalone plot, which is not interactive. If `FALSE` (required inside DExploreR), the plot is interactive via `plotly`. Defaults to `FALSE`.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return An interactive dotplot for Jaccard indicies of up- and downregulated genes as a `plotly` object.
 #'
 #' @export
 createDGEAContrastIntersectionPlot <- function(
   df,
   selected_palette = "App colors",
-  standalone = FALSE
+  standalone = FALSE,
+  color_scale_order = TRUE
 ) {
   # Define variables locally for R CMD check
   Seta <- Setb <- JI <- DEG_both_sets <- DEG_total <- Direction <- TooltipText <- CustomData <- NULL
@@ -80,7 +83,11 @@ createDGEAContrastIntersectionPlot <- function(
     )
 
   # Add the selected color scale
-  p <- add_selected_colors(p = p, selected_palette = selected_palette)
+  p <- add_selected_colors(
+    p = p,
+    selected_palette = selected_palette,
+    color_scale_order = color_scale_order
+  )
 
   # ---- Convert to plotly ----
   if (!standalone) {
@@ -122,13 +129,7 @@ createDGEAContrastIntersectionPlot <- function(
       p$x$data[[i]]$hoverinfo <- "none"
     }
   } else {
-    # Add a white background and grey grid lines for the standalone plot
-    p <- p +
-      theme(
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(color = "grey80"),
-        strip.background = element_rect(fill = "white"),
-      )
+    p <- standalone_plot_style(p)
   }
 
   return(p)

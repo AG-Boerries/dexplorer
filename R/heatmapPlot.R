@@ -17,6 +17,8 @@
 #'
 #' @param heatmap_heights A list of height and domain settings for the heatmap and its components, created by \code{\link{heatmapHeights}()}.
 #'
+#' @param color_scale_order Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.
+#'
 #' @return The interactive heatmap as a `plotly` object.
 #'
 #' @export
@@ -27,7 +29,8 @@ createGeneExpressionHeatmap <- function(
   id_or_sym = "Gene symbol",
   heatmap_colors = "App colors",
   group_colors = "inferno",
-  dendrogram_type = "Samples and genes"
+  dendrogram_type = "Samples and genes",
+  color_scale_order = TRUE
 ) {
   # Define variables locally for R CMD check
   SampleNameUser <- Group <- . <- NULL
@@ -83,7 +86,8 @@ createGeneExpressionHeatmap <- function(
   # ---- Create custom color functions for heatmap and groups ----
   color_funs <- lapply(
     c(heatmap_colors, group_colors),
-    create_heatmap_color_function
+    create_heatmap_color_function,
+    standard_order = color_scale_order
   )
 
   # ---- Create the expression matrix with the selected identifier as rownames ----

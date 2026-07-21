@@ -61,13 +61,7 @@ createCountDistributionPlot <- function(df, standalone = FALSE) {
 
   # ---- Fine tune plot for usage outside of DExploreR ----
   if (standalone) {
-    p <- p +
-      theme(
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(color = "grey80"),
-        legend.position = "none",
-        strip.background = element_rect(fill = "white")
-      )
+    p <- standalone_plot_style(p) + theme(legend.position = "none")
 
     # Use pre-defined plot components because of the usage of `factor(after_stat(quantile))`
     plot_components <- data.frame(

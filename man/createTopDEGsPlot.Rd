@@ -4,7 +4,12 @@
 \alias{createTopDEGsPlot}
 \title{Create Top DEGs Bar Plot}
 \usage{
-createTopDEGsPlot(df, selected_palette = "App colors", standalone = FALSE)
+createTopDEGsPlot(
+  df,
+  selected_palette = "App colors",
+  standalone = FALSE,
+  color_scale_order = TRUE
+)
 }
 \arguments{
 \item{df}{A data frame of top DEGs per contrast, as returned by \code{formatTopDEGs()}, including gene annotation columns.}
@@ -12,6 +17,8 @@ createTopDEGsPlot(df, selected_palette = "App colors", standalone = FALSE)
 \item{selected_palette}{Character. The name of the color palette to use for bar fill. Defaults to "App colors". See \code{print(color_choices)} for available palettes.}
 
 \item{standalone}{Logical. If \code{TRUE}, the PCA plot is generated as a standalone plot, which is not interactive. If \code{FALSE} (required inside DExploreR), the plot is interactive via \code{plotly}. Defaults to \code{FALSE}.}
+
+\item{color_scale_order}{Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.}
 }
 \value{
 A bar plot as a \code{ggplot2} object if \code{standalone = TRUE}, or an interactive \code{plotly} object if \code{standalone = FALSE}.

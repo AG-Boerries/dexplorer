@@ -4,7 +4,12 @@
 \alias{GeneSetsPlot}
 \title{Create Top Gene Sets Dotplot}
 \usage{
-GeneSetsPlot(df, selected_palette = "App colors", standalone = FALSE)
+GeneSetsPlot(
+  df,
+  selected_palette = "App colors",
+  standalone = FALSE,
+  color_scale_order = TRUE
+)
 }
 \arguments{
 \item{df}{A data frame containing gene set enrichment results, including enrichment scores, set sizes, direction,contrast labels and a column with the genes of the gene set as a nested tibble.}
@@ -12,6 +17,8 @@ GeneSetsPlot(df, selected_palette = "App colors", standalone = FALSE)
 \item{selected_palette}{Character. The name of the color palette to use for coloring gene sets.}
 
 \item{standalone}{Logical. If \code{TRUE}, the PCA plot is generated as a standalone plot, which is not interactive. If \code{FALSE} (required inside DExploreR), the plot is interactive via \code{plotly}. Defaults to \code{FALSE}.}
+
+\item{color_scale_order}{Logical. Whether to use the standard order of colors (TRUE) or reverse order (FALSE). Defaults to TRUE.}
 }
 \value{
 The dot plot, either as a \code{ggplot2} object (if \code{standalone = TRUE}) or a \code{plotly} object (if \code{standalone = FALSE}).
