@@ -136,7 +136,7 @@ createVennDiagram <- function(
   # Create the venn diagram using `ComplexUpset`
   p <- ggplot(df) +
     geom_venn_circle(data = df, sets = groups, linewidth = 1) +
-    geom_point_quiet(
+    geom_point(
       aes(x = x, y = y, color = region, text = TooltipText),
       size = 1,
       # Add some jittering to avoid grid-arranged points

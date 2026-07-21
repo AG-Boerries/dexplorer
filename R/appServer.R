@@ -1299,12 +1299,12 @@ app_server <- function(input, output, session, config) {
       df <- data_set_loaded()[["GeneSets"]] |>
         # Add the genes as a nested column
         left_join(
-          data_set_loaded()[["GeneSetsGenes"]] %>% group_by(GSName) %>% nest(),
+          data_set_loaded()[["GeneSetsGenes"]] |> group_by(GSName) |> nest(),
           by = c("Pathway" = "GSName")
         ) |>
         # Add information for the tooltip
         left_join(
-          data_set_loaded()[["GeneSetsGenes"]] %>%
+          data_set_loaded()[["GeneSetsGenes"]] |>
             distinct(GSName, GSCollectionName, GSDescription, GSURL),
           by = c("Pathway" = "GSName")
         )

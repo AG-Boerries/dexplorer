@@ -82,7 +82,7 @@ for (name in names(image_sizes_choice_selected)) {
       ),
       collapse = ","
     )
-  ) %>%
+  ) |>
     writeLines(
       con = paste0(
         "inst/dexplorer_assets/colorPaletteChoicesIcons",

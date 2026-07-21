@@ -102,12 +102,12 @@ createDGEAContrastIntersectionPlot(df = df, standalone = TRUE)
 df <- df2$GeneSets |>
   # Add the genes as a nested column
   left_join(
-    df2$GeneSetsGenes %>% group_by(GSName) %>% nest(),
+    df2$GeneSetsGenes |> group_by(GSName) |> nest(),
     by = c("Pathway" = "GSName")
   ) |>
   # Add information for the tooltip
   left_join(
-    df2$GeneSetsGenes %>%
+    df2$GeneSetsGenes |>
       distinct(GSName, GSCollectionName, GSDescription, GSURL),
     by = c("Pathway" = "GSName")
   )

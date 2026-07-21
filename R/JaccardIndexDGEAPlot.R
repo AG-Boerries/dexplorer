@@ -121,6 +121,14 @@ createDGEAContrastIntersectionPlot <- function(
     for (i in seq_along(p$x$data)) {
       p$x$data[[i]]$hoverinfo <- "none"
     }
+  } else {
+    # Add a white background and grey grid lines for the standalone plot
+    p <- p +
+      theme(
+        panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey80"),
+        strip.background = element_rect(fill = "white"),
+      )
   }
 
   return(p)

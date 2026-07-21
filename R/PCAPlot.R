@@ -135,7 +135,7 @@ createPCAPlot <- function(
   # This ensures in the interactive plot that the points are on top of the ellipses or convex hulls
   # And that the hovers work as expected
   p <- p +
-    geom_point_quiet(
+    geom_point(
       aes(text = TooltipText),
       fill = NA,
       show.legend = TRUE

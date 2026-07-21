@@ -15,7 +15,7 @@
 | createRawCountsWithStats.R  | NA     |
 | dexDataSetConversions.R     | will be removed     |
 | dexplorer-package.R         | no action required     |
-| geom_point_quiet.R          | check after Jaccard Index update, if this is still necessary     |
+| geom_point_quiet.R          | removed   |
 | mod_colors.R                | NA     |
 | dataTypeSelector.R      | no action required     |
 | plotDetectedGenes.R         | updated     |
