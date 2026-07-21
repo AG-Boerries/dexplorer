@@ -151,7 +151,7 @@ app_server <- function(input, output, session, config) {
         input$data_sets_table_rows_selected,
         "Authors"
       ] |>
-        gsub(" ", "_", .)
+        gsub(" ", "_", x = _)
     } else {
       ""
     }
