@@ -18,7 +18,7 @@ calculatePlotHeight <- function(
   per_sample_size = 30
 ) {
   height <- per_sample_size * n_samples
-  return(max(height, min_size))
+  return(min(max(height, min_size), 20000))
 }
 
 #' @title Calculate Heatmap Component Heights and Domains

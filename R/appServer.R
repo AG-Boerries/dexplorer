@@ -988,7 +988,9 @@ app_server <- function(input, output, session, config) {
     updateVirtualSelect(
       "volcano_contrast_select",
       choices = unique(data_set_loaded()[["DGEAnalysis"]]$Contrast),
-      selected = unique(data_set_loaded()[["DGEAnalysis"]]$Contrast)
+      # Showing the first 20 contrasts only
+      # User can change this later, but many contrasts may distort the image
+      selected = unique(data_set_loaded()[["DGEAnalysis"]]$Contrast)[1:20]
     )
 
     updateVirtualSelect(
