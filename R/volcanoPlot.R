@@ -147,6 +147,7 @@ createVolcanoPlot <- function(
       p <- p +
         geom_text_repel(
           data = df |>
+            filter(Regulation != "Not significant") |>
             group_by(Contrast) |>
             slice_max(order_by = LogPValAdj, n = 5),
           aes(x = Log2FC, y = LogPValAdj, label = Symbol),
@@ -160,6 +161,7 @@ createVolcanoPlot <- function(
       p <- p +
         geom_text(
           data = df |>
+            filter(Regulation != "Not significant") |>
             group_by(Contrast) |>
             slice_max(order_by = LogPValAdj, n = 5),
           aes(x = Log2FC, y = LogPValAdj, label = Symbol),

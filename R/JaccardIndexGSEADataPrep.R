@@ -40,6 +40,9 @@ formatGSEAContrastIntersection <- function(df) {
         filter(Var1 < Var2)
 
       # ---- Compute Jaccard index for each pair ----
+      if (base::nrow(pairs) == 0) {
+        return(data.frame())
+      }
       jaccard_results <- map_dfr(1:base::nrow(pairs), function(i) {
         seta <- df_jaccard |> filter(Contrast == pairs[i, 1])
         setb <- df_jaccard |> filter(Contrast == pairs[i, 2])
