@@ -214,10 +214,20 @@ tabContentServer <- function(
     observeEvent(
       input$select_plot_raw_counts,
       {
-        output$download_data <- dataDownload(
-          name = gsub(" ", "_", input$select_plot_raw_counts),
-          data = needed_data(),
-          authors = authors
+        output$download_data <- downloadHandler(
+          filename = function() {
+            paste0(
+              gsub(" ", "_", input$select_plot_raw_counts),
+              "_",
+              authors,
+              "_",
+              Sys.Date(),
+              ".csv"
+            )
+          },
+          content = function(file) {
+            write.csv(needed_data(), file)
+          }
         )
       }
     )

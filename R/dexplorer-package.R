@@ -12,6 +12,7 @@
 #' @importFrom DESeq2 DESeq
 #' @importFrom DESeq2 DESeqDataSetFromMatrix
 #' @importFrom DESeq2 results
+#' @importFrom dplyr %>%
 #' @importFrom dplyr across
 #' @importFrom dplyr add_row
 #' @importFrom dplyr all_of

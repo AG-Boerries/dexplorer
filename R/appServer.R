@@ -10,7 +10,7 @@
 #'
 app_server <- function(input, output, session, config) {
   # Define variables locally for R CMD check
-  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSDescription <- GSURL <- GSName <- GeneID <- EnrichmentScore <- Pathway <- Pathways <- NULL
+  . <- Symbol <- Contrst <- Genes <- Seta <- Setb <- Direction <- Contrast <- GSCollectionName <- GSDescription <- GSURL <- GSName <- GeneID <- EnrichmentScore <- Pathway <- Pathways <- data <- NULL
 
   # Increase the maximum file upload size to 50 MB
   # This is necessary for user-prepared RDS files
@@ -548,10 +548,19 @@ app_server <- function(input, output, session, config) {
   })
 
   # Download handler for PCA data
-  output$download_data_pca <- dataDownload(
-    name = "PCA_data",
-    data = data_set_loaded()[["PCA"]],
-    authors = authors()
+  output$download_data_pca <- downloadHandler(
+    filename = function() {
+      paste0(
+        "PCA_data_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(data_set_loaded()[["PCA"]], file)
+    }
   )
 
   ###################################################################################################
@@ -623,10 +632,19 @@ app_server <- function(input, output, session, config) {
   })
 
   # Get the data frame for the .csv download
-  output$download_data_heatmap <- dataDownload(
-    name = "Heatmap_data",
-    data = df_heatmap(),
-    authors = authors()
+  output$download_data_heatmap <- downloadHandler(
+    filename = function() {
+      paste0(
+        "Heatmap_data_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(df_heatmap(), file)
+    }
   )
 
   # The default state for the button in the volcano plots
@@ -971,12 +989,24 @@ app_server <- function(input, output, session, config) {
   })
 
   # Prepare data frame for download
-  output$download_data_top_genes <- dataDownload(
-    name = "Top_scoring_genes",
-    data = df_top_genes_dgea() |>
-      # Remove the groups added by `tidytext::reorder_within()`
-      mutate(Symbol = sub("__.*$", "", Symbol)),
-    authors = authors()
+  output$download_data_top_genes <- downloadHandler(
+    filename = function() {
+      paste0(
+        "Top_scoring_genes_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(
+        df_top_genes_dgea() |>
+          # Remove the groups added by `tidytext::reorder_within()`
+          mutate(Symbol = sub("__.*$", "", Symbol)),
+        file
+      )
+    }
   )
 
   ###################################################################################################
@@ -1030,11 +1060,23 @@ app_server <- function(input, output, session, config) {
   })
 
   # Get the data for the .csv download
-  output$download_data_volcano <- dataDownload(
-    name = "Volcano_plot_data",
-    data = data_set_loaded()[["DGEAnalysis"]] |>
-      filter(Contrast %in% input$volcano_contrast_select),
-    authors = authors()
+  output$download_data_volcano <- downloadHandler(
+    filename = function() {
+      paste0(
+        "Volcano_plot_data_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(
+        data_set_loaded()[["DGEAnalysis"]] |>
+          filter(Contrast %in% input$volcano_contrast_select),
+        file
+      )
+    }
   )
 
   ###################################################################################################
@@ -1070,11 +1112,22 @@ app_server <- function(input, output, session, config) {
     contrast_intersection_plot()
   })
 
-  output$download_data_contrast_intersection <- dataDownload(
-    name = "Contrast_intersection_DGEA",
-    # Remove the list column, which cannot be saved as .csv
-    data = df_dgea_ci() |> select(-Genes),
-    authors = authors()
+  output$download_data_contrast_intersection <- downloadHandler(
+    filename = function() {
+      paste0(
+        "Contrast_intersection_DGEA_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(
+        df_dgea_ci() |> select(-Genes),
+        file
+      )
+    }
   )
 
   observeEvent(
@@ -1112,10 +1165,22 @@ app_server <- function(input, output, session, config) {
       colnames(df) <- gsub("\\.", " ", colnames(df))
 
       # Get the data for the .csv download
-      output$download_dgea_ji <- dataDownload(
-        name = "Intersecting_genes",
-        data = df,
-        authors = authors()
+      output$download_dgea_ji <- downloadHandler(
+        filename = function() {
+          paste0(
+            "Intersecting_genes_",
+            authors(),
+            "_",
+            Sys.Date(),
+            ".csv"
+          )
+        },
+        content = function(file) {
+          write.csv(
+            df,
+            file
+          )
+        }
       )
 
       venn_plot <- reactive({
@@ -1314,7 +1379,7 @@ app_server <- function(input, output, session, config) {
           by = c("Pathway" = "GSName")
         )
     } else {
-      df <- data_set_loaded[["GeneSets"]]
+      df <- data_set_loaded()[["GeneSets"]]
     }
 
     formatForGeneSetsPlot(
@@ -1361,11 +1426,19 @@ app_server <- function(input, output, session, config) {
   })
 
   # Prepare data for download
-  output$download_data_top_gene_sets <- dataDownload(
-    name = "Top-scoring_gene_sets_data",
-    data = data_set_loaded()[["GeneSets"]] |>
-      filter(Contrast == input$gene_sets_contrast_select),
-    authors = authors()
+  output$download_data_top_gene_sets <- downloadHandler(
+    filename = function() {
+      paste0(
+        "Top-scoring_gene_sets_data_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(gene_sets_data() |> select(-data), file)
+    }
   )
 
   observeEvent(
@@ -1711,10 +1784,19 @@ app_server <- function(input, output, session, config) {
     contrast_intersection_sets_plot()
   })
 
-  output$download_data_contrast_intersection_sets <- dataDownload(
-    name = "Contrast_intersection_GSEA",
-    data = df_gsea_ci() |> select(-Pathways),
-    authors = authors()
+  output$download_data_contrast_intersection_sets <- downloadHandler(
+    filename = function() {
+      paste0(
+        "Contrast_intersection_GSEA_",
+        authors(),
+        "_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      write.csv(df_gsea_ci() |> select(-Pathways), file)
+    }
   )
 
   observeEvent(
@@ -1752,10 +1834,19 @@ app_server <- function(input, output, session, config) {
       colnames(df) <- gsub("\\.", " ", colnames(df))
 
       # Get the data for the .csv download
-      output$download_dgea_ji <- dataDownload(
-        name = "Intersecting_genes",
-        data = df,
-        authors = authors()
+      output$download_dgea_ji <- downloadHandler(
+        filename = function() {
+          paste0(
+            "Intersecting_gene_sets_",
+            authors(),
+            "_",
+            Sys.Date(),
+            ".csv"
+          )
+        },
+        content = function(file) {
+          write.csv(df, file)
+        }
       )
 
       venn_plot <- reactive({

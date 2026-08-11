@@ -19,8 +19,8 @@
 | colors.R                | updated     |
 | dataTypeSelector.R      | no action required     |
 | plotDetectedGenes.R         | updated     |
-| mod_downloadHandler.R       | merged with mod_downloadUIElements.R     |
-| mod_downloadUIElements.R    | merge with mod_downloadHander.R     |
+| mod_downloadHandler.R       | removed     |
+| mod_downloadUIElements.R    | renamed    |
 | emptyPlot.R             | no action required     |
 | furtherInfo.R           | no action required     |
 | mod_heatmap.R               | split into two files     |
